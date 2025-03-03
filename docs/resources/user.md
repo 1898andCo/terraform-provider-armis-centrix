@@ -51,7 +51,6 @@ resource "armis_user" "test_user" {
 ### Read-Only
 
 - `id` (String) A unique identifier for the user resource.
-- `last_updated` (String) The timestamp of the last update to the user's information.
 
 <a id="nestedatt--role_assignments"></a>
 ### Nested Schema for `role_assignments`

@@ -68,7 +68,6 @@ resource "armis_policy" "example_policy" {
 ### Read-Only
 
 - `id` (String) The ID of the policy.
-- `last_updated` (String) The timestamp of the last update to the policy.
 
 <a id="nestedatt--rules"></a>
 ### Nested Schema for `rules`

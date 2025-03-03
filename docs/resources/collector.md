@@ -39,7 +39,6 @@ resource "armis_collector" "test_collector" {
 ### Read-Only
 
 - `id` (String) A unique identifier for the user resource.
-- `last_updated` (String) The timestamp of the last update to the user's information.
 - `license_key` (String, Sensitive) The license key associated with the collector.
 - `password` (String, Sensitive) The password associated with the collector.
 - `user` (String) The unique username of the user.

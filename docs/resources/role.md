@@ -68,7 +68,6 @@ resource "armis_role" "auditor" {
 ### Read-Only
 
 - `id` (String) Unique identifier for the role.
-- `last_updated` (String) The last time the role was updated.
 
 <a id="nestedatt--permissions"></a>
 ### Nested Schema for `permissions`
