@@ -7,13 +7,14 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -91,13 +92,10 @@ func (r *collectorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "The unique username of the user.",
 			},
-			"last_updated": schema.StringAttribute{
-				Computed:    true,
-				Description: "The timestamp of the last update to the user's information.",
-			},
 			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "A unique identifier for the user resource.",
+				Computed:      true,
+				Description:   "A unique identifier for the user resource.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -111,7 +109,6 @@ type collectorResourceModel struct {
 	LicenseKey     types.String `tfsdk:"license_key"`
 	Password       types.String `tfsdk:"password"`
 	User           types.String `tfsdk:"user"`
-	LastUpdated    types.String `tfsdk:"last_updated"`
 }
 
 // Create creates the resource and sets the initial Terraform state.
@@ -143,7 +140,6 @@ func (r *collectorResource) Create(ctx context.Context, req resource.CreateReque
 
 	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(newCollector.CollectorID))
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 	plan.LicenseKey = types.StringValue(newCollector.LicenseKey)
 	plan.Password = types.StringValue(newCollector.Password)
 	plan.User = types.StringValue(newCollector.User)
@@ -185,7 +181,6 @@ func (r *collectorResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	//	Overwrite collector with refreshed state
 	state.Name = types.StringValue(collector.Name)
-	state.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 	state.ID = types.StringValue(strconv.Itoa(collector.CollectorNumber))
 
 	// Set refreshed state
@@ -253,7 +248,6 @@ func (r *collectorResource) Update(ctx context.Context, req resource.UpdateReque
 	// Update resource state with updated collector options and timestamp
 	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(updatedCollector.CollectorNumber))
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 	plan.Name = types.StringValue(updatedCollector.Name)
 	plan.DeploymentType = types.StringValue(plan.DeploymentType.ValueString())
 	plan.LicenseKey = types.StringValue(state.LicenseKey.ValueString())

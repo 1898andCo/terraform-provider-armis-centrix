@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
@@ -72,8 +71,9 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The ID of the policy.",
+				Computed:      true,
+				Description:   "The ID of the policy.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"name": schema.StringAttribute{
 				Required:    true,
@@ -188,10 +188,6 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			"last_updated": schema.StringAttribute{
-				Computed:    true,
-				Description: "The timestamp of the last update to the policy.",
-			},
 		},
 	}
 }
@@ -207,7 +203,6 @@ type policyResourceModel struct {
 	RuleType          types.String `tfsdk:"rule_type"`
 	Actions           types.List   `tfsdk:"actions"`
 	Rules             rulesModel   `tfsdk:"rules"`
-	LastUpdated       types.String `tfsdk:"last_updated"`
 }
 
 // actionModel maps the action schema data.
@@ -299,7 +294,6 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	plan.ID = types.StringValue(strconv.Itoa(newPolicy.ID))
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -364,7 +358,6 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	plan.ID = state.ID
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }

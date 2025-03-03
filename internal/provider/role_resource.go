@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -67,16 +69,14 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 		`,
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "The name of the role.",
-			},
-			"last_updated": schema.StringAttribute{
-				Computed:    true,
-				Description: "The last time the role was updated.",
+				Required:      true,
+				Description:   "The name of the role.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Unique identifier for the role.",
+				Computed:      true,
+				Description:   "Unique identifier for the role.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"permissions": schema.SingleNestedAttribute{
 				Description: "Permissions associated with the role, categorized by feature and capability.",
@@ -85,10 +85,13 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					"advanced_permissions": schema.SingleNestedAttribute{
 						Description: "Advanced permissions for managing sensitive data and configurations.",
 						Optional:    true,
+						Computed:    true,
 						Attributes: map[string]schema.Attribute{
 							"all": schema.BoolAttribute{
 								Description: "Indicates if all advanced permissions are enabled.",
 								Optional:    true,
+								Computed:    true,
+								Default:     booldefault.StaticBool(false),
 							},
 							"behavioral": schema.SingleNestedAttribute{
 								Description: "Behavioral permissions for specific system entities.",
@@ -97,18 +100,26 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"all": schema.BoolAttribute{
 										Description: "Indicates if all behavioral permissions are enabled.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"application_name": schema.BoolAttribute{
 										Description: "Permission to access application names.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"host_name": schema.BoolAttribute{
 										Description: "Permission to access host names.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"service_name": schema.BoolAttribute{
 										Description: "Permission to access service names.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 								},
 							},
@@ -119,22 +130,32 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"all": schema.BoolAttribute{
 										Description: "Indicates if all device-related permissions are enabled.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"device_names": schema.BoolAttribute{
 										Description: "Permission to access device names.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"ip_addresses": schema.BoolAttribute{
 										Description: "Permission to access device IP addresses.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"mac_addresses": schema.BoolAttribute{
 										Description: "Permission to access device MAC addresses.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"phone_numbers": schema.BoolAttribute{
 										Description: "Permission to access device phone numbers.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 								},
 							},
@@ -147,6 +168,8 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							"all": schema.BoolAttribute{
 								Description: "Indicates if all alert permissions are enabled.",
 								Optional:    true,
+								Computed:    true,
+								Default:     booldefault.StaticBool(false),
 							},
 							"manage": schema.SingleNestedAttribute{
 								Description: "Permissions for managing alerts.",
@@ -155,24 +178,34 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"all": schema.BoolAttribute{
 										Description: "Indicates if all alert management permissions are enabled.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"resolve": schema.BoolAttribute{
 										Description: "Permission to resolve alerts.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"suppress": schema.BoolAttribute{
 										Description: "Permission to suppress alerts.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 									"whitelist_devices": schema.BoolAttribute{
 										Description: "Permission to whitelist devices in alerts.",
 										Optional:    true,
+										Computed:    true,
+										Default:     booldefault.StaticBool(false),
 									},
 								},
 							},
 							"read": schema.BoolAttribute{
 								Description: "Permission to read alerts.",
 								Optional:    true,
+								Computed:    true,
+								Default:     booldefault.StaticBool(false),
 							},
 						},
 					},
@@ -187,7 +220,6 @@ type RoleResourceModel struct {
 	Name        types.String      `tfsdk:"name"`
 	Permissions *PermissionsModel `tfsdk:"permissions"`
 	ID          types.String      `tfsdk:"id"`
-	LastUpdated types.String      `tfsdk:"last_updated"`
 }
 
 // PermissionsModel maps the Permissions schema data.
@@ -479,7 +511,6 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Update the Terraform state with the created role's details
 	plan.ID = types.StringValue(strconv.Itoa(createdRole.ID))
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 
 	tflog.Info(ctx, "Setting Terraform state for created role", map[string]any{"role_id": plan.ID.ValueString()})
 	diags = resp.State.Set(ctx, plan)
@@ -570,7 +601,6 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Map the updated role details back to the plan
 	mapRoleSettingsToPlan(updatedRole, &plan)
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 
 	// Save the updated state
 	tflog.Info(ctx, "Setting updated state for role", map[string]any{"role_id": state.ID.ValueString()})

@@ -7,12 +7,13 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -64,8 +65,9 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 		`,
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "The full name of the user.",
+				Required:      true,
+				Description:   "The full name of the user.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured(), stringplanmodifier.UseStateForUnknown()},
 			},
 			"phone": schema.StringAttribute{
 				Optional:    true,
@@ -90,13 +92,10 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required:    true,
 				Description: "The unique username of the user.",
 			},
-			"last_updated": schema.StringAttribute{
-				Computed:    true,
-				Description: "The timestamp of the last update to the user's information.",
-			},
 			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "A unique identifier for the user resource.",
+				Computed:      true,
+				Description:   "A unique identifier for the user resource.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"role_assignments": schema.ListNestedAttribute{
 				Required:    true,
@@ -129,7 +128,6 @@ type userResourceModel struct {
 	Title           types.String     `tfsdk:"title"`
 	Username        types.String     `tfsdk:"username"`
 	RoleAssignments []roleAssignment `tfsdk:"role_assignments"`
-	LastUpdated     types.String     `tfsdk:"last_updated"`
 }
 
 type roleAssignment struct {
@@ -180,7 +178,6 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(newUser.ID))
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 	plan.Name = types.StringValue(newUser.Name)
 	plan.Phone = types.StringValue(newUser.Phone)
 	plan.Email = types.StringValue(newUser.Email)
@@ -309,15 +306,12 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Update resource state with updated user options and timestamp
 	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(updatedUser.ID))
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 	plan.Name = types.StringValue(updatedUser.Name)
 	plan.Phone = types.StringValue(updatedUser.Phone)
 	plan.Email = types.StringValue(updatedUser.Email)
 	plan.Location = types.StringValue(updatedUser.Location)
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
-
-	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC3339))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
