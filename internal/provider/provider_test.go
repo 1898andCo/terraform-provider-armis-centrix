@@ -1,7 +1,7 @@
 // Copyright (c) 1898 & Co.
 // SPDX-License-Identifier: Apache-2.0
 
-package provider
+package provider_test
 
 import (
 	"os"
@@ -9,12 +9,13 @@ import (
 	"testing"
 
 	"github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
+	"github.com/1898andCo/terraform-provider-armis-centrix/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
 
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"armis": providerserver.NewProtocol6WithError(New("armis")()),
+	"armis": providerserver.NewProtocol6WithError(provider.New("armis")()),
 }
 
 func requireEnv(t *testing.T, name string) {

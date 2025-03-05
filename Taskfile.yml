@@ -24,8 +24,10 @@ tasks:
     desc: "Run acceptance tests against the provider"
     env:
       TF_ACC: "true"
+      TF_LOG: "INFO"  # Change to DEBUG for deeper logging
     cmds:
-      - go test ./... {{.CLI_ARGS}}
+      - go mod tidy
+      - go test ./internal/provider/... -v -timeout=30m
 
   install-tools:
     desc: "Install required tools"
