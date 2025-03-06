@@ -14,7 +14,7 @@ import (
 
 func TestCreatingRole(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -381,7 +381,7 @@ func TestCreatingRole(t *testing.T) {
 
 func TestUpdatingRole(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -756,7 +756,7 @@ func TestUpdatingRole(t *testing.T) {
 
 func TestGettingRoles(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -794,7 +794,7 @@ func TestGettingRoles(t *testing.T) {
 
 func TestGettingRoleByName(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -832,7 +832,7 @@ func TestGettingRoleByName(t *testing.T) {
 
 func TestGettingRoleByID(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -870,7 +870,7 @@ func TestGettingRoleByID(t *testing.T) {
 
 func TestDeletingRole(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}

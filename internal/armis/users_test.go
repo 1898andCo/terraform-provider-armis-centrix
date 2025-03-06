@@ -13,7 +13,7 @@ import (
 
 func TestGettingUsers(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -51,7 +51,7 @@ func TestGettingUsers(t *testing.T) {
 
 func TestCreatingUser(t *testing.T) {
 	// Initialize the client with environment variables
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -110,7 +110,7 @@ func TestCreatingUser(t *testing.T) {
 
 func TestGettingUser(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -148,7 +148,7 @@ func TestGettingUser(t *testing.T) {
 
 func TestUpdatingUser(t *testing.T) {
 	// Initialize the client with environment variables
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -212,7 +212,7 @@ func TestUpdatingUser(t *testing.T) {
 
 func TestDeletingUsers(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}

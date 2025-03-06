@@ -13,7 +13,7 @@ import (
 
 func TestGettingSites(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}

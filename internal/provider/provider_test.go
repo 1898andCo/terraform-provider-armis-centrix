@@ -37,7 +37,7 @@ var (
 
 func testClient(t *testing.T) *armis.Client {
 	clientOnce.Do(func() {
-		options := armis.ClientOptions{
+		options := armis.Client{
 			ApiUrl:     os.Getenv("ARMIS_API_URL"),
 			ApiKey:     os.Getenv("ARMIS_API_KEY"),
 			ApiVersion: "v1",

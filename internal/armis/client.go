@@ -10,29 +10,14 @@ import (
 	"time"
 )
 
-// Armis endpoint.
 const (
 	armisApiUrl     = "https://api.armis.com"
 	armisApiVersion = "v1"
 )
 
-type ClientOptions struct {
-	ApiUrl     string
-	ApiKey     string
-	ApiVersion string
-}
-
-type AuthResponse struct {
-	Success bool `json:"success"`
-	Data    struct {
-		AccessToken   string `json:"access_token"`
-		ExpirationUtc string `json:"expiration_utc"`
-	} `json:"data"`
-}
-
-// Client definition.
 type Client struct {
 	ApiUrl                string
+	ApiKey                string
 	ApiVersion            string
 	AccessToken           string
 	AccessTokenExpiration time.Time
@@ -40,8 +25,8 @@ type Client struct {
 	HTTPClient *http.Client
 }
 
-// NewClient returns a new Armis client and authenticates.
-func NewClient(options ClientOptions) (*Client, error) {
+// NewClient returns a new Armis client and authenticates to the Armis API endpoint.
+func NewClient(options Client) (*Client, error) {
 	apiUrl := armisApiUrl
 	apiVersion := armisApiVersion
 

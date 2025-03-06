@@ -13,7 +13,7 @@ import (
 
 func TestCreatingCollector(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -56,7 +56,7 @@ func TestCreatingCollector(t *testing.T) {
 
 func TestGettingCollectors(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -94,7 +94,7 @@ func TestGettingCollectors(t *testing.T) {
 
 func TestGettingCollectorByID(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -132,7 +132,7 @@ func TestGettingCollectorByID(t *testing.T) {
 
 func TestUpdatingCollector(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -175,7 +175,7 @@ func TestUpdatingCollector(t *testing.T) {
 
 func TestDeletingCollector(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}

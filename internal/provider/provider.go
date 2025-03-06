@@ -135,7 +135,7 @@ func (p *ArmisProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	tflog.Debug(ctx, "Creating the Armis API client")
 
 	// Create the Armis client
-	client, err := armis.NewClient(armis.ClientOptions{
+	client, err := armis.NewClient(armis.Client{
 		ApiKey: apiKey,
 		ApiUrl: apiUrl,
 	})

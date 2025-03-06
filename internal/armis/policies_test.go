@@ -13,7 +13,7 @@ import (
 
 func TestCreatingPolicy(t *testing.T) {
 	// Initialize the client with environment variables
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -94,7 +94,7 @@ func TestCreatingPolicy(t *testing.T) {
 
 func TestCreatingTagPolicy(t *testing.T) {
 	// Initialize the client with environment variables
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -170,7 +170,7 @@ func TestCreatingTagPolicy(t *testing.T) {
 
 func TestGettingPolicy(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -208,7 +208,7 @@ func TestGettingPolicy(t *testing.T) {
 
 func TestUpdatingPolicy(t *testing.T) {
 	// Initialize the client with environment variables
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
@@ -289,7 +289,7 @@ func TestUpdatingPolicy(t *testing.T) {
 
 func TestDeletingPolicy(t *testing.T) {
 	// Initialize the client
-	options := ClientOptions{
+	options := Client{
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}

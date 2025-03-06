@@ -12,7 +12,7 @@ import (
 
 func TestNewClient(t *testing.T) {
 	// Initialize the client using the environment variables
-	options := ClientOptions{
+	options := Client{
 		ApiUrl:     os.Getenv("ARMIS_API_URL"),
 		ApiKey:     os.Getenv("ARMIS_API_KEY"),
 		ApiVersion: "v1",

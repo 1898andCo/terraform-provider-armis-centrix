@@ -13,6 +13,14 @@ import (
 	"time"
 )
 
+type AuthResponse struct {
+	Success bool `json:"success"`
+	Data    struct {
+		AccessToken   string `json:"access_token"`
+		ExpirationUtc string `json:"expiration_utc"`
+	} `json:"data"`
+}
+
 // Authenticate retrieves a temporary access token using the API key.
 func (c *Client) Authenticate(apiKey string) error {
 	if apiKey == "" {
