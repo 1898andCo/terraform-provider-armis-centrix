@@ -34,7 +34,7 @@ func (c *Client) GetRoles() ([]RoleSettings, error) {
 // GetRoleByName fetches a specific role by name.
 func (c *Client) GetRoleByName(name string) (*RoleSettings, error) {
 	if name == "" {
-		return nil, fmt.Errorf("role name cannot be empty")
+		return nil, fmt.Errorf("%w", ErrRoleName)
 	}
 
 	roles, err := c.GetRoles()
@@ -48,13 +48,13 @@ func (c *Client) GetRoleByName(name string) (*RoleSettings, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("role %q not found", name)
+	return nil, fmt.Errorf("%w: %q", ErrRoleNotFound, name)
 }
 
 // GetRoleByID fetches a specific role by ID.
 func (c *Client) GetRoleByID(id string) (*RoleSettings, error) {
 	if id == "" {
-		return nil, fmt.Errorf("role ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrRoleID)
 	}
 
 	roles, err := c.GetRoles()
@@ -73,7 +73,7 @@ func (c *Client) GetRoleByID(id string) (*RoleSettings, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("role ID %q not found", id)
+	return nil, fmt.Errorf("%w: %q", ErrRoleNotFound, id)
 }
 
 // CreateRole creates a new role in the API.
@@ -104,7 +104,7 @@ func (c *Client) CreateRole(role RoleSettings) (bool, error) {
 // UpdateRole updates an existing role in the API.
 func (c *Client) UpdateRole(role RoleSettings, id string) (*RoleSettings, error) {
 	if id == "" {
-		return nil, fmt.Errorf("role ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrRoleID)
 	}
 
 	roleData, err := json.Marshal(role)
@@ -135,7 +135,7 @@ func (c *Client) UpdateRole(role RoleSettings, id string) (*RoleSettings, error)
 // DeleteRole deletes a role by ID.
 func (c *Client) DeleteRole(id string) (bool, error) {
 	if id == "" {
-		return false, fmt.Errorf("role ID cannot be empty")
+		return false, fmt.Errorf("%w", ErrRoleID)
 	}
 
 	encodedRoleID := url.QueryEscape(id)

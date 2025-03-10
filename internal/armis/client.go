@@ -35,7 +35,7 @@ func NewClient(options Client) (*Client, error) {
 	}
 
 	if options.ApiKey == "" {
-		return nil, fmt.Errorf("API key is required")
+		return nil, fmt.Errorf("%w", ErrGetKey)
 	}
 
 	if options.ApiVersion != "" {
@@ -52,7 +52,7 @@ func NewClient(options Client) (*Client, error) {
 	if options.ApiKey != "" {
 		err := client.Authenticate(options.ApiKey)
 		if err != nil {
-			return nil, fmt.Errorf("failed to authenticate during client initialization: %w", err)
+			return nil, fmt.Errorf("%w", ErrAuthFailed)
 		}
 	}
 
@@ -92,5 +92,6 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 		return body, nil
 	}
 
-	return nil, fmt.Errorf("status: %d, body: %s", res.StatusCode, body)
+	return nil, fmt.Errorf("%w\n  Status Code: %d\n  Response Body: %s",
+		ErrHTTPResponse, res.StatusCode, string(body))
 }

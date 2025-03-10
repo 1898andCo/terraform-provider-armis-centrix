@@ -6,9 +6,10 @@ package armis
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
+
+	log "github.com/charmbracelet/log"
 )
 
 func TestCreatingCollector(t *testing.T) {
@@ -17,7 +18,7 @@ func TestCreatingCollector(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -39,18 +40,18 @@ func TestCreatingCollector(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -60,7 +61,7 @@ func TestGettingCollectors(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -77,18 +78,18 @@ func TestGettingCollectors(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -98,7 +99,7 @@ func TestGettingCollectorByID(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -115,18 +116,18 @@ func TestGettingCollectorByID(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -136,7 +137,7 @@ func TestUpdatingCollector(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -158,18 +159,18 @@ func TestUpdatingCollector(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -179,7 +180,7 @@ func TestDeletingCollector(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -194,8 +195,8 @@ func TestDeletingCollector(t *testing.T) {
 
 	// Log the response
 	if !success {
-		fmt.Printf("Failed to delete user.")
+		log.Info("Failed to delete user.")
 	} else {
-		fmt.Printf("Successfully deleted user.")
+		log.Info("Successfully deleted user.")
 	}
 }

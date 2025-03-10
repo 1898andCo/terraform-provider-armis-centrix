@@ -6,10 +6,11 @@ package armis
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"strconv"
 	"testing"
+
+	log "github.com/charmbracelet/log"
 )
 
 func TestCreatingRole(t *testing.T) {
@@ -18,7 +19,7 @@ func TestCreatingRole(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -365,17 +366,17 @@ func TestCreatingRole(t *testing.T) {
 	if response != false {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		} else {
 			var prettyResponse bytes.Buffer
 			if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-				fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+				log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 			} else {
-				fmt.Printf("Server response (raw JSON): %s\n", responseJSON)
+				log.Info("Server response (raw JSON): %s\n", responseJSON)
 			}
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -385,7 +386,7 @@ func TestUpdatingRole(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -740,17 +741,17 @@ func TestUpdatingRole(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		} else {
 			var prettyResponse bytes.Buffer
 			if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-				fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+				log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 			} else {
-				fmt.Printf("Server response (raw JSON): %s\n", responseJSON)
+				log.Info("Server response (raw JSON): %s\n", responseJSON)
 			}
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -760,7 +761,7 @@ func TestGettingRoles(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -777,18 +778,18 @@ func TestGettingRoles(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -798,7 +799,7 @@ func TestGettingRoleByName(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -815,18 +816,18 @@ func TestGettingRoleByName(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -836,7 +837,7 @@ func TestGettingRoleByID(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -853,18 +854,18 @@ func TestGettingRoleByID(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -874,7 +875,7 @@ func TestDeletingRole(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -899,17 +900,17 @@ func TestDeletingRole(t *testing.T) {
 	if response != false {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }

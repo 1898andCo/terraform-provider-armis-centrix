@@ -4,7 +4,6 @@
 package provider_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -44,9 +43,9 @@ func TestAcc_RoleDataSource(t *testing.T) {
 }
 
 func testAccRoleDataSourceConfig() string {
-	return fmt.Sprintf(`
+	return `
 		data "armis_role" "test" {
 			name = "Stakeholder"
 		}
-	`)
+	`
 }

@@ -4,7 +4,6 @@
 package provider_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +31,7 @@ func TestAcc_SitesDataSource(t *testing.T) {
 }
 
 func testAccSitesDataSourceConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "armis_sites" "test" {}
-`)
+`
 }

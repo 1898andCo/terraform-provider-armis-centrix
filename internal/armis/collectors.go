@@ -12,7 +12,7 @@ import (
 
 func (c *Client) GetCollectorByID(collectorId string) (*CollectorSettings, error) {
 	if collectorId == "" {
-		return nil, fmt.Errorf("collector ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
 
 	// URL encide the collector ID
@@ -63,11 +63,11 @@ func (c *Client) GetCollectors() ([]CollectorSettings, error) {
 
 func (c *Client) CreateCollector(collector CreateCollectorSettings) (*NewCollectorSettings, error) {
 	if collector.Name == "" {
-		return nil, fmt.Errorf("collector name is required")
+		return nil, fmt.Errorf("%w", ErrCollectorName)
 	}
 
 	if collector.DeploymentType == "" {
-		return nil, fmt.Errorf("collector deployment type is required")
+		return nil, fmt.Errorf("%w", ErrCollectorType)
 	}
 
 	collectorData, err := json.Marshal(collector)
@@ -98,15 +98,15 @@ func (c *Client) CreateCollector(collector CreateCollectorSettings) (*NewCollect
 
 func (c *Client) UpdateCollector(collectorId string, collector UpdateCollectorSettings) (*CollectorSettings, error) {
 	if collectorId == "" {
-		return nil, fmt.Errorf("collector ID is required")
+		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
 
 	if collector.Name == "" {
-		return nil, fmt.Errorf("collector name is required")
+		return nil, fmt.Errorf("%w", ErrCollectorName)
 	}
 
 	if collector.DeploymentType == "" {
-		return nil, fmt.Errorf("collector deployment type is required")
+		return nil, fmt.Errorf("%w", ErrCollectorType)
 	}
 
 	collectorData, err := json.Marshal(collector)
@@ -140,7 +140,7 @@ func (c *Client) UpdateCollector(collectorId string, collector UpdateCollectorSe
 
 func (c *Client) DeleteCollector(collectorId string) (bool, error) {
 	if collectorId == "" {
-		return false, fmt.Errorf("collector ID cannot be empty")
+		return false, fmt.Errorf("%w", ErrCollectorID)
 	}
 
 	// URL encode the collector ID

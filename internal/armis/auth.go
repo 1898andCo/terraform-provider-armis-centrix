@@ -5,7 +5,6 @@ package armis
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -24,7 +23,7 @@ type AuthResponse struct {
 // Authenticate retrieves a temporary access token using the API key.
 func (c *Client) Authenticate(apiKey string) error {
 	if apiKey == "" {
-		return errors.New("API key is required")
+		return fmt.Errorf("%w", ErrGetKey)
 	}
 
 	// Check if we already have a valid access token
@@ -64,7 +63,7 @@ func (c *Client) Authenticate(apiKey string) error {
 
 	// Check if the response indicates success
 	if !authResponse.Success {
-		return errors.New("authentication failed: API response indicates failure")
+		return fmt.Errorf("%w", ErrAuthFailed)
 	}
 
 	// Store the access token and expiration in the client

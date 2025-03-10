@@ -13,22 +13,22 @@ import (
 // CreatePolicy creates a new policy in Armis.
 func (c *Client) CreatePolicy(policy PolicySettings) (*PolicyId, error) {
 	if policy.Name == "" {
-		return nil, fmt.Errorf("policy name cannot be empty")
+		return nil, fmt.Errorf("%w", ErrPolicyName)
 	}
 
 	// Ensure policy rules exist
 	if len(policy.Rules.And) == 0 && len(policy.Rules.Or) == 0 {
-		return nil, fmt.Errorf("policy rules cannot be empty")
+		return nil, fmt.Errorf("%w", ErrPolicyRules)
 	}
 
 	// Policy description must be less than 500 characters
 	if len(policy.Description) > 500 {
-		return nil, fmt.Errorf("policy description must be less than 500 characters")
+		return nil, fmt.Errorf("%w", ErrPolicyDescription)
 	}
 
 	// Rule type must be ACTIVITY, IP CONNECTION, DEVICE, or VULNERABILITY
 	if policy.RuleType != "ACTIVITY" && policy.RuleType != "IP_CONNECTION" && policy.RuleType != "DEVICE" && policy.RuleType != "VULNERABILITY" {
-		return nil, fmt.Errorf("policy rule type must be ACTIVITY, IP_CONNECTION, DEVICE, or VULNERABILITY")
+		return nil, fmt.Errorf("%w", ErrPolicyRuleType)
 	}
 
 	policyData, err := json.Marshal(policy)
@@ -52,7 +52,7 @@ func (c *Client) CreatePolicy(policy PolicySettings) (*PolicyId, error) {
 	}
 
 	if !apiResponse.Success {
-		return nil, fmt.Errorf("API error: response indicates failure: %+v", apiResponse)
+		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
 	}
 
 	// Return the parsed policy settings directly
@@ -62,7 +62,7 @@ func (c *Client) CreatePolicy(policy PolicySettings) (*PolicyId, error) {
 // GetPolicy fetches a policy from Armis using the policy's ID.
 func (c *Client) GetPolicy(policyId string) (*GetPolicySettings, error) {
 	if policyId == "" {
-		return nil, fmt.Errorf("policy ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrPolicyID)
 	}
 
 	// URL encode the policy ID
@@ -87,7 +87,7 @@ func (c *Client) GetPolicy(policyId string) (*GetPolicySettings, error) {
 	}
 
 	if !response.Success {
-		return nil, fmt.Errorf("API error: response indicates failure: %+v", response)
+		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, response)
 	}
 
 	return &response.Data, nil
@@ -96,11 +96,11 @@ func (c *Client) GetPolicy(policyId string) (*GetPolicySettings, error) {
 // UpdatePolicy updates a policy in Armis.
 func (c *Client) UpdatePolicy(policy PolicySettings, policyId string) (*UpdatePolicySettings, error) {
 	if policy.Name == "" {
-		return nil, fmt.Errorf("policy name cannot be empty")
+		return nil, fmt.Errorf("%w", ErrPolicyName)
 	}
 
 	if policyId == "" {
-		return nil, fmt.Errorf("policy ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrPolicyID)
 	}
 
 	policyData, err := json.Marshal(policy)
@@ -127,7 +127,7 @@ func (c *Client) UpdatePolicy(policy PolicySettings, policyId string) (*UpdatePo
 	}
 
 	if !apiResponse.Success {
-		return nil, fmt.Errorf("API error: response indicates failure: %+v", apiResponse)
+		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
 	}
 
 	// Return the parsed policy settings directly
@@ -137,7 +137,7 @@ func (c *Client) UpdatePolicy(policy PolicySettings, policyId string) (*UpdatePo
 // DeletePolicy deletes a policy from Armis.
 func (c *Client) DeletePolicy(policyId string) (bool, error) {
 	if policyId == "" {
-		return false, fmt.Errorf("policy ID cannot be empty")
+		return false, fmt.Errorf("%w", ErrPolicyID)
 	}
 
 	// URL encode the policy ID

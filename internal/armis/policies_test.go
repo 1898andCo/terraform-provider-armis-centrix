@@ -6,9 +6,10 @@ package armis
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
+
+	log "github.com/charmbracelet/log"
 )
 
 func TestCreatingPolicy(t *testing.T) {
@@ -17,7 +18,7 @@ func TestCreatingPolicy(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -47,10 +48,10 @@ func TestCreatingPolicy(t *testing.T) {
 			},
 		},
 		Rules: Rules{
-			And: []interface{}{
+			And: []any{
 				"protocol:BMS",
 				Rules{
-					Or: []interface{}{
+					Or: []any{
 						"content:(iPhone)",
 						"content:(Android)",
 					},
@@ -64,7 +65,7 @@ func TestCreatingPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error marshaling policy: %s", err)
 	}
-	fmt.Printf("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
+	log.Info("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
 
 	// Call CreatePolicy to create the policy
 	response, err := client.CreatePolicy(newPolicy)
@@ -83,7 +84,7 @@ func TestCreatingPolicy(t *testing.T) {
 		// Attempt to pretty-print the JSON for better readability
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
 			t.Log("Failed to pretty-print JSON.")
 		}
@@ -98,7 +99,7 @@ func TestCreatingTagPolicy(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -123,10 +124,10 @@ func TestCreatingTagPolicy(t *testing.T) {
 			},
 		},
 		Rules: Rules{
-			And: []interface{}{
+			And: []any{
 				"protocol:BMS",
 				Rules{
-					Or: []interface{}{
+					Or: []any{
 						"content:(iPhone)",
 						"content:(Android)",
 					},
@@ -140,7 +141,7 @@ func TestCreatingTagPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error marshaling policy: %s", err)
 	}
-	fmt.Printf("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
+	log.Info("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
 
 	// Call CreatePolicy to create the policy
 	response, err := client.CreatePolicy(newPolicy)
@@ -159,7 +160,7 @@ func TestCreatingTagPolicy(t *testing.T) {
 		// Attempt to pretty-print the JSON for better readability
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
 			t.Log("Failed to pretty-print JSON.")
 		}
@@ -174,7 +175,7 @@ func TestGettingPolicy(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -191,18 +192,18 @@ func TestGettingPolicy(t *testing.T) {
 	if response != nil {
 		responseJSON, err := json.Marshal(response)
 		if err != nil {
-			fmt.Printf("Error marshaling server response: %s\n", err)
+			log.Info("Error marshaling server response: %s\n", err)
 		}
 
 		// Attempt to pretty-print the JSON
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
-			fmt.Println("Failed to pretty-print JSON.")
+			log.Info("Failed to pretty-print JSON.")
 		}
 	} else {
-		fmt.Println("No response received from server.")
+		log.Info("No response received from server.")
 	}
 }
 
@@ -212,7 +213,7 @@ func TestUpdatingPolicy(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -242,10 +243,10 @@ func TestUpdatingPolicy(t *testing.T) {
 			},
 		},
 		Rules: Rules{
-			And: []interface{}{
+			And: []any{
 				"protocol:BMS",
 				Rules{
-					Or: []interface{}{
+					Or: []any{
 						"content:(iPhone)",
 						"content:(Android)",
 					},
@@ -259,7 +260,7 @@ func TestUpdatingPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error marshaling policy: %s", err)
 	}
-	fmt.Printf("\n=== Policy to Update ===\n%s\n", string(updatedPolicyJSON))
+	log.Info("\n=== Policy to Update ===\n%s\n", string(updatedPolicyJSON))
 
 	// Call UpdatePolicy to update the policy
 	response, err := client.UpdatePolicy(updatedPolicy, "76700")
@@ -278,7 +279,7 @@ func TestUpdatingPolicy(t *testing.T) {
 		// Attempt to pretty-print the JSON for better readability
 		var prettyResponse bytes.Buffer
 		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			fmt.Printf("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
+			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
 		} else {
 			t.Log("Failed to pretty-print JSON.")
 		}
@@ -293,7 +294,7 @@ func TestDeletingPolicy(t *testing.T) {
 		ApiUrl: os.Getenv("ARMIS_API_URL"),
 		ApiKey: os.Getenv("ARMIS_API_KEY"),
 	}
-	fmt.Printf("Initializing client with API URL: %s\n", options.ApiUrl)
+	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
 	client, err := NewClient(options)
 	if err != nil {
@@ -308,8 +309,8 @@ func TestDeletingPolicy(t *testing.T) {
 
 	// Log the response
 	if !success {
-		fmt.Printf("Failed to delete policy.")
+		log.Info("Failed to delete policy.")
 	} else {
-		fmt.Printf("Successfully deleted policy.")
+		log.Info("Successfully deleted policy.")
 	}
 }

@@ -36,7 +36,7 @@ func (c *Client) GetUsers() ([]UserSettings, error) {
 // GetUser fetches a user from Armis using the user's ID or email.
 func (c *Client) GetUser(userId string) (*UserSettings, error) {
 	if userId == "" {
-		return nil, fmt.Errorf("user ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrUserID)
 	}
 
 	// URL encode the user ID
@@ -61,7 +61,7 @@ func (c *Client) GetUser(userId string) (*UserSettings, error) {
 	}
 
 	if !response.Success {
-		return nil, fmt.Errorf("API error: response indicates failure: %+v", response)
+		return nil, fmt.Errorf("%w: %+v", ErrHTTPResponse, response)
 	}
 
 	return &response.Data, nil
@@ -70,11 +70,11 @@ func (c *Client) GetUser(userId string) (*UserSettings, error) {
 // CreateUser creates a new user in Armis.
 func (c *Client) CreateUser(user UserSettings) (*UserSettings, error) {
 	if user.Name == "" {
-		return nil, fmt.Errorf("user name cannot be empty")
+		return nil, fmt.Errorf("%w", ErrUserName)
 	}
 
 	if user.Email == "" {
-		return nil, fmt.Errorf("user email cannot be empty")
+		return nil, fmt.Errorf("%w", ErrUserEmail)
 	}
 
 	userData, err := json.Marshal(user)
@@ -98,7 +98,7 @@ func (c *Client) CreateUser(user UserSettings) (*UserSettings, error) {
 	}
 
 	if !apiResponse.Success {
-		return nil, fmt.Errorf("API error: response indicates failure: %+v", apiResponse)
+		return nil, fmt.Errorf("%w: %+v", ErrHTTPResponse, apiResponse)
 	}
 
 	// Return the parsed user settings directly
@@ -108,15 +108,15 @@ func (c *Client) CreateUser(user UserSettings) (*UserSettings, error) {
 // UpdateUser updates a user in Armis.
 func (c *Client) UpdateUser(user UserSettings, userId string) (*UserSettings, error) {
 	if user.Name == "" {
-		return nil, fmt.Errorf("user name cannot be empty")
+		return nil, fmt.Errorf("%w", ErrUserName)
 	}
 
 	if user.Email == "" {
-		return nil, fmt.Errorf("user email cannot be empty")
+		return nil, fmt.Errorf("%w", ErrUserEmail)
 	}
 
 	if userId == "" {
-		return nil, fmt.Errorf("user ID cannot be empty")
+		return nil, fmt.Errorf("%w", ErrUserID)
 	}
 
 	userData, err := json.Marshal(user)
@@ -143,7 +143,7 @@ func (c *Client) UpdateUser(user UserSettings, userId string) (*UserSettings, er
 	}
 
 	if !apiResponse.Success {
-		return nil, fmt.Errorf("API error: response indicates failure: %+v", apiResponse)
+		return nil, fmt.Errorf("%w: %+v", ErrHTTPResponse, apiResponse)
 	}
 
 	// Return the parsed user settings directly
@@ -153,7 +153,7 @@ func (c *Client) UpdateUser(user UserSettings, userId string) (*UserSettings, er
 // DeleteUser deletes a user from Armis.
 func (c *Client) DeleteUser(userId string) (bool, error) {
 	if userId == "" {
-		return false, fmt.Errorf("user ID cannot be empty")
+		return false, fmt.Errorf("%w", ErrUserID)
 	}
 
 	// URL encode the user ID

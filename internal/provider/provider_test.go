@@ -5,10 +5,8 @@ package provider_test
 
 import (
 	"os"
-	"sync"
 	"testing"
 
-	"github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 	"github.com/1898andCo/terraform-provider-armis-centrix/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -28,27 +26,4 @@ func requireEnv(t *testing.T, name string) {
 func testAccPreCheck(t *testing.T) {
 	requireEnv(t, "ARMIS_API_KEY")
 	requireEnv(t, "ARMIS_API_URL")
-}
-
-var (
-	clientInstance *armis.Client
-	clientOnce     sync.Once
-)
-
-func testClient(t *testing.T) *armis.Client {
-	clientOnce.Do(func() {
-		options := armis.Client{
-			ApiUrl:     os.Getenv("ARMIS_API_URL"),
-			ApiKey:     os.Getenv("ARMIS_API_KEY"),
-			ApiVersion: "v1",
-		}
-
-		var err error
-		clientInstance, err = armis.NewClient(options)
-		if err != nil {
-			t.Fatalf("Failed to initialize Armis client: %v", err)
-		}
-	})
-
-	return clientInstance
 }
