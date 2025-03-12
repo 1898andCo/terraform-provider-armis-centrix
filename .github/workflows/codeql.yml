@@ -52,7 +52,7 @@ jobs:
           category: "/language:${{matrix.language}}"
 
   lint-golangci:
-    name: "Lint (golangci)"
+    name: "GolangCI Lint"
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     permissions:
