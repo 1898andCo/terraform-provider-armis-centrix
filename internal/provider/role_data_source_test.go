@@ -45,7 +45,7 @@ func TestAcc_RoleDataSource(t *testing.T) {
 func testAccRoleDataSourceConfig() string {
 	return `
 		data "armis_role" "test" {
-			name = "Stakeholder"
+			name = "Admin"
 		}
 	`
 }
