@@ -144,6 +144,8 @@ issues:
         - gci
 
 output:
+  sort-results: true
   formats:
     - format: colored-line-number
+      path: stderr
 
