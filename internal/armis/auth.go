@@ -27,7 +27,7 @@ func (c *Client) Authenticate(apiKey string) error {
 	}
 
 	// Check if we already have a valid access token
-	if c.AccessToken != "" && c.AccessTokenExpiration.Before(time.Now()) {
+	if c.AccessToken != "" && time.Now().Before(c.AccessTokenExpiration) {
 		return nil
 	}
 
