@@ -1,0 +1,104 @@
+# Copyright (c) 1898 & Co.
+# SPDX-License-Identifier: Apache-2.0
+
+# https://taskfile.dev
+version: "3"
+tasks:
+  default:
+    desc: "Help menu"
+    cmds:
+      - task --list
+
+  build:
+    desc: "Build the provider binary"
+    cmds:
+      - go build -v ./...
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - terraform-provider-armis-centrix
+
+  test:
+    desc: "Run acceptance tests against the provider"
+    env:
+      TF_ACC: "true"
+      TF_LOG: "INFO"  # Change to DEBUG for deeper logging
+    cmds:
+      - go mod tidy
+      - go test ./internal/provider/... -v -timeout=30m
+
+  install-tools:
+    desc: "Install required tools"
+    cmds:
+      - go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@v0.21.0
+      - go install github.com/goreleaser/goreleaser/v2@latest
+      - go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
+    status:
+      - which tfplugindocs
+      - which goreleaser
+      - which tfproviderlint
+
+  docs:
+    desc: "Update the docs generated from description fields"
+    deps:
+      - install-tools
+    cmds:
+      - cd tools; go generate ./...
+      - sed -i.bak 's/armis Provider/Armis Centrix Provider/g' docs/index.md && rm docs/index.md.bak
+    sources:
+      - "armis/**/*.go"
+      - "provider/**/*.go"
+      - "main.go"
+      - "examples/**/*.tf"
+      - "examples/**/*.sh"
+    generates:
+      - docs/**/*.md
+
+  fmt:
+    desc: "Run gofumpt against the provider"
+    cmds:
+      - gofumpt -w .
+
+  lint:
+    desc: "Run linters against the provider"
+    deps:
+      - install-tools
+    cmds:
+      - golangci-lint run
+      - tfproviderlint -R018=false ./...
+      - cmd: |
+          BADFMT=$(gofmt -s -l .)
+          test -z "$BADFMT" || (echo -e "Invalid gofmt:\n$BADFMT"; exit 1)
+        silent: true
+      - go vet ./...
+
+  install:
+    desc: "Set up an override allowing a local version of the provider to be used"
+    cmds:
+      - cmd: |-
+          cat <<EOF > "$HOME/.terraformrc"
+          provider_installation {
+            dev_overrides {
+              "1898andCo/armis-centrix" = "$GOPATH/bin"
+            }
+            direct {}
+          }
+          EOF
+        silent: true
+      - go install .
+
+  uninstall:
+    desc: "Remove any local overrides for local development"
+    cmds:
+      - rm -f "$HOME/.terraformrc"
+
+  prep:
+    desc: "Prepare the provider"
+    deps:
+      - fmt
+      - docs
+      - install
+    cmds:
+      - go mod tidy

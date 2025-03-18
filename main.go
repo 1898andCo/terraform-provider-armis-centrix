@@ -8,7 +8,7 @@ import (
 	"flag"
 	"log"
 
-	"your-module-path/provider" // Replace with actual path
+	"github.com/1898andCo/terraform-provider-armis-centrix/internal/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/provider",
+		Address: "registry.terraform.io/1898andCo/armis-centrix",
 		Debug:   debug,
 	}
 
