@@ -4,6 +4,7 @@
 package armis
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,6 +24,7 @@ type Client struct {
 	AccessTokenExpiration time.Time
 
 	HTTPClient *http.Client
+	Ctx        context.Context
 }
 
 // NewClient returns a new Armis client and authenticates to the Armis API endpoint.
@@ -46,6 +48,7 @@ func NewClient(options Client) (*Client, error) {
 		ApiUrl:     apiUrl,
 		ApiVersion: apiVersion,
 		HTTPClient: http.DefaultClient,
+		Ctx:        context.Background(),
 	}
 
 	// Authenticate and get the access token
@@ -60,8 +63,12 @@ func NewClient(options Client) (*Client, error) {
 }
 
 // NewRequest creates a new HTTP request with the access token header.
-func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, c.ApiUrl+path, body)
+func (c *Client) newRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(
+		c.Ctx,
+		method,
+		c.ApiUrl+path,
+		body)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +82,7 @@ func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request,
 	return req, nil
 }
 
-// doRequest sends an HTTP request and handles the response.
+// doRequest is a helper function for consistently requesting data from the Armis API.
 func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
