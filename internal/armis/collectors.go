@@ -16,7 +16,7 @@ func (c *Client) GetCollectorByID(ctx context.Context, collectorId string) (*Col
 		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
 
-	// URL encide the collector ID
+	// URL encode the collector ID
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
