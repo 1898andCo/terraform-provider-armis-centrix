@@ -5,6 +5,7 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -12,8 +13,8 @@ import (
 )
 
 // GetRoles fetches all roles from the API.
-func (c *Client) GetRoles() ([]RoleSettings, error) {
-	req, err := c.newRequest("GET", fmt.Sprintf("/api/%s/roles/", c.ApiVersion), nil)
+func (c *Client) GetRoles(ctx context.Context) ([]RoleSettings, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/roles/", c.ApiVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetRoles: %w", err)
 	}
@@ -32,12 +33,12 @@ func (c *Client) GetRoles() ([]RoleSettings, error) {
 }
 
 // GetRoleByName fetches a specific role by name.
-func (c *Client) GetRoleByName(name string) (*RoleSettings, error) {
+func (c *Client) GetRoleByName(ctx context.Context, name string) (*RoleSettings, error) {
 	if name == "" {
 		return nil, fmt.Errorf("%w", ErrRoleName)
 	}
 
-	roles, err := c.GetRoles()
+	roles, err := c.GetRoles(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch roles to find role %q: %w", name, err)
 	}
@@ -52,12 +53,12 @@ func (c *Client) GetRoleByName(name string) (*RoleSettings, error) {
 }
 
 // GetRoleByID fetches a specific role by ID.
-func (c *Client) GetRoleByID(id string) (*RoleSettings, error) {
+func (c *Client) GetRoleByID(ctx context.Context, id string) (*RoleSettings, error) {
 	if id == "" {
 		return nil, fmt.Errorf("%w", ErrRoleID)
 	}
 
-	roles, err := c.GetRoles()
+	roles, err := c.GetRoles(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch roles to find role ID %q: %w", id, err)
 	}
@@ -77,13 +78,13 @@ func (c *Client) GetRoleByID(id string) (*RoleSettings, error) {
 }
 
 // CreateRole creates a new role in the API.
-func (c *Client) CreateRole(role RoleSettings) (bool, error) {
+func (c *Client) CreateRole(ctx context.Context, role RoleSettings) (bool, error) {
 	roleData, err := json.Marshal(role)
 	if err != nil {
 		return false, fmt.Errorf("failed to marshal role data: %w", err)
 	}
 
-	req, err := c.newRequest("POST", fmt.Sprintf("/api/%s/roles/", c.ApiVersion), bytes.NewReader(roleData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/roles/", c.ApiVersion), bytes.NewReader(roleData))
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for CreateRole: %w", err)
 	}
@@ -102,7 +103,7 @@ func (c *Client) CreateRole(role RoleSettings) (bool, error) {
 }
 
 // UpdateRole updates an existing role in the API.
-func (c *Client) UpdateRole(role RoleSettings, id string) (*RoleSettings, error) {
+func (c *Client) UpdateRole(ctx context.Context, role RoleSettings, id string) (*RoleSettings, error) {
 	if id == "" {
 		return nil, fmt.Errorf("%w", ErrRoleID)
 	}
@@ -114,7 +115,7 @@ func (c *Client) UpdateRole(role RoleSettings, id string) (*RoleSettings, error)
 
 	encodedRoleID := url.QueryEscape(id)
 
-	req, err := c.newRequest("PATCH", fmt.Sprintf("/api/%s/roles/%s/", c.ApiVersion, encodedRoleID), bytes.NewReader(roleData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/roles/%s/", c.ApiVersion, encodedRoleID), bytes.NewReader(roleData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateRole: %w", err)
 	}
@@ -133,14 +134,14 @@ func (c *Client) UpdateRole(role RoleSettings, id string) (*RoleSettings, error)
 }
 
 // DeleteRole deletes a role by ID.
-func (c *Client) DeleteRole(id string) (bool, error) {
+func (c *Client) DeleteRole(ctx context.Context, id string) (bool, error) {
 	if id == "" {
 		return false, fmt.Errorf("%w", ErrRoleID)
 	}
 
 	encodedRoleID := url.QueryEscape(id)
 
-	req, err := c.newRequest("DELETE", fmt.Sprintf("/api/%s/roles/%s/", c.ApiVersion, encodedRoleID), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/roles/%s/", c.ApiVersion, encodedRoleID), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteRole: %w", err)
 	}

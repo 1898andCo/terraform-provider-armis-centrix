@@ -5,6 +5,7 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -31,7 +32,8 @@ func TestCreatingCollector(t *testing.T) {
 		DeploymentType: "OVA",
 	}
 
-	response, err := client.CreateCollector(collector)
+	ctx := context.Background()
+	response, err := client.CreateCollector(ctx, collector)
 	if err != nil {
 		t.Errorf("Error creating collector: %s", err)
 	}
@@ -69,7 +71,8 @@ func TestGettingCollectors(t *testing.T) {
 	}
 
 	// Attempt to get all collectors
-	response, err := client.GetCollectors()
+	ctx := context.Background()
+	response, err := client.GetCollectors(ctx)
 	if err != nil {
 		t.Errorf("Error getting sites: %s", err)
 	}
@@ -107,7 +110,8 @@ func TestGettingCollectorByID(t *testing.T) {
 	}
 
 	// Attempt to get all collectors
-	response, err := client.GetCollectorByID("8153")
+	ctx := context.Background()
+	response, err := client.GetCollectorByID(ctx, "8153")
 	if err != nil {
 		t.Errorf("Error getting sites: %s", err)
 	}
@@ -150,7 +154,8 @@ func TestUpdatingCollector(t *testing.T) {
 		DeploymentType: "OVA",
 	}
 
-	response, err := client.UpdateCollector("8158", collector)
+	ctx := context.Background()
+	response, err := client.UpdateCollector(ctx, "8158", collector)
 	if err != nil {
 		t.Errorf("Error updating collector: %s", err)
 	}
@@ -188,7 +193,8 @@ func TestDeletingCollector(t *testing.T) {
 	}
 
 	// Attempt to delete test user
-	success, err := client.DeleteCollector("8158")
+	ctx := context.Background()
+	success, err := client.DeleteCollector(ctx, "8158")
 	if err != nil {
 		t.Errorf("Error deleting user: %s", err)
 	}

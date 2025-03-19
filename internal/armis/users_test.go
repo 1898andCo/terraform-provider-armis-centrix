@@ -5,6 +5,7 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -26,7 +27,8 @@ func TestGettingUsers(t *testing.T) {
 	}
 
 	// Attempt to get all users
-	response, err := client.GetUsers()
+	ctx := context.Background()
+	response, err := client.GetUsers(ctx)
 	if err != nil {
 		t.Errorf("Error getting users: %s", err)
 	}
@@ -77,7 +79,8 @@ func TestCreatingUser(t *testing.T) {
 	}
 
 	// Call CreateUser to create the user
-	response, err := client.CreateUser(newUser)
+	ctx := context.Background()
+	response, err := client.CreateUser(ctx, newUser)
 	if err != nil {
 		t.Errorf("Error creating user: %s", err)
 		return
@@ -123,7 +126,8 @@ func TestGettingUser(t *testing.T) {
 	}
 
 	// Attempt to get a user by email
-	response, err := client.GetUser("test.user@1898andco.io")
+	ctx := context.Background()
+	response, err := client.GetUser(ctx, "test.user@1898andco.io")
 	if err != nil {
 		t.Errorf("Error getting user: %s", err)
 	}
@@ -176,7 +180,8 @@ func TestUpdatingUser(t *testing.T) {
 	}
 
 	// Update the user
-	response, err := client.UpdateUser(updatedUser, "test.user@1898andco.io")
+	ctx := context.Background()
+	response, err := client.UpdateUser(ctx, updatedUser, "test.user@1898andco.io")
 	if err != nil {
 		t.Errorf("Error updating user: %s", err)
 		return
@@ -225,7 +230,8 @@ func TestDeletingUsers(t *testing.T) {
 	}
 
 	// Attempt to delete test user
-	success, err := client.DeleteUser("test.user@1898andco.io")
+	ctx := context.Background()
+	success, err := client.DeleteUser(ctx, "test.user@1898andco.io")
 	if err != nil {
 		t.Errorf("Error deleting user: %s", err)
 	}

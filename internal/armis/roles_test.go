@@ -5,6 +5,7 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"strconv"
@@ -357,7 +358,8 @@ func TestCreatingRole(t *testing.T) {
 	}
 
 	// Attempt to create the role
-	response, err := client.CreateRole(role)
+	ctx := context.Background()
+	response, err := client.CreateRole(ctx, role)
 	if err != nil {
 		t.Errorf("Error creating role: %s", err)
 	}
@@ -724,7 +726,8 @@ func TestUpdatingRole(t *testing.T) {
 	}
 
 	// Attempt to get a role by name
-	rolesName, err := client.GetRoleByName("Test Role")
+	ctx := context.Background()
+	rolesName, err := client.GetRoleByName(ctx, "Test Role")
 	if err != nil {
 		t.Errorf("Error getting role: %s", err)
 	}
@@ -732,7 +735,7 @@ func TestUpdatingRole(t *testing.T) {
 	roleId := strconv.Itoa(rolesName.ID)
 
 	// Attempt to update the role
-	response, err := client.UpdateRole(role, roleId)
+	response, err := client.UpdateRole(ctx, role, roleId)
 	if err != nil {
 		t.Errorf("Error updating role: %s", err)
 	}
@@ -769,7 +772,8 @@ func TestGettingRoles(t *testing.T) {
 	}
 
 	// Attempt to get all roles
-	response, err := client.GetRoles()
+	ctx := context.Background()
+	response, err := client.GetRoles(ctx)
 	if err != nil {
 		t.Errorf("Error getting roles: %s", err)
 	}
@@ -807,7 +811,8 @@ func TestGettingRoleByName(t *testing.T) {
 	}
 
 	// Attempt to get a role
-	response, err := client.GetRoleByName("Test Role")
+	ctx := context.Background()
+	response, err := client.GetRoleByName(ctx, "Test Role")
 	if err != nil {
 		t.Errorf("Error getting role: %s", err)
 	}
@@ -845,7 +850,8 @@ func TestGettingRoleByID(t *testing.T) {
 	}
 
 	// Attempt to get a role
-	response, err := client.GetRoleByID("10")
+	ctx := context.Background()
+	response, err := client.GetRoleByID(ctx, "10")
 	if err != nil {
 		t.Errorf("Error getting role: %s", err)
 	}
@@ -883,7 +889,8 @@ func TestDeletingRole(t *testing.T) {
 	}
 
 	// Attempt to get a role by name
-	role, err := client.GetRoleByName("Test Role")
+	ctx := context.Background()
+	role, err := client.GetRoleByName(ctx, "Test Role")
 	if err != nil {
 		t.Errorf("Error getting role: %s", err)
 	}
@@ -891,7 +898,7 @@ func TestDeletingRole(t *testing.T) {
 	roleId := strconv.Itoa(role.ID)
 
 	// Attempt to delete a role
-	response, err := client.DeleteRole(roleId)
+	response, err := client.DeleteRole(ctx, roleId)
 	if err != nil {
 		t.Errorf("Error deleting role: %s", err)
 	}
