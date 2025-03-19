@@ -56,6 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     permissions:
+      actions: read
       # Required: allow read access to the content for analysis.
       contents: read
       # allow read access to pull request. Use with `only-new-issues` option.
