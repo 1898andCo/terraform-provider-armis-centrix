@@ -83,5 +83,5 @@ jobs:
           TF_ACC: "1"
           ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
           ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
-        run: go test -v -parallel=1 -cover ./internal/provider/
+        run: go test -v -cover ./internal/provider/
         timeout-minutes: 10
