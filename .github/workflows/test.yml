@@ -59,6 +59,9 @@ jobs:
     name: Terraform Provider Acceptance Tests
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-${{ github.ref }}
+      cancel-in-progress: false
     timeout-minutes: 15
     strategy:
       fail-fast: false
