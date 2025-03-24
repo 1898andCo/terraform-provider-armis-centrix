@@ -172,7 +172,7 @@ type collectorModel struct {
 func (d *collectorsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state collectorsDataSourceModel
 
-	collectors, err := d.client.GetCollectors()
+	collectors, err := d.client.GetCollectors(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Armis Collectors",

@@ -5,15 +5,16 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
 )
 
 // GetUsers fetches all users from Armis.
-func (c *Client) GetUsers() ([]UserSettings, error) {
+func (c *Client) GetUsers(ctx context.Context) ([]UserSettings, error) {
 	// Create a new request
-	req, err := c.newRequest("GET", fmt.Sprintf("/api/%s/users/", c.ApiVersion), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/", c.ApiVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetUsers: %w", err)
 	}
@@ -34,7 +35,7 @@ func (c *Client) GetUsers() ([]UserSettings, error) {
 }
 
 // GetUser fetches a user from Armis using the user's ID or email.
-func (c *Client) GetUser(userId string) (*UserSettings, error) {
+func (c *Client) GetUser(ctx context.Context, userId string) (*UserSettings, error) {
 	if userId == "" {
 		return nil, fmt.Errorf("%w", ErrUserID)
 	}
@@ -43,7 +44,7 @@ func (c *Client) GetUser(userId string) (*UserSettings, error) {
 	encodedUserId := url.QueryEscape(userId)
 
 	// Create a new request
-	req, err := c.newRequest("GET", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Get User: %w", err)
 	}
@@ -68,7 +69,7 @@ func (c *Client) GetUser(userId string) (*UserSettings, error) {
 }
 
 // CreateUser creates a new user in Armis.
-func (c *Client) CreateUser(user UserSettings) (*UserSettings, error) {
+func (c *Client) CreateUser(ctx context.Context, user UserSettings) (*UserSettings, error) {
 	if user.Name == "" {
 		return nil, fmt.Errorf("%w", ErrUserName)
 	}
@@ -82,7 +83,7 @@ func (c *Client) CreateUser(user UserSettings) (*UserSettings, error) {
 		return nil, fmt.Errorf("failed to marshal user data: %w", err)
 	}
 
-	req, err := c.newRequest("POST", fmt.Sprintf("/api/%s/users/", c.ApiVersion), bytes.NewReader(userData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/users/", c.ApiVersion), bytes.NewReader(userData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for CreateUser: %w", err)
 	}
@@ -106,7 +107,7 @@ func (c *Client) CreateUser(user UserSettings) (*UserSettings, error) {
 }
 
 // UpdateUser updates a user in Armis.
-func (c *Client) UpdateUser(user UserSettings, userId string) (*UserSettings, error) {
+func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId string) (*UserSettings, error) {
 	if user.Name == "" {
 		return nil, fmt.Errorf("%w", ErrUserName)
 	}
@@ -127,7 +128,7 @@ func (c *Client) UpdateUser(user UserSettings, userId string) (*UserSettings, er
 	// URL encode the user ID
 	encodedUserId := url.QueryEscape(userId)
 
-	req, err := c.newRequest("PATCH", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), bytes.NewReader(userData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), bytes.NewReader(userData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateUser: %w", err)
 	}
@@ -151,7 +152,7 @@ func (c *Client) UpdateUser(user UserSettings, userId string) (*UserSettings, er
 }
 
 // DeleteUser deletes a user from Armis.
-func (c *Client) DeleteUser(userId string) (bool, error) {
+func (c *Client) DeleteUser(ctx context.Context, userId string) (bool, error) {
 	if userId == "" {
 		return false, fmt.Errorf("%w", ErrUserID)
 	}
@@ -160,7 +161,7 @@ func (c *Client) DeleteUser(userId string) (bool, error) {
 	encodedUserId := url.QueryEscape(userId)
 
 	// Create a new request
-	req, err := c.newRequest("DELETE", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteUser: %w", err)
 	}

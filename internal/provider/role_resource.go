@@ -490,7 +490,7 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	role := mapPlanToRoleSettings(plan)
 
 	// Call API to create the role
-	success, err := r.client.CreateRole(role)
+	success, err := r.client.CreateRole(ctx, role)
 	if err != nil || !success {
 		resp.Diagnostics.AddError(
 			"Error creating role",
@@ -500,7 +500,7 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Fetch the created role to get its ID and other attributes
-	createdRole, err := r.client.GetRoleByName(plan.Name.ValueString())
+	createdRole, err := r.client.GetRoleByName(ctx, plan.Name.ValueString())
 	if err != nil || createdRole == nil {
 		resp.Diagnostics.AddError(
 			"Error fetching created role",
@@ -530,7 +530,7 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	// Fetch the role by ID
 	tflog.Debug(ctx, "Fetching role by ID", map[string]any{"role_id": state.ID.ValueString()})
-	role, err := r.client.GetRoleByID(state.ID.ValueString())
+	role, err := r.client.GetRoleByID(ctx, state.ID.ValueString())
 	if err != nil || role == nil {
 		resp.Diagnostics.AddError(
 			"Error reading role",
@@ -580,7 +580,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Update the role in the API
 	tflog.Debug(ctx, "Sending update request to Armis API", map[string]any{"role_id": state.ID.ValueString()})
-	_, err := r.client.UpdateRole(role, state.ID.ValueString())
+	_, err := r.client.UpdateRole(ctx, role, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Role",
@@ -590,7 +590,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Fetch the updated role details
-	updatedRole, err := r.client.GetRoleByID(state.ID.ValueString())
+	updatedRole, err := r.client.GetRoleByID(ctx, state.ID.ValueString())
 	if err != nil || updatedRole == nil {
 		resp.Diagnostics.AddError(
 			"Error Fetching Updated Role",
@@ -621,7 +621,7 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	// Delete the role in the API
 	tflog.Debug(ctx, "Deleting role in Armis", map[string]any{"role_id": state.ID.ValueString()})
-	success, err := r.client.DeleteRole(state.ID.ValueString())
+	success, err := r.client.DeleteRole(ctx, state.ID.ValueString())
 	if err != nil || !success {
 		resp.Diagnostics.AddError(
 			"Error deleting role",

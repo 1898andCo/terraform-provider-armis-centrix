@@ -4,6 +4,7 @@
 package armis
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,25 +22,22 @@ type Client struct {
 	ApiVersion            string
 	AccessToken           string
 	AccessTokenExpiration time.Time
-
-	HTTPClient *http.Client
+	HTTPClient            *http.Client
 }
 
-// NewClient returns a new Armis client and authenticates to the Armis API endpoint.
+// NewClient returns a new Armis client and authenticates to the Armis API.
 func NewClient(options Client) (*Client, error) {
 	apiUrl := armisApiUrl
 	apiVersion := armisApiVersion
 
-	if apiUrl != "" {
+	if options.ApiUrl != "" {
 		apiUrl = options.ApiUrl
 	}
-
-	if options.ApiKey == "" {
-		return nil, fmt.Errorf("%w", ErrGetKey)
-	}
-
 	if options.ApiVersion != "" {
 		apiVersion = options.ApiVersion
+	}
+	if options.ApiKey == "" {
+		return nil, fmt.Errorf("%w", ErrGetKey)
 	}
 
 	client := &Client{
@@ -59,9 +57,9 @@ func NewClient(options Client) (*Client, error) {
 	return client, nil
 }
 
-// NewRequest creates a new HTTP request with the access token header.
-func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, c.ApiUrl+path, body)
+// newRequest creates a new HTTP request with the access token header.
+func (c *Client) newRequest(ctx context.Context, method, path string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, method, c.ApiUrl+path, body)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +73,7 @@ func (c *Client) newRequest(method, path string, body io.Reader) (*http.Request,
 	return req, nil
 }
 
-// doRequest sends an HTTP request and handles the response.
+// doRequest performs an HTTP request and reads the response.
 func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {

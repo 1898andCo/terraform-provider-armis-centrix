@@ -190,7 +190,7 @@ func (d *usersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	if !config.Email.IsNull() {
 		// Fetch a specific user by email
-		user, err := d.client.GetUser(config.Email.ValueString())
+		user, err := d.client.GetUser(ctx, config.Email.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unable to Read Armis User",
@@ -231,7 +231,7 @@ func (d *usersDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		users = append(users, userState)
 	} else {
 		// Fetch all users
-		allUsers, err := d.client.GetUsers()
+		allUsers, err := d.client.GetUsers(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Unable to Read Armis Users",

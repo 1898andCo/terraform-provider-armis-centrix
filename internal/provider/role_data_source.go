@@ -199,7 +199,7 @@ func (d *rolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	role, err := d.client.GetRoleByName(config.Name.ValueString())
+	role, err := d.client.GetRoleByName(ctx, config.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Armis Role",

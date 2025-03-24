@@ -5,6 +5,7 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -26,7 +27,8 @@ func TestGettingSites(t *testing.T) {
 	}
 
 	// Attempt to get all sites
-	response, err := client.GetSites()
+	ctx := context.Background()
+	response, err := client.GetSites(ctx)
 	if err != nil {
 		t.Errorf("Error getting sites: %s", err)
 	}
