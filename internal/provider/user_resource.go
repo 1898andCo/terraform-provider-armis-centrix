@@ -167,7 +167,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Create the user via the client
-	newUser, err := r.client.CreateUser(user)
+	newUser, err := r.client.CreateUser(ctx, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating user",
@@ -203,7 +203,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	// Get refreshed user value from Armis
-	user, err := r.client.GetUser(state.ID.ValueString())
+	user, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Armis User",
@@ -283,7 +283,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Update existing user
 	// and then fetch the updated user from the API.
-	_, err := r.client.UpdateUser(user, state.ID.ValueString())
+	_, err := r.client.UpdateUser(ctx, user, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Armis user",
@@ -294,7 +294,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Fetch updated user from UpdateUser as GetUser items are not
 	// populated.
-	updatedUser, err := r.client.GetUser(state.ID.ValueString())
+	updatedUser, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Armis User",
@@ -330,7 +330,7 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	// Delete existing order
-	success, err := r.client.DeleteUser(state.ID.ValueString())
+	success, err := r.client.DeleteUser(ctx, state.ID.ValueString())
 	if err != nil || !success {
 		resp.Diagnostics.AddError(
 			"Error Deleting Armis user",

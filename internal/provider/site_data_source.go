@@ -121,7 +121,7 @@ type sitesModel struct {
 func (d *sitesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state sitesDataSourceModel
 
-	sites, err := d.client.GetSites()
+	sites, err := d.client.GetSites(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Read Armis Sites",

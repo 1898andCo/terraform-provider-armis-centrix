@@ -5,6 +5,7 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -68,7 +69,8 @@ func TestCreatingPolicy(t *testing.T) {
 	log.Info("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
 
 	// Call CreatePolicy to create the policy
-	response, err := client.CreatePolicy(newPolicy)
+	ctx := context.Background()
+	response, err := client.CreatePolicy(ctx, newPolicy)
 	if err != nil {
 		t.Errorf("Error creating policy: %s", err)
 		return
@@ -144,7 +146,8 @@ func TestCreatingTagPolicy(t *testing.T) {
 	log.Info("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
 
 	// Call CreatePolicy to create the policy
-	response, err := client.CreatePolicy(newPolicy)
+	ctx := context.Background()
+	response, err := client.CreatePolicy(ctx, newPolicy)
 	if err != nil {
 		t.Errorf("Error creating policy: %s", err)
 		return
@@ -183,7 +186,8 @@ func TestGettingPolicy(t *testing.T) {
 	}
 
 	// Attempt to get policy
-	response, err := client.GetPolicy("76884")
+	ctx := context.Background()
+	response, err := client.GetPolicy(ctx, "76884")
 	if err != nil {
 		t.Errorf("Error getting policy: %s", err)
 	}
@@ -263,7 +267,8 @@ func TestUpdatingPolicy(t *testing.T) {
 	log.Info("\n=== Policy to Update ===\n%s\n", string(updatedPolicyJSON))
 
 	// Call UpdatePolicy to update the policy
-	response, err := client.UpdatePolicy(updatedPolicy, "76700")
+	ctx := context.Background()
+	response, err := client.UpdatePolicy(ctx, updatedPolicy, "76700")
 	if err != nil {
 		t.Errorf("Error updating policy: %s", err)
 		return
@@ -302,7 +307,8 @@ func TestDeletingPolicy(t *testing.T) {
 	}
 
 	// Attempt to delete test policy
-	success, err := client.DeletePolicy("76700")
+	ctx := context.Background()
+	success, err := client.DeletePolicy(ctx, "76700")
 	if err != nil {
 		t.Errorf("Error deleting policy: %s", err)
 	}

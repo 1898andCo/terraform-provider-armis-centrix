@@ -129,7 +129,7 @@ func (r *collectorResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	// Create the collector via the client
-	newCollector, err := r.client.CreateCollector(collector)
+	newCollector, err := r.client.CreateCollector(ctx, collector)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating collector",
@@ -162,7 +162,7 @@ func (r *collectorResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	// Get refreshed collector value from Armis
-	collector, err := r.client.GetCollectorByID(state.ID.ValueString())
+	collector, err := r.client.GetCollectorByID(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Armis Collector",
@@ -225,7 +225,7 @@ func (r *collectorResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Update existing collector
 	// and then fetch the updated collector from the API.
-	_, err := r.client.UpdateCollector(state.ID.ValueString(), collector)
+	_, err := r.client.UpdateCollector(ctx, state.ID.ValueString(), collector)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Updating Armis collector",
@@ -236,7 +236,7 @@ func (r *collectorResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Fetch updated collector from the API to ensure the state is fully
 	// populated.
-	updatedCollector, err := r.client.GetCollectorByID(state.ID.ValueString())
+	updatedCollector, err := r.client.GetCollectorByID(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error Reading Armis Collector",
@@ -271,7 +271,7 @@ func (r *collectorResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	// Delete existing order
-	success, err := r.client.DeleteCollector(state.ID.ValueString())
+	success, err := r.client.DeleteCollector(ctx, state.ID.ValueString())
 	if err != nil || !success {
 		resp.Diagnostics.AddError(
 			"Error Deleting Armis collector",

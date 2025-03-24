@@ -5,21 +5,22 @@ package armis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
 )
 
-func (c *Client) GetCollectorByID(collectorId string) (*CollectorSettings, error) {
+func (c *Client) GetCollectorByID(ctx context.Context, collectorId string) (*CollectorSettings, error) {
 	if collectorId == "" {
 		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
 
-	// URL encide the collector ID
+	// URL encode the collector ID
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
-	req, err := c.newRequest("GET", fmt.Sprintf("/api/%s/collectors/%s/", c.ApiVersion, encodedCollectorId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/%s/", c.ApiVersion, encodedCollectorId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetCollector: %w", err)
 	}
@@ -39,9 +40,9 @@ func (c *Client) GetCollectorByID(collectorId string) (*CollectorSettings, error
 	return &response.Data, nil
 }
 
-func (c *Client) GetCollectors() ([]CollectorSettings, error) {
+func (c *Client) GetCollectors(ctx context.Context) ([]CollectorSettings, error) {
 	// Create a new request
-	req, err := c.newRequest("GET", fmt.Sprintf("/api/%s/collectors/", c.ApiVersion), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/", c.ApiVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetCollectors: %w", err)
 	}
@@ -61,7 +62,7 @@ func (c *Client) GetCollectors() ([]CollectorSettings, error) {
 	return response.Data.Collectors, nil
 }
 
-func (c *Client) CreateCollector(collector CreateCollectorSettings) (*NewCollectorSettings, error) {
+func (c *Client) CreateCollector(ctx context.Context, collector CreateCollectorSettings) (*NewCollectorSettings, error) {
 	if collector.Name == "" {
 		return nil, fmt.Errorf("%w", ErrCollectorName)
 	}
@@ -76,7 +77,7 @@ func (c *Client) CreateCollector(collector CreateCollectorSettings) (*NewCollect
 	}
 
 	// Create a new request
-	req, err := c.newRequest("POST", fmt.Sprintf("/api/%s/collectors/", c.ApiVersion), bytes.NewBuffer(collectorData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/collectors/", c.ApiVersion), bytes.NewBuffer(collectorData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for CreateCollector: %w", err)
 	}
@@ -96,7 +97,7 @@ func (c *Client) CreateCollector(collector CreateCollectorSettings) (*NewCollect
 	return &response.Data, nil
 }
 
-func (c *Client) UpdateCollector(collectorId string, collector UpdateCollectorSettings) (*CollectorSettings, error) {
+func (c *Client) UpdateCollector(ctx context.Context, collectorId string, collector UpdateCollectorSettings) (*CollectorSettings, error) {
 	if collectorId == "" {
 		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
@@ -118,7 +119,7 @@ func (c *Client) UpdateCollector(collectorId string, collector UpdateCollectorSe
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
-	req, err := c.newRequest("PATCH", fmt.Sprintf("/api/%s/collectors/%s/", c.ApiVersion, encodedCollectorId), bytes.NewBuffer(collectorData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/collectors/%s/", c.ApiVersion, encodedCollectorId), bytes.NewBuffer(collectorData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateCollector: %w", err)
 	}
@@ -138,7 +139,7 @@ func (c *Client) UpdateCollector(collectorId string, collector UpdateCollectorSe
 	return &response.Data, nil
 }
 
-func (c *Client) DeleteCollector(collectorId string) (bool, error) {
+func (c *Client) DeleteCollector(ctx context.Context, collectorId string) (bool, error) {
 	if collectorId == "" {
 		return false, fmt.Errorf("%w", ErrCollectorID)
 	}
@@ -147,7 +148,7 @@ func (c *Client) DeleteCollector(collectorId string) (bool, error) {
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
-	req, err := c.newRequest("DELETE", fmt.Sprintf("/api/%s/collectors/%s/", c.ApiVersion, encodedCollectorId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/collectors/%s/", c.ApiVersion, encodedCollectorId), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteCollector: %w", err)
 	}

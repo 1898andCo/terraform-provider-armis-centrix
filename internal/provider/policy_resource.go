@@ -287,7 +287,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	newPolicy, err := r.client.CreatePolicy(policy)
+	newPolicy, err := r.client.CreatePolicy(ctx, policy)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating policy", fmt.Sprintf("API error: %v", err))
 		return
@@ -305,7 +305,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	policy, err := r.client.GetPolicy(state.ID.ValueString())
+	policy, err := r.client.GetPolicy(ctx, state.ID.ValueString())
 	if err != nil {
 		// Handle 404 Not Found by removing resource from state
 		if strings.Contains(err.Error(), "status: 404") {
@@ -351,7 +351,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	_, err := r.client.UpdatePolicy(policy, state.ID.ValueString())
+	_, err := r.client.UpdatePolicy(ctx, policy, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating policy", fmt.Sprintf("API error: %v", err))
 		return
@@ -369,7 +369,7 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	if success, err := r.client.DeletePolicy(state.ID.ValueString()); err != nil || !success {
+	if success, err := r.client.DeletePolicy(ctx, state.ID.ValueString()); err != nil || !success {
 		resp.Diagnostics.AddError("Error deleting policy", err.Error())
 	}
 }
