@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
@@ -205,18 +206,27 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	// Get refreshed user value from Armis
 	user, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
+		// Handle 404 Not Found by removing resource from state
+		if strings.Contains(err.Error(), "Status Code: 404") {
+			tflog.Warn(ctx, "User not found, remvoving from state", map[string]any{
+				"user_id": state.ID.ValueString(),
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Error Reading Armis User",
-			"Could not read Armis user ID "+state.ID.ValueString()+": "+err.Error(),
+			fmt.Sprintf("Failed to fetch user: %v", err),
 		)
 		return
 	}
 
 	if user == nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Armis User",
-			"Could not read Armis user ID "+state.ID.ValueString()+": User not found",
-		)
+		resp.State.RemoveResource(ctx)
+		tflog.Warn(ctx, "User not found, removing from state", map[string]any{
+			"user_id": state.ID.ValueString(),
+		})
 		return
 	}
 
