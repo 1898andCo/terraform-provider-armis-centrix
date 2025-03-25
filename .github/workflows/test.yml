@@ -8,8 +8,8 @@ on:
     paths-ignore:
       - 'README.md'
   push:
-    paths-ignore:
-      - 'README.md'
+    branches:
+      - main
 
 permissions:
   contents: read
