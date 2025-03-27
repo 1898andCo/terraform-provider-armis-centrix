@@ -61,7 +61,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     concurrency:
-      group: test-${{ github.ref }}
+      group: test-${{ github.run_id }}
       cancel-in-progress: false
     timeout-minutes: 15
     strategy:
