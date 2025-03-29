@@ -14,7 +14,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Ubuntu, Common]
     timeout-minutes: 360
     permissions:
       actions: read
@@ -53,7 +53,7 @@ jobs:
 
   lint-golangci:
     name: "GolangCI Lint"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Ubuntu, Common]
     if: github.event_name == 'pull_request'
     permissions:
       actions: read
