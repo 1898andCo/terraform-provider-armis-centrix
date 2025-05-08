@@ -18,7 +18,7 @@ func TestAcc_PolicyResource(t *testing.T) {
 			{
 				Config: testAccPolicyResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "BMS Security Alert Policy"),
+					resource.TestCheckResourceAttr(resourceName, "name", "Test Security Alert Policy"),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is an example security policy with all options."),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "ACTIVITY"),
@@ -27,7 +27,7 @@ func TestAcc_PolicyResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mitre_attack_labels.1", "Enterprise.TA0009.T1056.004"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.type", "alert"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.params.severity", "high"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.params.title", "BMS Security Alert"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.params.title", "Test Security Alert"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.params.type", "Security - Threat"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.params.consolidation.amount", "2"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.params.consolidation.unit", "Hours"),
@@ -41,7 +41,7 @@ func TestAcc_PolicyResource(t *testing.T) {
 func testAccPolicyResourceConfig() string {
 	return `
 resource "armis_policy" "test" {
-  name                = "BMS Security Alert Policy"
+  name                = "Test Security Alert Policy"
   description         = "This is an example security policy with all options."
   enabled             = true
   rule_type           = "ACTIVITY"
@@ -53,7 +53,7 @@ resource "armis_policy" "test" {
       type = "alert"
       params = {
         severity = "high"
-        title    = "BMS Security Alert"
+        title    = "Test Security Alert"
         type     = "Security - Threat"
         consolidation = {
           amount = 2

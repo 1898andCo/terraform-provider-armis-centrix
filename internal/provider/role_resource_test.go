@@ -18,7 +18,7 @@ func TestAcc_RoleResource(t *testing.T) {
 			{
 				Config: testAccRoleResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "Test"),
+					resource.TestCheckResourceAttr(resourceName, "name", "Test Role"),
 
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.all", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.behavioral.all", "false"),
@@ -46,7 +46,7 @@ func TestAcc_RoleResource(t *testing.T) {
 func testAccRoleResourceConfig() string {
 	return `
 resource "armis_role" "test" {
-  name = "Test"
+  name = "Test Role"
 
   permissions = {
     advanced_permissions = {
