@@ -73,10 +73,10 @@ jobs:
           fetch-depth: 0
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         id: golangci
         with:
-          version: v1.64
+          version: 2.1.2
           only-new-issues: true # Shows only issues introduced in the PR
           # Not all line numbers in diff may match the linter's line outputs
           # See: https://github.com/golangci/golangci-lint/issues/4376#issuecomment-1938874827
