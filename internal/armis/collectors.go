@@ -20,7 +20,7 @@ func (c *Client) GetCollectorByID(ctx context.Context, collectorId string) (*Col
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/%s/", c.APIVersion, encodedCollectorId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetCollector: %w", err)
 	}
@@ -42,7 +42,7 @@ func (c *Client) GetCollectorByID(ctx context.Context, collectorId string) (*Col
 
 func (c *Client) GetCollectors(ctx context.Context) ([]CollectorSettings, error) {
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/", c.APIVersion), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/", c.apiVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetCollectors: %w", err)
 	}
@@ -77,7 +77,7 @@ func (c *Client) CreateCollector(ctx context.Context, collector CreateCollectorS
 	}
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/collectors/", c.APIVersion), bytes.NewBuffer(collectorData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/collectors/", c.apiVersion), bytes.NewBuffer(collectorData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for CreateCollector: %w", err)
 	}
@@ -119,7 +119,7 @@ func (c *Client) UpdateCollector(ctx context.Context, collectorId string, collec
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/collectors/%s/", c.APIVersion, encodedCollectorId), bytes.NewBuffer(collectorData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorId), bytes.NewBuffer(collectorData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateCollector: %w", err)
 	}
@@ -148,7 +148,7 @@ func (c *Client) DeleteCollector(ctx context.Context, collectorId string) (bool,
 	encodedCollectorId := url.QueryEscape(collectorId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/collectors/%s/", c.APIVersion, encodedCollectorId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorId), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteCollector: %w", err)
 	}

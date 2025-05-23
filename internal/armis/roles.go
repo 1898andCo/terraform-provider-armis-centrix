@@ -14,7 +14,7 @@ import (
 
 // GetRoles fetches all roles from the API.
 func (c *Client) GetRoles(ctx context.Context) ([]RoleSettings, error) {
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/roles/", c.APIVersion), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/roles/", c.apiVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetRoles: %w", err)
 	}
@@ -84,7 +84,7 @@ func (c *Client) CreateRole(ctx context.Context, role RoleSettings) (bool, error
 		return false, fmt.Errorf("failed to marshal role data: %w", err)
 	}
 
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/roles/", c.APIVersion), bytes.NewReader(roleData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/roles/", c.apiVersion), bytes.NewReader(roleData))
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for CreateRole: %w", err)
 	}
@@ -115,7 +115,7 @@ func (c *Client) UpdateRole(ctx context.Context, role RoleSettings, id string) (
 
 	encodedRoleID := url.QueryEscape(id)
 
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/roles/%s/", c.APIVersion, encodedRoleID), bytes.NewReader(roleData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/roles/%s/", c.apiVersion, encodedRoleID), bytes.NewReader(roleData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateRole: %w", err)
 	}
@@ -141,7 +141,7 @@ func (c *Client) DeleteRole(ctx context.Context, id string) (bool, error) {
 
 	encodedRoleID := url.QueryEscape(id)
 
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/roles/%s/", c.APIVersion, encodedRoleID), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/roles/%s/", c.apiVersion, encodedRoleID), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteRole: %w", err)
 	}

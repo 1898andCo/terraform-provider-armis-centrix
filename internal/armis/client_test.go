@@ -1,29 +1,30 @@
-// Copyright (c) 1898 & Co.
-// SPDX-License-Identifier: Apache-2.0
-
 package armis
 
 import (
-	"os"
+	"context"
+	"net/http"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewClient(t *testing.T) {
-	// Initialize the client using the environment variables
-	options := Client{
-		ApiUrl:     os.Getenv("ARMIS_API_URL"),
-		ApiKey:     os.Getenv("ARMIS_API_KEY"),
-		APIVersion: "v1",
+	t.Parallel()
+	client := integrationClient(t)
+
+	// Basic sanity checks.
+	if client.apiURL == "" {
+		t.Fatalf("client apiURL should not be empty")
+	}
+	if client.apiKey == "" {
+		t.Fatalf("client apiKey should not be empty")
 	}
 
-	client, err := NewClient(options)
+	// Verify that the helper sets an auth token by attempting to build a request.
+	req, err := client.newRequest(context.Background(), http.MethodGet, "/ping", nil)
+	if err != nil {
+		t.Fatalf("newRequest failed: %v", err)
+	}
 
-	// Assertions
-	assert.NoError(t, err, "Expected no error when initializing client")
-	assert.NotNil(t, client, "Client should not be nil")
-	assert.Equal(t, "https://lab-1898andco.armis.com", client.ApiUrl, "Client API URL should match the environment variable")
-	assert.Equal(t, "v1", client.APIVersion, "Client API version should match the environment variable")
-	assert.NotEmpty(t, client.AccessToken, "Client should have an access token after authentication")
+	if got := req.Header.Get("Authorization"); got == "" {
+		t.Fatalf("expected Authorization header to be set, got empty string")
+	}
 }

@@ -13,196 +13,103 @@ import (
 	log "github.com/charmbracelet/log"
 )
 
-func TestCreatingCollector(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
+// integrationClient builds a live API client or skips the test suite if the
+// required environment variables are not present.
+func integrationClient(t *testing.T) *Client {
+	apiURL := os.Getenv("ARMIS_API_URL")
+	apiKey := os.Getenv("ARMIS_API_KEY")
+	if apiURL == "" || apiKey == "" {
+		t.Skip("ARMIS_API_URL and ARMIS_API_KEY must be set for integration tests")
 	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
 
-	client, err := NewClient(options)
+	client, err := NewClient(apiKey, WithAPIURL(apiURL))
 	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
+		t.Fatalf("create client: %v", err)
+	}
+	return client
+}
+
+func prettyPrint(v any) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		log.Info("marshal response: %v", err)
+		return
 	}
 
-	// Attempt to create a collector
-	collector := CreateCollectorSettings{
+	var buf bytes.Buffer
+	if err := json.Indent(&buf, data, "", "  "); err == nil {
+		log.Info("\n=== Response ===\n%s", buf.String())
+	}
+}
+
+func TestCreatingCollector(t *testing.T) {
+	t.Parallel()
+	client := integrationClient(t)
+
+	ctx := context.Background()
+	payload := CreateCollectorSettings{
 		Name:           "Test Collector",
 		DeploymentType: "OVA",
 	}
 
-	ctx := context.Background()
-	response, err := client.CreateCollector(ctx, collector)
+	res, err := client.CreateCollector(ctx, payload)
 	if err != nil {
-		t.Errorf("Error creating collector: %s", err)
+		t.Fatalf("create collector: %v", err)
 	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			log.Info("Error marshaling server response: %s\n", err)
-		}
-
-		// Attempt to pretty-print the JSON
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			log.Info("Failed to pretty-print JSON.")
-		}
-	} else {
-		log.Info("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestGettingCollectors(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
+	res, err := client.GetCollectors(context.Background())
 	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
+		t.Fatalf("get collectors: %v", err)
 	}
-
-	// Attempt to get all collectors
-	ctx := context.Background()
-	response, err := client.GetCollectors(ctx)
-	if err != nil {
-		t.Errorf("Error getting sites: %s", err)
-	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			log.Info("Error marshaling server response: %s\n", err)
-		}
-
-		// Attempt to pretty-print the JSON
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			log.Info("Failed to pretty-print JSON.")
-		}
-	} else {
-		log.Info("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestGettingCollectorByID(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
+	const id = "8153" // TODO: make dynamic or env-driven
+	res, err := client.GetCollectorByID(context.Background(), id)
 	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
+		t.Fatalf("get collector by id: %v", err)
 	}
-
-	// Attempt to get all collectors
-	ctx := context.Background()
-	response, err := client.GetCollectorByID(ctx, "8153")
-	if err != nil {
-		t.Errorf("Error getting sites: %s", err)
-	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			log.Info("Error marshaling server response: %s\n", err)
-		}
-
-		// Attempt to pretty-print the JSON
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			log.Info("Failed to pretty-print JSON.")
-		}
-	} else {
-		log.Info("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestUpdatingCollector(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
-	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
-	}
-
-	// Attempt to update a collector
-	collector := UpdateCollectorSettings{
-		Name:           "Test Collector",
+	payload := UpdateCollectorSettings{
+		Name:           "Test Collector Updated",
 		DeploymentType: "OVA",
 	}
 
-	ctx := context.Background()
-	response, err := client.UpdateCollector(ctx, "8158", collector)
+	const id = "8158"
+	res, err := client.UpdateCollector(context.Background(), id, payload)
 	if err != nil {
-		t.Errorf("Error updating collector: %s", err)
+		t.Fatalf("update collector: %v", err)
 	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			log.Info("Error marshaling server response: %s\n", err)
-		}
-
-		// Attempt to pretty-print the JSON
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			log.Info("Failed to pretty-print JSON.")
-		}
-	} else {
-		log.Info("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestDeletingCollector(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
+	const id = "8158"
+	ok, err := client.DeleteCollector(context.Background(), id)
 	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
+		t.Fatalf("delete collector: %v", err)
 	}
-
-	// Attempt to delete test user
-	ctx := context.Background()
-	success, err := client.DeleteCollector(ctx, "8158")
-	if err != nil {
-		t.Errorf("Error deleting user: %s", err)
+	if !ok {
+		t.Fatalf("collector %s not deleted", id)
 	}
-
-	// Log the response
-	if !success {
-		log.Info("Failed to delete user.")
-	} else {
-		log.Info("Successfully deleted user.")
-	}
+	log.Info("collector %s deleted", id)
 }

@@ -5,10 +5,11 @@ package armis
 
 import "errors"
 
-// Common errors shared across the Armis package.
+// Sentinel errors shared across the Armis package.
 
 var (
 	ErrGetKey       = errors.New("failed to get API key")
+	ErrNoAPIKey     = errors.New("missing API key")
 	ErrAuthFailed   = errors.New("failed to authenticate")
 	ErrHTTPResponse = errors.New("HTTP response error")
 
