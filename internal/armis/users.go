@@ -14,7 +14,7 @@ import (
 // GetUsers fetches all users from Armis.
 func (c *Client) GetUsers(ctx context.Context) ([]UserSettings, error) {
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/", c.ApiVersion), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/", c.APIVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetUsers: %w", err)
 	}
@@ -44,7 +44,7 @@ func (c *Client) GetUser(ctx context.Context, userId string) (*UserSettings, err
 	encodedUserId := url.QueryEscape(userId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/%s/", c.APIVersion, encodedUserId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Get User: %w", err)
 	}
@@ -83,7 +83,7 @@ func (c *Client) CreateUser(ctx context.Context, user UserSettings) (*UserSettin
 		return nil, fmt.Errorf("failed to marshal user data: %w", err)
 	}
 
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/users/", c.ApiVersion), bytes.NewReader(userData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/users/", c.APIVersion), bytes.NewReader(userData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for CreateUser: %w", err)
 	}
@@ -128,7 +128,7 @@ func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId strin
 	// URL encode the user ID
 	encodedUserId := url.QueryEscape(userId)
 
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), bytes.NewReader(userData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/users/%s/", c.APIVersion, encodedUserId), bytes.NewReader(userData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateUser: %w", err)
 	}
@@ -161,7 +161,7 @@ func (c *Client) DeleteUser(ctx context.Context, userId string) (bool, error) {
 	encodedUserId := url.QueryEscape(userId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/users/%s/", c.ApiVersion, encodedUserId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/users/%s/", c.APIVersion, encodedUserId), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteUser: %w", err)
 	}

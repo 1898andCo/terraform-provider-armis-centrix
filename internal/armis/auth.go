@@ -38,7 +38,7 @@ func (c *Client) Authenticate(apiKey string) error {
 	// Create the POST request
 	req, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("%s/api/%s/access_token/", c.ApiUrl, c.ApiVersion),
+		fmt.Sprintf("%s/api/%s/access_token/", c.ApiUrl, c.APIVersion),
 		strings.NewReader(form.Encode()),
 	)
 	if err != nil {

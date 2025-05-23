@@ -19,7 +19,7 @@ const (
 type Client struct {
 	ApiUrl                string
 	ApiKey                string
-	ApiVersion            string
+	APIVersion            string
 	AccessToken           string
 	AccessTokenExpiration time.Time
 	HTTPClient            *http.Client
@@ -33,8 +33,8 @@ func NewClient(options Client) (*Client, error) {
 	if options.ApiUrl != "" {
 		apiUrl = options.ApiUrl
 	}
-	if options.ApiVersion != "" {
-		apiVersion = options.ApiVersion
+	if options.APIVersion != "" {
+		apiVersion = options.APIVersion
 	}
 	if options.ApiKey == "" {
 		return nil, fmt.Errorf("%w", ErrGetKey)
@@ -42,7 +42,7 @@ func NewClient(options Client) (*Client, error) {
 
 	client := &Client{
 		ApiUrl:     apiUrl,
-		ApiVersion: apiVersion,
+		APIVersion: apiVersion,
 		HTTPClient: http.DefaultClient,
 	}
 

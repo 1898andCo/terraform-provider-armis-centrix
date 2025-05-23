@@ -11,7 +11,7 @@ import (
 
 func (c *Client) GetSites(ctx context.Context) ([]SiteSettings, error) {
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/sites/", c.ApiVersion), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/sites/", c.APIVersion), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetSites: %w", err)
 	}
