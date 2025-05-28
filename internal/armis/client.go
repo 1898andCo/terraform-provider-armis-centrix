@@ -122,7 +122,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body io.Re
 	c.mu.RUnlock()
 
 	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", token)
 	}
 
 	req.Header.Set("Accept", "application/json")
