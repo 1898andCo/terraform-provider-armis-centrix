@@ -37,7 +37,7 @@ func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (*Poli
 		return nil, fmt.Errorf("failed to marshal policy data: %w", err)
 	}
 
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/policies/", c.ApiVersion), bytes.NewReader(policyData))
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/policies/", c.apiVersion), bytes.NewReader(policyData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for CreatePolicy: %w", err)
 	}
@@ -70,7 +70,7 @@ func (c *Client) GetPolicy(ctx context.Context, policyId string) (*GetPolicySett
 	encodedPolicyId := url.QueryEscape(policyId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/policies/%s/", c.ApiVersion, encodedPolicyId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyId), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Get Policy: %w", err)
 	}
@@ -112,7 +112,7 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policy
 	// URL encode the policy ID
 	encodedPolicyId := url.QueryEscape(policyId)
 
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/policies/%s/", c.ApiVersion, encodedPolicyId), bytes.NewReader(policyData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyId), bytes.NewReader(policyData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdatePolicy: %w", err)
 	}
@@ -145,7 +145,7 @@ func (c *Client) DeletePolicy(ctx context.Context, policyId string) (bool, error
 	encodedPolicyId := url.QueryEscape(policyId)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/policies/%s/", c.ApiVersion, encodedPolicyId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyId), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeletePolicy: %w", err)
 	}

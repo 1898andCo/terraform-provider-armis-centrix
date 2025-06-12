@@ -4,77 +4,76 @@
 package armis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 )
 
-type AuthResponse struct {
+// authResponse mirrors the JSON returned by /access_token/. All field names
+// follow Go's initialism rules while the struct tags preserve Armis' schema.
+type authResponse struct {
 	Success bool `json:"success"`
 	Data    struct {
 		AccessToken   string `json:"access_token"`
-		ExpirationUtc string `json:"expiration_utc"`
+		ExpirationUTC string `json:"expiration_utc"`
 	} `json:"data"`
 }
 
-// Authenticate retrieves a temporary access token using the API key.
-func (c *Client) Authenticate(apiKey string) error {
-	if apiKey == "" {
-		return fmt.Errorf("%w", ErrGetKey)
+// authenticate exchanges the API key for a short-lived bearer token. It is
+// concurrency-safe and returns early if the cached token is still valid.
+func (c *Client) authenticate(ctx context.Context) error {
+	c.mu.RLock()
+	if c.accessToken != "" && time.Now().Before(c.accessTokenExpires) {
+		c.mu.RUnlock()
+		return nil // cached token still good
 	}
+	c.mu.RUnlock()
 
-	// Check if we already have a valid access token
-	if c.AccessToken != "" && time.Now().Before(c.AccessTokenExpiration) {
-		return nil
-	}
-
-	// Prepare the form data for the request
 	form := url.Values{}
-	form.Set("secret_key", apiKey)
+	form.Set("secret_key", c.apiKey)
 
-	// Create the POST request
-	req, err := http.NewRequest(
-		"POST",
-		fmt.Sprintf("%s/api/%s/access_token/", c.ApiUrl, c.ApiVersion),
-		strings.NewReader(form.Encode()),
-	)
+	endpoint := fmt.Sprintf("%s/api/%s/access_token/", c.apiURL, c.apiVersion)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
 	if err != nil {
-		return fmt.Errorf("failed to create authentication request: %w", err)
+		return fmt.Errorf("armis: build auth request: %w", err)
 	}
-
-	// Set required headers
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	// Send the request and get the response
-	body, err := c.doRequest(req)
+	res, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to authenticate: %w", err)
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		b, _ := io.ReadAll(res.Body)
+		return &APIError{StatusCode: res.StatusCode, Body: b}
 	}
 
-	// Parse the response JSON
-	var authResponse AuthResponse
-	if err := json.Unmarshal(body, &authResponse); err != nil {
-		return fmt.Errorf("failed to parse authentication response: %w", err)
+	var ar authResponse
+	if err := json.NewDecoder(res.Body).Decode(&ar); err != nil {
+		return fmt.Errorf("armis: decode auth response: %w", err)
+	}
+	if !ar.Success {
+		return ErrAuthFailed
 	}
 
-	// Check if the response indicates success
-	if !authResponse.Success {
-		return fmt.Errorf("%w", ErrAuthFailed)
-	}
-
-	// Store the access token and expiration in the client
-	c.AccessToken = authResponse.Data.AccessToken
-	c.AccessTokenExpiration, err = time.Parse(time.RFC3339Nano, authResponse.Data.ExpirationUtc)
-
-	// Expire 5 minutes early to ensure we don't ever get an invalid token
-	c.AccessTokenExpiration = c.AccessTokenExpiration.Add(-time.Minute * 5)
+	expiry, err := time.Parse(time.RFC3339Nano, ar.Data.ExpirationUTC)
 	if err != nil {
-		return fmt.Errorf("failed to parse expiration time: %w", err)
+		return fmt.Errorf("armis: parse expiry: %w", err)
 	}
+	expiry = expiry.Add(-5 * time.Minute) // expire early for safety
+
+	c.mu.Lock()
+	c.accessToken = ar.Data.AccessToken
+	c.accessTokenExpires = expiry
+	c.mu.Unlock()
 
 	return nil
 }

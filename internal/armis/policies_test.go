@@ -4,36 +4,24 @@
 package armis
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"os"
 	"testing"
-
-	log "github.com/charmbracelet/log"
 )
 
 func TestCreatingPolicy(t *testing.T) {
-	// Initialize the client with environment variables
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
-	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
-	}
-
-	// Create a new policy with necessary fields
-	newPolicy := PolicySettings{
-		Name:              "Test Policy",
-		Description:       "This is a test policy",
-		IsEnabled:         false,
-		Labels:            []string{"Security"},
-		MitreAttackLabels: []string{"Enterprise.TA0009.T1056.001", "Enterprise.TA0009.T1056.004"},
-		RuleType:          "ACTIVITY",
+	payload := PolicySettings{
+		Name:        "Test Policy",
+		Description: "This is a test policy",
+		IsEnabled:   false,
+		Labels:      []string{"Security"},
+		MitreAttackLabels: []string{
+			"Enterprise.TA0009.T1056.001",
+			"Enterprise.TA0009.T1056.004",
+		},
+		RuleType: "ACTIVITY",
 		Actions: []Action{
 			{
 				Type: "alert",
@@ -51,71 +39,32 @@ func TestCreatingPolicy(t *testing.T) {
 		Rules: Rules{
 			And: []any{
 				"protocol:BMS",
-				Rules{
-					Or: []any{
-						"content:(iPhone)",
-						"content:(Android)",
-					},
-				},
+				Rules{Or: []any{"content:(iPhone)", "content:(Android)"}},
 			},
 		},
 	}
 
-	// Pretty print with indentation the policy before sending
-	newPolicyJSON, err := json.Marshal(newPolicy)
+	res, err := client.CreatePolicy(context.Background(), payload)
 	if err != nil {
-		t.Fatalf("Error marshaling policy: %s", err)
+		t.Fatalf("create policy: %v", err)
 	}
-	log.Info("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
-
-	// Call CreatePolicy to create the policy
-	ctx := context.Background()
-	response, err := client.CreatePolicy(ctx, newPolicy)
-	if err != nil {
-		t.Errorf("Error creating policy: %s", err)
-		return
-	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			t.Fatalf("Error marshaling server response: %s", err)
-		}
-
-		// Attempt to pretty-print the JSON for better readability
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			t.Log("Failed to pretty-print JSON.")
-		}
-	} else {
-		t.Log("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestCreatingTagPolicy(t *testing.T) {
-	// Initialize the client with environment variables
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
-	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
-	}
-
-	// Create a new policy with necessary fields
-	newPolicy := PolicySettings{
-		Name:              "Test Tag Policy",
-		Description:       "This is a test tag policy",
-		IsEnabled:         false,
-		Labels:            []string{"Security"},
-		MitreAttackLabels: []string{"Enterprise.TA0009.T1056.001", "Enterprise.TA0009.T1056.004"},
-		RuleType:          "ACTIVITY",
+	payload := PolicySettings{
+		Name:        "Test Tag Policy",
+		Description: "This is a test tag policy",
+		IsEnabled:   false,
+		Labels:      []string{"Security"},
+		MitreAttackLabels: []string{
+			"Enterprise.TA0009.T1056.001",
+			"Enterprise.TA0009.T1056.004",
+		},
+		RuleType: "ACTIVITY",
 		Actions: []Action{
 			{
 				Type: "tag",
@@ -128,110 +77,44 @@ func TestCreatingTagPolicy(t *testing.T) {
 		Rules: Rules{
 			And: []any{
 				"protocol:BMS",
-				Rules{
-					Or: []any{
-						"content:(iPhone)",
-						"content:(Android)",
-					},
-				},
+				Rules{Or: []any{"content:(iPhone)", "content:(Android)"}},
 			},
 		},
 	}
 
-	// Pretty print with indentation the policy before sending
-	newPolicyJSON, err := json.Marshal(newPolicy)
+	res, err := client.CreatePolicy(context.Background(), payload)
 	if err != nil {
-		t.Fatalf("Error marshaling policy: %s", err)
+		t.Fatalf("create tag policy: %v", err)
 	}
-	log.Info("\n=== Policy to Create ===\n%s\n", string(newPolicyJSON))
-
-	// Call CreatePolicy to create the policy
-	ctx := context.Background()
-	response, err := client.CreatePolicy(ctx, newPolicy)
-	if err != nil {
-		t.Errorf("Error creating policy: %s", err)
-		return
-	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			t.Fatalf("Error marshaling server response: %s", err)
-		}
-
-		// Attempt to pretty-print the JSON for better readability
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			t.Log("Failed to pretty-print JSON.")
-		}
-	} else {
-		t.Log("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestGettingPolicy(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
+	const id = "76884"
+	res, err := client.GetPolicy(context.Background(), id)
 	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
+		t.Fatalf("get policy: %v", err)
 	}
-
-	// Attempt to get policy
-	ctx := context.Background()
-	response, err := client.GetPolicy(ctx, "76884")
-	if err != nil {
-		t.Errorf("Error getting policy: %s", err)
-	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			log.Info("Error marshaling server response: %s\n", err)
-		}
-
-		// Attempt to pretty-print the JSON
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			log.Info("Failed to pretty-print JSON.")
-		}
-	} else {
-		log.Info("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestUpdatingPolicy(t *testing.T) {
-	// Initialize the client with environment variables
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
-	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
-	}
-
-	// Update a policy with necessary fields
-	updatedPolicy := PolicySettings{
-		Name:              "Test Policy",
-		Description:       "This is an updated test policy",
-		IsEnabled:         true,
-		Labels:            []string{"Security"},
-		MitreAttackLabels: []string{"Enterprise.TA0009.T1056.001", "Enterprise.TA0009.T1056.004"},
-		RuleType:          "ACTIVITY",
+	payload := PolicySettings{
+		Name:        "Test Policy Updated",
+		Description: "This is an updated test policy",
+		IsEnabled:   true,
+		Labels:      []string{"Security"},
+		MitreAttackLabels: []string{
+			"Enterprise.TA0009.T1056.001",
+			"Enterprise.TA0009.T1056.004",
+		},
+		RuleType: "ACTIVITY",
 		Actions: []Action{
 			{
 				Type: "alert",
@@ -249,74 +132,29 @@ func TestUpdatingPolicy(t *testing.T) {
 		Rules: Rules{
 			And: []any{
 				"protocol:BMS",
-				Rules{
-					Or: []any{
-						"content:(iPhone)",
-						"content:(Android)",
-					},
-				},
+				Rules{Or: []any{"content:(iPhone)", "content:(Android)"}},
 			},
 		},
 	}
 
-	// Pretty print with indentation the policy before sending
-	updatedPolicyJSON, err := json.Marshal(updatedPolicy)
+	const id = "76700"
+	res, err := client.UpdatePolicy(context.Background(), payload, id)
 	if err != nil {
-		t.Fatalf("Error marshaling policy: %s", err)
+		t.Fatalf("update policy: %v", err)
 	}
-	log.Info("\n=== Policy to Update ===\n%s\n", string(updatedPolicyJSON))
-
-	// Call UpdatePolicy to update the policy
-	ctx := context.Background()
-	response, err := client.UpdatePolicy(ctx, updatedPolicy, "76700")
-	if err != nil {
-		t.Errorf("Error updating policy: %s", err)
-		return
-	}
-
-	// Log the response
-	if response != nil {
-		responseJSON, err := json.Marshal(response)
-		if err != nil {
-			t.Fatalf("Error marshaling server response: %s", err)
-		}
-
-		// Attempt to pretty-print the JSON for better readability
-		var prettyResponse bytes.Buffer
-		if err := json.Indent(&prettyResponse, responseJSON, "", "  "); err == nil {
-			log.Info("\n=== Parsed Response Body ===\n%s\n", prettyResponse.String())
-		} else {
-			t.Log("Failed to pretty-print JSON.")
-		}
-	} else {
-		t.Log("No response received from server.")
-	}
+	prettyPrint(res)
 }
 
 func TestDeletingPolicy(t *testing.T) {
-	// Initialize the client
-	options := Client{
-		ApiUrl: os.Getenv("ARMIS_API_URL"),
-		ApiKey: os.Getenv("ARMIS_API_KEY"),
-	}
-	log.Info("Initializing client with API URL: %s\n", options.ApiUrl)
+	t.Parallel()
+	client := integrationClient(t)
 
-	client, err := NewClient(options)
+	const id = "76700"
+	ok, err := client.DeletePolicy(context.Background(), id)
 	if err != nil {
-		t.Fatalf("Error creating client: %s", err)
+		t.Fatalf("delete policy: %v", err)
 	}
-
-	// Attempt to delete test policy
-	ctx := context.Background()
-	success, err := client.DeletePolicy(ctx, "76700")
-	if err != nil {
-		t.Errorf("Error deleting policy: %s", err)
-	}
-
-	// Log the response
-	if !success {
-		log.Info("Failed to delete policy.")
-	} else {
-		log.Info("Successfully deleted policy.")
+	if !ok {
+		t.Fatalf("policy %s not deleted", id)
 	}
 }
