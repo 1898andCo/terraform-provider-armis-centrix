@@ -7,29 +7,26 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
+
+const descriptionLimit = 500
+
+var allowedRuleTypes = map[string]struct{}{
+	"ACTIVITY":      {},
+	"IP_CONNECTION": {},
+	"DEVICE":        {},
+	"VULNERABILITY": {},
+}
 
 // CreatePolicy creates a new policy in Armis.
 func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (*PolicyId, error) {
-	if policy.Name == "" {
-		return nil, fmt.Errorf("%w", ErrPolicyName)
-	}
-
-	// Ensure policy rules exist
-	if len(policy.Rules.And) == 0 && len(policy.Rules.Or) == 0 {
-		return nil, fmt.Errorf("%w", ErrPolicyRules)
-	}
-
-	// Policy description must be less than 500 characters
-	if len(policy.Description) > 500 {
-		return nil, fmt.Errorf("%w", ErrPolicyDescription)
-	}
-
-	// Rule type must be ACTIVITY, IP CONNECTION, DEVICE, or VULNERABILITY
-	if policy.RuleType != "ACTIVITY" && policy.RuleType != "IP_CONNECTION" && policy.RuleType != "DEVICE" && policy.RuleType != "VULNERABILITY" {
-		return nil, fmt.Errorf("%w", ErrPolicyRuleType)
+	err := policy.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate policy: %w", err)
 	}
 
 	policyData, err := json.Marshal(policy)
@@ -56,8 +53,31 @@ func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (*Poli
 		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
 	}
 
-	// Return the parsed policy settings directly
 	return &apiResponse.Data, nil
+}
+
+// Validate performs policy validation to ensure that a name and rules exist,
+// the description field is less than 500 characters,
+// and the rule type must be ACTIVITY, IP CONNECTION, DEVICE, or VULNERABILITY.
+func (p PolicySettings) Validate() error {
+	var errs []error
+	if p.Name == "" {
+		errs = append(errs, ErrPolicyName)
+	}
+
+	if len(p.Rules.And) == 0 && len(p.Rules.Or) == 0 {
+		errs = append(errs, ErrPolicyRules)
+	}
+
+	if len(p.Description) > descriptionLimit {
+		errs = append(errs, ErrPolicyDescription)
+	}
+
+	if _, ok := allowedRuleTypes[p.RuleType]; !ok {
+		errs = append(errs, ErrPolicyRuleType)
+	}
+
+	return errors.Join(errs...)
 }
 
 // GetPolicy fetches a policy from Armis using the policy's ID.
@@ -96,12 +116,8 @@ func (c *Client) GetPolicy(ctx context.Context, policyID string) (*GetPolicySett
 
 // UpdatePolicy updates a policy in Armis.
 func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policyID string) (*UpdatePolicySettings, error) {
-	if policy.Name == "" {
-		return nil, fmt.Errorf("%w", ErrPolicyName)
-	}
-
-	if policyID == "" {
-		return nil, fmt.Errorf("%w", ErrPolicyID)
+	if err := validateUpdateInput(policy, policyID); err != nil {
+		return nil, err
 	}
 
 	policyData, err := json.Marshal(policy)
@@ -133,6 +149,18 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policy
 
 	// Return the parsed policy settings directly
 	return &apiResponse.Data, nil
+}
+
+func validateUpdateInput(policy PolicySettings, id string) error {
+	var errs []error
+
+	if strings.TrimSpace(policy.Name) == "" {
+		errs = append(errs, ErrPolicyName)
+	}
+	if strings.TrimSpace(id) == "" {
+		errs = append(errs, ErrPolicyID)
+	}
+	return errors.Join(errs...)
 }
 
 // DeletePolicy deletes a policy from Armis.
