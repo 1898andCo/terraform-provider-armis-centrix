@@ -61,16 +61,16 @@ func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (*Poli
 }
 
 // GetPolicy fetches a policy from Armis using the policy's ID.
-func (c *Client) GetPolicy(ctx context.Context, policyId string) (*GetPolicySettings, error) {
-	if policyId == "" {
+func (c *Client) GetPolicy(ctx context.Context, policyID string) (*GetPolicySettings, error) {
+	if policyID == "" {
 		return nil, fmt.Errorf("%w", ErrPolicyID)
 	}
 
 	// URL encode the policy ID
-	encodedPolicyId := url.QueryEscape(policyId)
+	encodedPolicyID := url.QueryEscape(policyID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Get Policy: %w", err)
 	}
@@ -95,12 +95,12 @@ func (c *Client) GetPolicy(ctx context.Context, policyId string) (*GetPolicySett
 }
 
 // UpdatePolicy updates a policy in Armis.
-func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policyId string) (*UpdatePolicySettings, error) {
+func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policyID string) (*UpdatePolicySettings, error) {
 	if policy.Name == "" {
 		return nil, fmt.Errorf("%w", ErrPolicyName)
 	}
 
-	if policyId == "" {
+	if policyID == "" {
 		return nil, fmt.Errorf("%w", ErrPolicyID)
 	}
 
@@ -110,9 +110,9 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policy
 	}
 
 	// URL encode the policy ID
-	encodedPolicyId := url.QueryEscape(policyId)
+	encodedPolicyID := url.QueryEscape(policyID)
 
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyId), bytes.NewReader(policyData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyID), bytes.NewReader(policyData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdatePolicy: %w", err)
 	}
@@ -136,16 +136,16 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policy
 }
 
 // DeletePolicy deletes a policy from Armis.
-func (c *Client) DeletePolicy(ctx context.Context, policyId string) (bool, error) {
-	if policyId == "" {
+func (c *Client) DeletePolicy(ctx context.Context, policyID string) (bool, error) {
+	if policyID == "" {
 		return false, fmt.Errorf("%w", ErrPolicyID)
 	}
 
 	// URL encode the policy ID
-	encodedPolicyId := url.QueryEscape(policyId)
+	encodedPolicyID := url.QueryEscape(policyID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyID), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeletePolicy: %w", err)
 	}
