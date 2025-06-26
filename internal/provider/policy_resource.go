@@ -298,6 +298,15 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
+func responseToPolicy(p *armis.GetPolicySettings) policyResourceModel {
+	return policyResourceModel{
+		Name:        types.StringValue(p.Name),
+		Description: types.StringValue(p.Description),
+		IsEnabled:   types.BoolValue(p.IsEnabled),
+		RuleType:    types.StringValue(p.RuleType),
+	}
+}
+
 func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state policyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -329,12 +338,9 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Update state with the retrieved policy data
-	state.Name = types.StringValue(policy.Name)
-	state.Description = types.StringValue(policy.Description)
-	state.IsEnabled = types.BoolValue(policy.IsEnabled)
-	state.RuleType = types.StringValue(policy.RuleType)
+	result := responseToPolicy(policy)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 }
 
 func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
