@@ -233,6 +233,13 @@ type rulesModel struct {
 	Or  types.List `tfsdk:"or"`
 }
 
+// extractPolicyFromPlan transforms a typed Terraform plan (policyResourceModel) into
+// an armis.PolicySettings request for the Armis API. It pulls each collection field
+// out of the plan with ElementsAs, accumulating any element-conversion diagnostics
+// and aborting early if errors occur. When successful it maps scalars, labels,
+// MITRE ATT&CK tags, actions, and AND/OR rule slices (normalising RuleType to
+// upper-case and converting rule slices to []interface{}) into the API struct and
+// returns it alongside any collected diagnostics.
 func extractPolicyFromPlan(ctx context.Context, plan *policyResourceModel) (armis.PolicySettings, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var mitreAttackLabels, labels []string
@@ -274,6 +281,10 @@ func extractPolicyFromPlan(ctx context.Context, plan *policyResourceModel) (armi
 	}, diags
 }
 
+// Create decodes the plan into a model, converts it to an Armis
+// PolicySettings payload, invokes r.client.CreatePolicy, stores the returned
+// policy ID in state, and writes the updated state back—aborting early whenever
+// diagnostics report an error.
 func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan policyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -296,15 +307,6 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ID = types.StringValue(strconv.Itoa(newPolicy.ID))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func responseToPolicy(p *armis.GetPolicySettings) policyResourceModel {
-	return policyResourceModel{
-		Name:        types.StringValue(p.Name),
-		Description: types.StringValue(p.Description),
-		IsEnabled:   types.BoolValue(p.IsEnabled),
-		RuleType:    types.StringValue(p.RuleType),
-	}
 }
 
 func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -343,6 +345,9 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 }
 
+// Update loads plan and state, maps the plan to an Armis PolicySettings
+// payload, calls r.client.UpdatePolicy with the existing ID, and writes the
+// (unchanged-ID) state back—bailing out on any diagnostics or API error.
 func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state policyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -368,6 +373,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
+// Deletes a policy of the provided ID.
 func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state policyResourceModel
 	if diags := req.State.Get(ctx, &state); diags.HasError() {
@@ -380,6 +386,10 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
+// convertActionsToAPI transforms internal actionModel entries into Armis
+// Action structs: it copies the type, converts non-null/non-unknown params
+// with convertParamsToAPI (skipping any that fail extraction), logs the result
+// for debugging, and returns the assembled slice.
 func convertActionsToAPI(actions []actionModel) []armis.Action {
 	var apiActions []armis.Action
 	for _, a := range actions {
@@ -448,4 +458,13 @@ func convertStringSliceToInterface(elements []string) []any {
 		interfaces[i] = v
 	}
 	return interfaces
+}
+
+func responseToPolicy(p *armis.GetPolicySettings) policyResourceModel {
+	return policyResourceModel{
+		Name:        types.StringValue(p.Name),
+		Description: types.StringValue(p.Description),
+		IsEnabled:   types.BoolValue(p.IsEnabled),
+		RuleType:    types.StringValue(p.RuleType),
+	}
 }
