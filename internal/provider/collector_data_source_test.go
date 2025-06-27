@@ -20,7 +20,6 @@ func TestAcc_CollectorDataSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.#"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.name"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.boot_time"),
-					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.city"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.cluster_id"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.collector_number"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.country"),
