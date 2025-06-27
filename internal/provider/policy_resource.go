@@ -486,6 +486,16 @@ func convertToIntOrNull(i int64) types.Int64 {
 	return types.Int64Value(i)
 }
 
+func normaliseMitre(src []armis.MitreAttackLabel) []string {
+	out := make([]string, len(src))
+	for i, l := range src {
+		// matrix/technique/subTechnique/tactic
+		out[i] = fmt.Sprintf("%s/%s/%s/%s",
+			l.Matrix, l.Technique, l.SubTechnique, l.Tactic)
+	}
+	return out
+}
+
 var consolidationObjectType = types.ObjectType{
 	AttrTypes: map[string]attr.Type{
 		"amount": types.Int64Type,
@@ -570,8 +580,16 @@ func responseToPolicy(
 	labels, d := types.SetValueFrom(ctx, types.StringType, p.Labels)
 	diags.Append(d...)
 
-	mitreLabels, d := types.SetValueFrom(ctx, types.StringType, p.MitreAttackLabels)
-	diags.Append(d...)
+	var mitreLabels types.Set
+	mitreStrings := normaliseMitre(p.MitreAttackLabels)
+
+	if len(mitreStrings) == 0 {
+		mitreLabels = types.SetNull(types.StringType)
+	} else {
+		ml, d := types.SetValueFrom(ctx, types.StringType, mitreStrings)
+		diags.Append(d...)
+		mitreLabels = ml
+	}
 
 	var andList types.List
 	if len(p.Rules.And) == 0 {
