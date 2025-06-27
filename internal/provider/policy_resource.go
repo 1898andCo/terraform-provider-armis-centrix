@@ -13,6 +13,7 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -305,7 +306,6 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	plan.ID = types.StringValue(strconv.Itoa(newPolicy.ID))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -327,7 +327,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			return
 		}
 
-		resp.Diagnostics.AddError("Error reading policy", fmt.Sprintf("Failed to fetch policy: %v", err))
+		resp.Diagnostics.AddError("Error reading policy", err.Error())
 		return
 	}
 
@@ -346,6 +346,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
+	result.ID = state.ID
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 }
 
@@ -373,7 +374,6 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	plan.ID = state.ID
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -472,6 +472,93 @@ func convertSliceToStringSlice(in []any) []string {
 	return out
 }
 
+func convertToStringOrNull(s string) types.String {
+	if s == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(s)
+}
+
+func convertToIntOrNull(i int64) types.Int64 {
+	if i == 0 {
+		return types.Int64Null()
+	}
+	return types.Int64Value(i)
+}
+
+var consolidationObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"amount": types.Int64Type,
+		"unit":   types.StringType,
+	},
+}
+
+var paramsObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"severity":      types.StringType,
+		"title":         types.StringType,
+		"type":          types.StringType,
+		"endpoint":      types.StringType,
+		"tags":          types.ListType{ElemType: types.StringType}, // schema says list, not set
+		"consolidation": consolidationObjectType,
+	},
+}
+
+var actionObjectType = types.ObjectType{
+	AttrTypes: map[string]attr.Type{
+		"type":   types.StringType,
+		"params": paramsObjectType,
+	},
+}
+
+// actionsListFromAPI converts Armis []Action into a Terraform list(object)
+// while normalising empty/zero values to null using convertToStringOrNull and IntOrNull.
+func actionsListFromAPI(
+	ctx context.Context,
+	api []armis.Action,
+) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var elems []actionModel
+
+	for _, a := range api {
+		tagList, d := types.ListValueFrom(ctx, types.StringType, a.Params.Tags)
+		diags.Append(d...)
+
+		amt := convertToIntOrNull(int64(a.Params.Consolidation.Amount))
+		unit := convertToStringOrNull(a.Params.Consolidation.Unit)
+		var consObj types.Object
+		if amt.IsNull() && unit.IsNull() {
+			consObj = types.ObjectNull(consolidationObjectType.AttrTypes)
+		} else {
+			consObj, d = types.ObjectValueFrom(ctx,
+				consolidationObjectType.AttrTypes,
+				consolidationModel{Amount: amt, Unit: unit},
+			)
+		}
+		diags.Append(d...)
+
+		paramsObj, d := types.ObjectValueFrom(ctx, paramsObjectType.AttrTypes, paramsModel{
+			Severity:      convertToStringOrNull(a.Params.Severity),
+			Title:         convertToStringOrNull(a.Params.Title),
+			Type:          convertToStringOrNull(a.Params.Type),
+			Endpoint:      convertToStringOrNull(a.Params.Endpoint),
+			Tags:          tagList,
+			Consolidation: consObj,
+		})
+		diags.Append(d...)
+
+		elems = append(elems, actionModel{
+			Type:   convertToStringOrNull(a.Type),
+			Params: paramsObj,
+		})
+	}
+
+	listVal, d := types.ListValueFrom(ctx, actionObjectType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
 // responseToPolicy converts the Armis API payload returned by GetPolicy
 // into the Terraform state model, returning any conversion diagnostics.
 func responseToPolicy(
@@ -486,12 +573,21 @@ func responseToPolicy(
 	mitreLabels, d := types.SetValueFrom(ctx, types.StringType, p.MitreAttackLabels)
 	diags.Append(d...)
 
-	andStrings := convertSliceToStringSlice(p.Rules.And)
-	andList, d := types.ListValueFrom(ctx, types.StringType, andStrings) // ⇐ helper
-	diags.Append(d...)                                                   // gather errors
+	var andList types.List
+	if len(p.Rules.And) == 0 {
+		andList = types.ListNull(types.StringType)
+	} else {
+		andStrings := convertSliceToStringSlice(p.Rules.And)
+		l, d2 := types.ListValueFrom(ctx, types.StringType, andStrings)
+		diags.Append(d2...)
+		andList = l
+	}
 
 	orStrings := convertSliceToStringSlice(p.Rules.Or)
-	orList, d := types.ListValueFrom(ctx, types.StringType, orStrings)
+	orList, d2 := types.ListValueFrom(ctx, types.StringType, orStrings)
+	diags.Append(d2...)
+
+	actionsVal, d := actionsListFromAPI(ctx, p.Actions)
 	diags.Append(d...)
 
 	model := policyResourceModel{
@@ -505,6 +601,7 @@ func responseToPolicy(
 			And: andList,
 			Or:  orList,
 		},
+		Actions: actionsVal,
 	}
 
 	return model, diags
