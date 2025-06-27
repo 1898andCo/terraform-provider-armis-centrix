@@ -148,6 +148,9 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 								"endpoint": schema.StringAttribute{
 									Optional:    true,
 									Description: "Endpoints to apply this action to.",
+									PlanModifiers: []planmodifier.String{
+										stringplanmodifier.UseStateForUnknown(),
+									},
 								},
 								"tags": schema.ListAttribute{
 									Optional:    true,
@@ -489,9 +492,14 @@ func convertToIntOrNull(i int64) types.Int64 {
 func normaliseMitre(src []armis.MitreAttackLabel) []string {
 	out := make([]string, len(src))
 	for i, l := range src {
-		// matrix/technique/subTechnique/tactic
-		out[i] = fmt.Sprintf("%s/%s/%s/%s",
-			l.Matrix, l.Technique, l.SubTechnique, l.Tactic)
+		// Enterprise.<tactic>.<technique>[.<subTechnique>]
+		if l.SubTechnique != "" {
+			out[i] = fmt.Sprintf("%s.%s.%s.%s",
+				l.Matrix, l.Tactic, l.Technique, l.SubTechnique)
+		} else {
+			out[i] = fmt.Sprintf("%s.%s.%s",
+				l.Matrix, l.Tactic, l.Technique)
+		}
 	}
 	return out
 }
@@ -601,9 +609,15 @@ func responseToPolicy(
 		andList = l
 	}
 
-	orStrings := convertSliceToStringSlice(p.Rules.Or)
-	orList, d2 := types.ListValueFrom(ctx, types.StringType, orStrings)
-	diags.Append(d2...)
+	var orList types.List
+	if len(p.Rules.Or) == 0 {
+		orList = types.ListNull(types.StringType)
+	} else {
+		orStrings := convertSliceToStringSlice(p.Rules.Or)
+		l, d2 := types.ListValueFrom(ctx, types.StringType, orStrings)
+		diags.Append(d2...)
+		orList = l
+	}
 
 	actionsVal, d := actionsListFromAPI(ctx, p.Actions)
 	diags.Append(d...)
