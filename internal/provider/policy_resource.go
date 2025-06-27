@@ -489,19 +489,44 @@ func convertToIntOrNull(i int64) types.Int64 {
 	return types.Int64Value(i)
 }
 
-func normaliseMitre(src []armis.MitreAttackLabel) []string {
-	out := make([]string, len(src))
-	for i, l := range src {
-		// Enterprise.<tactic>.<technique>[.<subTechnique>]
-		if l.SubTechnique != "" {
-			out[i] = fmt.Sprintf("%s.%s.%s.%s",
-				l.Matrix, l.Tactic, l.Technique, l.SubTechnique)
-		} else {
-			out[i] = fmt.Sprintf("%s.%s.%s",
-				l.Matrix, l.Tactic, l.Technique)
+var mitreRe = regexp.MustCompile(
+	`(?i)(Enterprise|ICS).*?(TA\d{4}).*?(T\d{4})(?:\.(\d{3}))?`,
+)
+
+// Accepts either []MitreAttackLabel (Read/Update) or []string (Create).
+func canonicalMitre(src any) []string {
+	switch v := src.(type) {
+	case []armis.MitreAttackLabel: // structured shape
+		out := make([]string, len(v))
+		for i, l := range v {
+			if l.SubTechnique != "" {
+				out[i] = fmt.Sprintf("%s.%s.%s.%s",
+					l.Matrix, l.Tactic, l.Technique, l.SubTechnique)
+			} else {
+				out[i] = fmt.Sprintf("%s.%s.%s",
+					l.Matrix, l.Tactic, l.Technique)
+			}
 		}
+		return out
+
+	case []string: // long or dotted strings
+		out := make([]string, 0, len(v))
+		for _, s := range v {
+			if m := mitreRe.FindStringSubmatch(s); len(m) > 0 {
+				key := m[1] + "." + m[2] + "." + m[3]
+				if m[4] != "" {
+					key += "." + m[4]
+				}
+				out = append(out, key)
+			} else {
+				out = append(out, s) // unknown format: keep as-is
+			}
+		}
+		return out
+
+	default:
+		return nil
 	}
-	return out
 }
 
 var consolidationObjectType = types.ObjectType{
@@ -589,7 +614,7 @@ func responseToPolicy(
 	diags.Append(d...)
 
 	var mitreLabels types.Set
-	mitreStrings := normaliseMitre(p.MitreAttackLabels)
+	mitreStrings := canonicalMitre(p.MitreAttackLabels)
 
 	if len(mitreStrings) == 0 {
 		mitreLabels = types.SetNull(types.StringType)
@@ -609,15 +634,9 @@ func responseToPolicy(
 		andList = l
 	}
 
-	var orList types.List
-	if len(p.Rules.Or) == 0 {
-		orList = types.ListNull(types.StringType)
-	} else {
-		orStrings := convertSliceToStringSlice(p.Rules.Or)
-		l, d2 := types.ListValueFrom(ctx, types.StringType, orStrings)
-		diags.Append(d2...)
-		orList = l
-	}
+	orStrings := convertSliceToStringSlice(p.Rules.Or)
+	orList, d2 := types.ListValueFrom(ctx, types.StringType, orStrings)
+	diags.Append(d2...)
 
 	actionsVal, d := actionsListFromAPI(ctx, p.Actions)
 	diags.Append(d...)
