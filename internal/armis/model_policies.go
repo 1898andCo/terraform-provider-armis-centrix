@@ -53,8 +53,8 @@ type Action struct {
 
 // Rules represents the rules configuration for the policy.
 type Rules struct {
-	And []interface{} `json:"and,omitempty"`
-	Or  []interface{} `json:"or,omitempty"`
+	And []any `json:"and,omitempty"`
+	Or  []any `json:"or,omitempty"`
 }
 
 // PolicySettings represents the main JSON structure.

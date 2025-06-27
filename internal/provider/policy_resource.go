@@ -340,7 +340,11 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Update state with the retrieved policy data
-	result := responseToPolicy(policy)
+	result, diags := responseToPolicy(ctx, policy)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 }
@@ -460,11 +464,48 @@ func convertStringSliceToInterface(elements []string) []any {
 	return interfaces
 }
 
-func responseToPolicy(p *armis.GetPolicySettings) policyResourceModel {
-	return policyResourceModel{
-		Name:        types.StringValue(p.Name),
-		Description: types.StringValue(p.Description),
-		IsEnabled:   types.BoolValue(p.IsEnabled),
-		RuleType:    types.StringValue(p.RuleType),
+func convertSliceToStringSlice(in []any) []string {
+	out := make([]string, len(in))
+	for i, v := range in {
+		out[i] = fmt.Sprint(v)
 	}
+	return out
+}
+
+// responseToPolicy converts the Armis API payload returned by GetPolicy
+// into the Terraform state model, returning any conversion diagnostics.
+func responseToPolicy(
+	ctx context.Context,
+	p *armis.GetPolicySettings,
+) (policyResourceModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	labels, d := types.SetValueFrom(ctx, types.StringType, p.Labels)
+	diags.Append(d...)
+
+	mitreLabels, d := types.SetValueFrom(ctx, types.StringType, p.MitreAttackLabels)
+	diags.Append(d...)
+
+	andStrings := convertSliceToStringSlice(p.Rules.And)
+	andList, d := types.ListValueFrom(ctx, types.StringType, andStrings) // ⇐ helper
+	diags.Append(d...)                                                   // gather errors
+
+	orStrings := convertSliceToStringSlice(p.Rules.Or)
+	orList, d := types.ListValueFrom(ctx, types.StringType, orStrings)
+	diags.Append(d...)
+
+	model := policyResourceModel{
+		Name:              types.StringValue(p.Name),
+		Description:       types.StringValue(p.Description),
+		IsEnabled:         types.BoolValue(p.IsEnabled),
+		RuleType:          types.StringValue(p.RuleType),
+		Labels:            types.List(labels),
+		MitreAttackLabels: types.List(mitreLabels),
+		Rules: rulesModel{
+			And: andList,
+			Or:  orList,
+		},
+	}
+
+	return model, diags
 }
