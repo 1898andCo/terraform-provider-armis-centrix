@@ -1,6 +1,22 @@
 // Copyright (c) 1898 & Co.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package provider is a Terraform provider for the Armis asset-visibility and
+// security platform.
+//
+// It exposes resources (e.g. armis_policy) and data sources that map directly
+// to Armis API objects. Each resource follows the same framework-idiomatic
+// flow:
+//
+//  1. Decode plan and/or state into a typed model.
+//  2. Map the model to an Armis SDK payload with small helpers
+//  3. Call the REST client.
+//  4. Surface diagnostics and write the resulting state.
+//
+// Helper functions live in the provider package to keep resource files concise
+// while preserving compile-time safety—no reflection, minimal boilerplate, and
+// early exits on any diagnostic errors. All resources and helpers comply with
+// Terraform Plugin Framework best practices and semantic versioning.
 package provider
 
 import (
