@@ -1,6 +1,10 @@
 // Copyright (c) 1898 & Co.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package provider implements the Armis Terraform provider
+// for managing Armis Centrix security platform resources.
+// It provides the necessary configuration, resources, and data sources
+// to interact with the Armis API.
 package provider
 
 import (

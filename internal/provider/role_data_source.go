@@ -174,7 +174,7 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 	}
 }
 
-// RoleSettingsModel maps the RoleSettings schema data.
+// RoleDataSourceModel defines the structure for the role data source model.
 type RoleDataSourceModel struct {
 	Name        types.String      `tfsdk:"name"`
 	Permissions *PermissionsModel `tfsdk:"permissions"`
