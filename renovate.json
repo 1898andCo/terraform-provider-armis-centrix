@@ -1,0 +1,17 @@
+{
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "managers": ["gomod"],
+      "enabled": true,
+      "groupName": "Go dependencies",
+      "schedule": ["weekly"]
+    }
+  ],
+  "labels": ["dependencies", "golang"],
+  "commitMessage": {
+    "prefix": "chore",
+    "includeScope": true
+  }
+}
+
