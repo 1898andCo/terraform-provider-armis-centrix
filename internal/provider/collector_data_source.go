@@ -175,6 +175,7 @@ func (d *collectorsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	for _, collector := range collectors {
 		collectorState := collectorModel{
 			BootTime:         types.StringValue(collector.BootTime),
+			ClusterID:        types.NumberValue(big.NewFloat(float64(collector.ClusterID))),
 			CollectorNumber:  types.NumberValue(big.NewFloat(float64(collector.CollectorNumber))),
 			DefaultGateway:   types.StringValue(collector.DefaultGateway),
 			HTTPSProxyRedact: types.StringValue(collector.HTTPSProxyRedacted),
