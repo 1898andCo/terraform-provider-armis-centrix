@@ -1,5 +1,5 @@
 {
-  "extends": ["github>renovatebot/config:recommended"],
+  "extends": ["config:recommended"],
   "packageRules": [
     {
       "managers": ["gomod"],
