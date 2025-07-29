@@ -35,10 +35,8 @@ output "armis_lab_collectors" {
 Read-Only:
 
 - `boot_time` (String) The boot time of the collector, represented as a timestamp.
-- `city` (String) The city where the collector is located.
 - `cluster_id` (Number) The unique identifier of the cluster to which the collector belongs.
 - `collector_number` (Number) A number that uniquely identifies the collector.
-- `country` (String) The country where the collector is located.
 - `default_gateway` (String) The default gateway associated with the collector.
 - `https_proxy_redacted` (String) The HTTPS proxy configuration for the collector, with sensitive information redacted.
 - `ip_address` (String) The IP address assigned to the collector.

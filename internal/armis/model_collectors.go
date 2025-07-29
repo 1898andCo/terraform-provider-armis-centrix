@@ -3,8 +3,8 @@
 
 package armis
 
-// Struct to match the entire API response.
-type CollectorApiResponse struct {
+// CollectorAPIResponse struct to match the entire API response.
+type CollectorAPIResponse struct {
 	Data    Collectors `json:"data"`
 	Success bool       `json:"success,omitempty"`
 	Count   *int       `json:"count,omitempty"`
@@ -13,18 +13,16 @@ type CollectorApiResponse struct {
 	Total   *int       `json:"total,omitempty"`
 }
 
-// Struct for the "data" key.
+// Collectors struct for the "data" key.
 type Collectors struct {
 	Collectors []CollectorSettings `json:"collectors,omitempty"`
 }
 
-// Struct for individual collector settings.
+// CollectorSettings struct for individual collector settings.
 type CollectorSettings struct {
 	BootTime           string `json:"bootTime,omitempty"`
-	City               string `json:"city,omitempty"`
 	ClusterID          int    `json:"clusterId,omitempty"`
 	CollectorNumber    int    `json:"collectorNumber,omitempty"`
-	Country            string `json:"country,omitempty"`
 	DefaultGateway     string `json:"defaultGateway,omitempty"`
 	HTTPSProxyRedacted string `json:"httpsProxyRedacted,omitempty"`
 	IPAddress          string `json:"ipAddress,omitempty"`
@@ -49,30 +47,30 @@ type UpdateCollectorSettings struct {
 	Name           string `json:"name"`
 }
 
-// Struct for creating collectors.
-type CreateCollectorApiResponse struct {
+// CreateCollectorAPIResponse struct for creating a new collector.
+type CreateCollectorAPIResponse struct {
 	Data    NewCollectorSettings `json:"data"`
 	Success bool                 `json:"success,omitempty"`
 }
 
-// Struct for getting a single collector.
-type GetCollectorApiResponse struct {
+// GetCollectorAPIResponse struct for getting collector details.
+type GetCollectorAPIResponse struct {
 	Data    CollectorSettings `json:"data"`
 	Success bool              `json:"success,omitempty"`
 }
 
-// Struct for updating collector.
-type UpdateCollectorApiResponse struct {
+// UpdateCollectorAPIesponse struct for updating collector.
+type UpdateCollectorAPIResponse struct {
 	Data    CollectorSettings `json:"data"`
 	Success bool              `json:"success"`
 }
 
-// Structs for deleting collector.
-type DeleteCollectorApiResponse struct {
+// DeleteCollectorAPIResponse struct for deleting collector.
+type DeleteCollectorAPIResponse struct {
 	Success bool `json:"success"`
 }
 
-// Struct for creating a new collector response.
+// NewCollectorSettings struct for creating a new collector response.
 type NewCollectorSettings struct {
 	CollectorID int    `json:"collectorId,omitempty"`
 	LicenseKey  string `json:"licenseKey,omitempty"`

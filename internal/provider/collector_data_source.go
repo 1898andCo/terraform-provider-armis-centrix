@@ -71,20 +71,12 @@ func (d *collectorsDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 							Description: "The boot time of the collector, represented as a timestamp.",
 							Computed:    true,
 						},
-						"city": schema.StringAttribute{
-							Description: "The city where the collector is located.",
-							Computed:    true,
-						},
 						"cluster_id": schema.NumberAttribute{
 							Description: "The unique identifier of the cluster to which the collector belongs.",
 							Computed:    true,
 						},
 						"collector_number": schema.NumberAttribute{
 							Description: "A number that uniquely identifies the collector.",
-							Computed:    true,
-						},
-						"country": schema.StringAttribute{
-							Description: "The country where the collector is located.",
 							Computed:    true,
 						},
 						"default_gateway": schema.StringAttribute{
@@ -150,10 +142,8 @@ type collectorsDataSourceModel struct {
 // collectorModel maps the collector schema data.
 type collectorModel struct {
 	BootTime         types.String `tfsdk:"boot_time"`
-	City             types.String `tfsdk:"city"`
 	ClusterID        types.Number `tfsdk:"cluster_id"`
 	CollectorNumber  types.Number `tfsdk:"collector_number"`
-	Country          types.String `tfsdk:"country"`
 	DefaultGateway   types.String `tfsdk:"default_gateway"`
 	HTTPSProxyRedact types.String `tfsdk:"https_proxy_redacted"`
 	IPAddress        types.String `tfsdk:"ip_address"`
@@ -185,10 +175,7 @@ func (d *collectorsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	for _, collector := range collectors {
 		collectorState := collectorModel{
 			BootTime:         types.StringValue(collector.BootTime),
-			City:             types.StringValue(collector.City),
-			ClusterID:        types.NumberValue(big.NewFloat(float64(collector.ClusterID))),
 			CollectorNumber:  types.NumberValue(big.NewFloat(float64(collector.CollectorNumber))),
-			Country:          types.StringValue(collector.Country),
 			DefaultGateway:   types.StringValue(collector.DefaultGateway),
 			HTTPSProxyRedact: types.StringValue(collector.HTTPSProxyRedacted),
 			IPAddress:        types.StringValue(collector.IPAddress),
