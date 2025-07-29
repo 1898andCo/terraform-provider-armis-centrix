@@ -1,0 +1,33 @@
+{
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "managers": ["gomod"],
+      "enabled": true,
+      "groupName": "Go dependencies",
+      "schedule": ["weekly"]
+    },
+    {
+      "matchSourceUrls": [
+        "https://github.com/**"
+      ],
+      "prBodyDefinitions": {
+        "OpenSSF": "[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/{{sourceRepo}}/badge)](https://securityscorecards.dev/viewer/?uri=github.com/{{sourceRepo}})"
+      },
+      "prBodyColumns": [
+        "Package",
+        "Type",
+        "Update",
+        "Change",
+        "Pending",
+        "OpenSSF"
+      ]
+    }
+  ],
+  "labels": ["dependencies", "golang", "renovate"],
+  "commitMessage": {
+    "prefix": "chore",
+    "includeScope": true
+  },
+  "dependencyDashboard": true
+}
