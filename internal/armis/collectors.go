@@ -11,16 +11,16 @@ import (
 	"net/url"
 )
 
-func (c *Client) GetCollectorByID(ctx context.Context, collectorId string) (*CollectorSettings, error) {
-	if collectorId == "" {
+func (c *Client) GetCollectorByID(ctx context.Context, collectorID string) (*CollectorSettings, error) {
+	if collectorID == "" {
 		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
 
 	// URL encode the collector ID
-	encodedCollectorId := url.QueryEscape(collectorId)
+	encodedCollectorID := url.QueryEscape(collectorID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for GetCollector: %w", err)
 	}
@@ -32,7 +32,7 @@ func (c *Client) GetCollectorByID(ctx context.Context, collectorId string) (*Col
 	}
 
 	// Parse the response
-	var response GetCollectorApiResponse
+	var response GetCollectorAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse collector response: %w", err)
 	}
@@ -54,7 +54,7 @@ func (c *Client) GetCollectors(ctx context.Context) ([]CollectorSettings, error)
 	}
 
 	// Parse the response
-	var response CollectorApiResponse
+	var response CollectorAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse collectors response: %w", err)
 	}
@@ -89,7 +89,7 @@ func (c *Client) CreateCollector(ctx context.Context, collector CreateCollectorS
 	}
 
 	// Parse the response
-	var response CreateCollectorApiResponse
+	var response CreateCollectorAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse create collector response: %w", err)
 	}
@@ -97,8 +97,8 @@ func (c *Client) CreateCollector(ctx context.Context, collector CreateCollectorS
 	return &response.Data, nil
 }
 
-func (c *Client) UpdateCollector(ctx context.Context, collectorId string, collector UpdateCollectorSettings) (*CollectorSettings, error) {
-	if collectorId == "" {
+func (c *Client) UpdateCollector(ctx context.Context, collectorID string, collector UpdateCollectorSettings) (*CollectorSettings, error) {
+	if collectorID == "" {
 		return nil, fmt.Errorf("%w", ErrCollectorID)
 	}
 
@@ -116,10 +116,10 @@ func (c *Client) UpdateCollector(ctx context.Context, collectorId string, collec
 	}
 
 	// URL encode the collector ID
-	encodedCollectorId := url.QueryEscape(collectorId)
+	encodedCollectorID := url.QueryEscape(collectorID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorId), bytes.NewBuffer(collectorData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorID), bytes.NewBuffer(collectorData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateCollector: %w", err)
 	}
@@ -131,7 +131,7 @@ func (c *Client) UpdateCollector(ctx context.Context, collectorId string, collec
 	}
 
 	// Parse the response
-	var response UpdateCollectorApiResponse
+	var response UpdateCollectorAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse update collector response: %w", err)
 	}
@@ -139,16 +139,16 @@ func (c *Client) UpdateCollector(ctx context.Context, collectorId string, collec
 	return &response.Data, nil
 }
 
-func (c *Client) DeleteCollector(ctx context.Context, collectorId string) (bool, error) {
-	if collectorId == "" {
+func (c *Client) DeleteCollector(ctx context.Context, collectorID string) (bool, error) {
+	if collectorID == "" {
 		return false, fmt.Errorf("%w", ErrCollectorID)
 	}
 
 	// URL encode the collector ID
-	encodedCollectorId := url.QueryEscape(collectorId)
+	encodedCollectorID := url.QueryEscape(collectorID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/collectors/%s/", c.apiVersion, encodedCollectorID), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteCollector: %w", err)
 	}
@@ -160,7 +160,7 @@ func (c *Client) DeleteCollector(ctx context.Context, collectorId string) (bool,
 	}
 
 	// Parse the response
-	var response DeleteCollectorApiResponse
+	var response DeleteCollectorAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return false, fmt.Errorf("failed to parse collector response: %w", err)
 	}
