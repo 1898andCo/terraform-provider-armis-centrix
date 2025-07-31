@@ -9,7 +9,6 @@ permissions:
   contents: write
 jobs:
   pr_agent_job:
-    # Run for Atmos component updates
     if: ${{ github.event.sender.login != 'renovate[bot]' }}
     runs-on: [self-hosted, Ubuntu, Common]
     name: Run pr agent on every pull request, respond to user comments
