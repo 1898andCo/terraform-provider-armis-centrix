@@ -1005,7 +1005,17 @@ func (d *rolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	roleState := RoleDataSourceModel{
+	roleState := BuildRoleDataSourceModel(role)
+
+	// Set the state with the fetched role
+	resp.Diagnostics.Append(resp.State.Set(ctx, &roleState)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
+	return RoleDataSourceModel{
 		ID:       types.StringValue(fmt.Sprintf("%d", role.ID)),
 		Name:     types.StringValue(role.Name),
 		ViprRole: types.BoolValue(role.ViprRole),
@@ -1172,11 +1182,5 @@ func (d *rolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 				Read: types.BoolValue(role.Permissions.Vulnerability.Read.All),
 			},
 		},
-	}
-
-	// Set the state with the fetched role
-	resp.Diagnostics.Append(resp.State.Set(ctx, &roleState)...)
-	if resp.Diagnostics.HasError() {
-		return
 	}
 }
