@@ -19,7 +19,8 @@ func TestAcc_CollectorDataSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.#"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.name"),
-					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.boot_time"),
+					// If the test devices are not turned on, the boot time will be null
+					// resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.boot_time"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.cluster_id"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.collector_number"),
 					resource.TestCheckResourceAttrSet("data.armis_collectors.test", "collectors.0.default_gateway"),
