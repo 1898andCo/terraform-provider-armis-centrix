@@ -44,6 +44,13 @@ Read-Only:
 
 - `advanced_permissions` (Attributes) Advanced permissions for the role. (see [below for nested schema](#nestedatt--permissions--advanced_permissions))
 - `alert` (Attributes) Permissions for managing alerts. (see [below for nested schema](#nestedatt--permissions--alert))
+- `device` (Attributes) Permissions for managing devices. (see [below for nested schema](#nestedatt--permissions--device))
+- `policy` (Attributes) Permissions for managing policies. (see [below for nested schema](#nestedatt--permissions--policy))
+- `report` (Attributes) Permissions for managing reports. (see [below for nested schema](#nestedatt--permissions--report))
+- `risk_factor` (Attributes) Permissions for managing risk factors. (see [below for nested schema](#nestedatt--permissions--risk_factor))
+- `settings` (Attributes) Permissions for managing settings. (see [below for nested schema](#nestedatt--permissions--settings))
+- `user` (Attributes) Permissions for managing users. (see [below for nested schema](#nestedatt--permissions--user))
+- `vulnerability` (Attributes) Permissions for managing vulnerabilities. (see [below for nested schema](#nestedatt--permissions--vulnerability))
 
 <a id="nestedatt--permissions--advanced_permissions"></a>
 ### Nested Schema for `permissions.advanced_permissions`
@@ -96,3 +103,336 @@ Read-Only:
 - `resolve` (Boolean) Permission to resolve alerts.
 - `suppress` (Boolean) Permission to suppress alerts.
 - `whitelist_devices` (Boolean) Permission to whitelist devices in alerts.
+
+
+
+<a id="nestedatt--permissions--device"></a>
+### Nested Schema for `permissions.device`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all device permissions are enabled.
+- `manage` (Attributes) Permissions for managing devices. (see [below for nested schema](#nestedatt--permissions--device--manage))
+- `read` (Boolean) Permission to read devices.
+
+<a id="nestedatt--permissions--device--manage"></a>
+### Nested Schema for `permissions.device.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all device management permissions are enabled.
+- `create` (Boolean) Permission to create devices.
+- `delete` (Boolean) Permission to delete devices.
+- `edit` (Boolean) Permission to edit devices.
+- `enforce` (Attributes) Permissions for enforcing device policies. (see [below for nested schema](#nestedatt--permissions--device--manage--enforce))
+- `merge` (Boolean) Permission to merge devices.
+- `request_deleted_data` (Boolean) Permission to request deleted data.
+- `tags` (Boolean) Permission to manage device tags.
+
+<a id="nestedatt--permissions--device--manage--enforce"></a>
+### Nested Schema for `permissions.device.manage.enforce`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all enforce permissions are enabled.
+- `create` (Boolean) Permission to create enforcement policies.
+- `delete` (Boolean) Permission to delete enforcement policies.
+
+
+
+
+<a id="nestedatt--permissions--policy"></a>
+### Nested Schema for `permissions.policy`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all policy permissions are enabled.
+- `manage` (Boolean) Permission to manage policies.
+- `read` (Boolean) Permission to read policies.
+
+
+<a id="nestedatt--permissions--report"></a>
+### Nested Schema for `permissions.report`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all report permissions are enabled.
+- `export` (Boolean) Permission to export reports.
+- `manage` (Attributes) Permissions for managing reports. (see [below for nested schema](#nestedatt--permissions--report--manage))
+- `read` (Boolean) Permission to read reports.
+
+<a id="nestedatt--permissions--report--manage"></a>
+### Nested Schema for `permissions.report.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all report management permissions are enabled.
+- `create` (Boolean) Permission to create reports.
+- `delete` (Boolean) Permission to delete reports.
+- `edit` (Boolean) Permission to edit reports.
+
+
+
+<a id="nestedatt--permissions--risk_factor"></a>
+### Nested Schema for `permissions.risk_factor`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all risk factor permissions are enabled.
+- `manage` (Attributes) Permissions for managing risk factors. (see [below for nested schema](#nestedatt--permissions--risk_factor--manage))
+- `read` (Boolean) Permission to read risk factors.
+
+<a id="nestedatt--permissions--risk_factor--manage"></a>
+### Nested Schema for `permissions.risk_factor.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all risk factor management permissions are enabled.
+- `customization` (Attributes) Permissions for customizing risk factors. (see [below for nested schema](#nestedatt--permissions--risk_factor--manage--customization))
+- `status` (Attributes) Permissions for managing risk factor status. (see [below for nested schema](#nestedatt--permissions--risk_factor--manage--status))
+
+<a id="nestedatt--permissions--risk_factor--manage--customization"></a>
+### Nested Schema for `permissions.risk_factor.manage.customization`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all customization permissions are enabled.
+- `create` (Boolean) Permission to create customizations.
+- `disable` (Boolean) Permission to disable customizations.
+- `edit` (Boolean) Permission to edit customizations.
+
+
+<a id="nestedatt--permissions--risk_factor--manage--status"></a>
+### Nested Schema for `permissions.risk_factor.manage.status`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all status permissions are enabled.
+- `ignore` (Boolean) Permission to ignore risk factors.
+- `resolve` (Boolean) Permission to resolve risk factors.
+
+
+
+
+<a id="nestedatt--permissions--settings"></a>
+### Nested Schema for `permissions.settings`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all settings permissions are enabled.
+- `audit_log` (Boolean) Permission to access audit logs.
+- `boundary` (Attributes) Permissions for managing boundaries. (see [below for nested schema](#nestedatt--permissions--settings--boundary))
+- `business_impact` (Attributes) Permissions for managing business impact. (see [below for nested schema](#nestedatt--permissions--settings--business_impact))
+- `collector` (Attributes) Permissions for managing collectors. (see [below for nested schema](#nestedatt--permissions--settings--collector))
+- `custom_properties` (Attributes) Permissions for managing custom properties. (see [below for nested schema](#nestedatt--permissions--settings--custom_properties))
+- `integration` (Attributes) Permissions for managing integrations. (see [below for nested schema](#nestedatt--permissions--settings--integration))
+- `internal_ips` (Attributes) Permissions for managing internal IPs. (see [below for nested schema](#nestedatt--permissions--settings--internal_ips))
+- `notifications` (Attributes) Permissions for managing notifications. (see [below for nested schema](#nestedatt--permissions--settings--notifications))
+- `oidc` (Attributes) Permissions for managing OIDC. (see [below for nested schema](#nestedatt--permissions--settings--oidc))
+- `saml` (Attributes) Permissions for managing SAML. (see [below for nested schema](#nestedatt--permissions--settings--saml))
+- `secret_key` (Boolean) Permission to access secret keys.
+- `security_settings` (Boolean) Permission to access security settings.
+- `sites_and_sensors` (Attributes) Permissions for managing sites and sensors. (see [below for nested schema](#nestedatt--permissions--settings--sites_and_sensors))
+- `users_and_roles` (Attributes) Permissions for managing users and roles. (see [below for nested schema](#nestedatt--permissions--settings--users_and_roles))
+
+<a id="nestedatt--permissions--settings--boundary"></a>
+### Nested Schema for `permissions.settings.boundary`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all boundary permissions are enabled.
+- `manage` (Attributes) Permissions for managing boundaries. (see [below for nested schema](#nestedatt--permissions--settings--boundary--manage))
+- `read` (Boolean) Permission to read boundaries.
+
+<a id="nestedatt--permissions--settings--boundary--manage"></a>
+### Nested Schema for `permissions.settings.boundary.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all boundary management permissions are enabled.
+- `create` (Boolean) Permission to create boundaries.
+- `delete` (Boolean) Permission to delete boundaries.
+- `edit` (Boolean) Permission to edit boundaries.
+
+
+
+<a id="nestedatt--permissions--settings--business_impact"></a>
+### Nested Schema for `permissions.settings.business_impact`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all business impact permissions are enabled.
+- `manage` (Boolean) Permission to manage business impact.
+- `read` (Boolean) Permission to read business impact.
+
+
+<a id="nestedatt--permissions--settings--collector"></a>
+### Nested Schema for `permissions.settings.collector`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all collector permissions are enabled.
+- `manage` (Boolean) Permission to manage collectors.
+- `read` (Boolean) Permission to read collectors.
+
+
+<a id="nestedatt--permissions--settings--custom_properties"></a>
+### Nested Schema for `permissions.settings.custom_properties`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all custom properties permissions are enabled.
+- `manage` (Boolean) Permission to manage custom properties.
+- `read` (Boolean) Permission to read custom properties.
+
+
+<a id="nestedatt--permissions--settings--integration"></a>
+### Nested Schema for `permissions.settings.integration`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all integration permissions are enabled.
+- `manage` (Boolean) Permission to manage integrations.
+- `read` (Boolean) Permission to read integrations.
+
+
+<a id="nestedatt--permissions--settings--internal_ips"></a>
+### Nested Schema for `permissions.settings.internal_ips`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all internal IPs permissions are enabled.
+- `manage` (Boolean) Permission to manage internal IPs.
+- `read` (Boolean) Permission to read internal IPs.
+
+
+<a id="nestedatt--permissions--settings--notifications"></a>
+### Nested Schema for `permissions.settings.notifications`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all notifications permissions are enabled.
+- `manage` (Boolean) Permission to manage notifications.
+- `read` (Boolean) Permission to read notifications.
+
+
+<a id="nestedatt--permissions--settings--oidc"></a>
+### Nested Schema for `permissions.settings.oidc`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all OIDC permissions are enabled.
+- `manage` (Boolean) Permission to manage OIDC.
+- `read` (Boolean) Permission to read OIDC.
+
+
+<a id="nestedatt--permissions--settings--saml"></a>
+### Nested Schema for `permissions.settings.saml`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all SAML permissions are enabled.
+- `manage` (Boolean) Permission to manage SAML.
+- `read` (Boolean) Permission to read SAML.
+
+
+<a id="nestedatt--permissions--settings--sites_and_sensors"></a>
+### Nested Schema for `permissions.settings.sites_and_sensors`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all sites and sensors permissions are enabled.
+- `manage` (Attributes) Permissions for managing sites and sensors. (see [below for nested schema](#nestedatt--permissions--settings--sites_and_sensors--manage))
+- `read` (Boolean) Permission to read sites and sensors.
+
+<a id="nestedatt--permissions--settings--sites_and_sensors--manage"></a>
+### Nested Schema for `permissions.settings.sites_and_sensors.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all manage permissions are enabled.
+- `sensors` (Boolean) Permission to manage sensors.
+- `sites` (Boolean) Permission to manage sites.
+
+
+
+<a id="nestedatt--permissions--settings--users_and_roles"></a>
+### Nested Schema for `permissions.settings.users_and_roles`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all users and roles permissions are enabled.
+- `manage` (Attributes) Permissions for managing users and roles. (see [below for nested schema](#nestedatt--permissions--settings--users_and_roles--manage))
+- `read` (Boolean) Permission to read users and roles.
+
+<a id="nestedatt--permissions--settings--users_and_roles--manage"></a>
+### Nested Schema for `permissions.settings.users_and_roles.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all manage permissions are enabled.
+- `roles` (Attributes) Permissions for managing roles. (see [below for nested schema](#nestedatt--permissions--settings--users_and_roles--manage--roles))
+- `users` (Attributes) Permissions for managing users. (see [below for nested schema](#nestedatt--permissions--settings--users_and_roles--manage--users))
+
+<a id="nestedatt--permissions--settings--users_and_roles--manage--roles"></a>
+### Nested Schema for `permissions.settings.users_and_roles.manage.roles`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all role permissions are enabled.
+- `create` (Boolean) Permission to create roles.
+- `delete` (Boolean) Permission to delete roles.
+- `edit` (Boolean) Permission to edit roles.
+
+
+<a id="nestedatt--permissions--settings--users_and_roles--manage--users"></a>
+### Nested Schema for `permissions.settings.users_and_roles.manage.users`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all user permissions are enabled.
+- `create` (Boolean) Permission to create users.
+- `delete` (Boolean) Permission to delete users.
+- `edit` (Boolean) Permission to edit users.
+
+
+
+
+
+<a id="nestedatt--permissions--user"></a>
+### Nested Schema for `permissions.user`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all user permissions are enabled.
+- `manage` (Attributes) Permissions for managing users. (see [below for nested schema](#nestedatt--permissions--user--manage))
+- `read` (Boolean) Permission to read users.
+
+<a id="nestedatt--permissions--user--manage"></a>
+### Nested Schema for `permissions.user.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all user management permissions are enabled.
+- `upsert` (Boolean) Permission to upsert users.
+
+
+
+<a id="nestedatt--permissions--vulnerability"></a>
+### Nested Schema for `permissions.vulnerability`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all vulnerability permissions are enabled.
+- `manage` (Attributes) Permissions for managing vulnerabilities. (see [below for nested schema](#nestedatt--permissions--vulnerability--manage))
+- `read` (Boolean) Permission to read vulnerabilities.
+
+<a id="nestedatt--permissions--vulnerability--manage"></a>
+### Nested Schema for `permissions.vulnerability.manage`
+
+Read-Only:
+
+- `all` (Boolean) Indicates if all vulnerability management permissions are enabled.
+- `ignore` (Boolean) Permission to ignore vulnerabilities.
+- `resolve` (Boolean) Permission to resolve vulnerabilities.
+- `write` (Boolean) Permission to write vulnerabilities.

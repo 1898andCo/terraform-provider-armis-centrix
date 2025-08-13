@@ -12,9 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -56,106 +53,75 @@ func (r *roleResource) Metadata(_ context.Context, req resource.MetadataRequest,
 	resp.TypeName = req.ProviderTypeName + "_role"
 }
 
-// Schema defines the schema for the role resource.
 func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: `
-		Provides an Armis Role.
-
-		This resource configures permissions, including advanced and alert permissions, for a role.
-		The nested permissions follow a parent-child Boolean relationship:
-		- If a parent option is True, all its nested options must also be True.
-		- If any nested option is False, the parent option cannot be True.
-		`,
+		Description: "Manages an Armis role",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Required:      true,
-				Description:   "The name of the role.",
-				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				Required:    true,
+				Description: "The name of the role.",
 			},
 			"id": schema.StringAttribute{
-				Computed:      true,
-				Description:   "Unique identifier for the role.",
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Computed:    true,
+				Description: "Unique identifier for the role.",
 			},
 			"permissions": schema.SingleNestedAttribute{
-				Description: "Permissions associated with the role, categorized by feature and capability.",
-				Required:    true, // Permissions must be defined for every role.
+				Description: "Permissions associated with the role.",
+				Required:    true,
 				Attributes: map[string]schema.Attribute{
 					"advanced_permissions": schema.SingleNestedAttribute{
-						Description: "Advanced permissions for managing sensitive data and configurations.",
 						Optional:    true,
-						Computed:    true,
+						Description: "Advanced permissions for the role.",
 						Attributes: map[string]schema.Attribute{
 							"all": schema.BoolAttribute{
-								Description: "Indicates if all advanced permissions are enabled.",
 								Optional:    true,
-								Computed:    true,
-								Default:     booldefault.StaticBool(false),
+								Description: "Indicates if the role has all advanced permissions.",
 							},
 							"behavioral": schema.SingleNestedAttribute{
-								Description: "Behavioral permissions for specific system entities.",
 								Optional:    true,
+								Description: "Behavioral permissions for the role.",
 								Attributes: map[string]schema.Attribute{
 									"all": schema.BoolAttribute{
-										Description: "Indicates if all behavioral permissions are enabled.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Indicates if the role has all behavioral permissions.",
 									},
 									"application_name": schema.BoolAttribute{
-										Description: "Permission to access application names.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for application names.",
 									},
 									"host_name": schema.BoolAttribute{
-										Description: "Permission to access host names.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for host names.",
 									},
 									"service_name": schema.BoolAttribute{
-										Description: "Permission to access service names.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for service names.",
 									},
 								},
 							},
 							"device": schema.SingleNestedAttribute{
-								Description: "Permissions for managing device-related data.",
 								Optional:    true,
+								Description: "Device-related permissions.",
 								Attributes: map[string]schema.Attribute{
 									"all": schema.BoolAttribute{
-										Description: "Indicates if all device-related permissions are enabled.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Indicates if the role has all device permissions.",
 									},
 									"device_names": schema.BoolAttribute{
-										Description: "Permission to access device names.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for device names.",
 									},
 									"ip_addresses": schema.BoolAttribute{
-										Description: "Permission to access device IP addresses.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for IP addresses.",
 									},
 									"mac_addresses": schema.BoolAttribute{
-										Description: "Permission to access device MAC addresses.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for MAC addresses.",
 									},
 									"phone_numbers": schema.BoolAttribute{
-										Description: "Permission to access device phone numbers.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
+										Description: "Permission for phone numbers.",
 									},
 								},
 							},
@@ -168,8 +134,6 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							"all": schema.BoolAttribute{
 								Description: "Indicates if all alert permissions are enabled.",
 								Optional:    true,
-								Computed:    true,
-								Default:     booldefault.StaticBool(false),
 							},
 							"manage": schema.SingleNestedAttribute{
 								Description: "Permissions for managing alerts.",
@@ -178,34 +142,578 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"all": schema.BoolAttribute{
 										Description: "Indicates if all alert management permissions are enabled.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
 									},
 									"resolve": schema.BoolAttribute{
 										Description: "Permission to resolve alerts.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
 									},
 									"suppress": schema.BoolAttribute{
 										Description: "Permission to suppress alerts.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
 									},
 									"whitelist_devices": schema.BoolAttribute{
 										Description: "Permission to whitelist devices in alerts.",
 										Optional:    true,
-										Computed:    true,
-										Default:     booldefault.StaticBool(false),
 									},
 								},
 							},
 							"read": schema.BoolAttribute{
 								Description: "Permission to read alerts.",
 								Optional:    true,
-								Computed:    true,
-								Default:     booldefault.StaticBool(false),
+							},
+						},
+					},
+					"device": schema.SingleNestedAttribute{
+						Description: "Permissions for managing devices.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all device permissions are enabled.",
+								Optional:    true,
+							},
+							"manage": schema.SingleNestedAttribute{
+								Description: "Permissions for managing devices.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all device management permissions are enabled.",
+										Optional:    true,
+									},
+									"create": schema.BoolAttribute{
+										Description: "Permission to create devices.",
+										Optional:    true,
+									},
+									"delete": schema.BoolAttribute{
+										Description: "Permission to delete devices.",
+										Optional:    true,
+									},
+									"edit": schema.BoolAttribute{
+										Description: "Permission to edit devices.",
+										Optional:    true,
+									},
+									"enforce": schema.SingleNestedAttribute{
+										Description: "Permissions for enforcing device policies.",
+										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all enforce permissions are enabled.",
+												Optional:    true,
+											},
+											"create": schema.BoolAttribute{
+												Description: "Permission to create enforcement policies.",
+												Optional:    true,
+											},
+											"delete": schema.BoolAttribute{
+												Description: "Permission to delete enforcement policies.",
+												Optional:    true,
+											},
+										},
+									},
+									"merge": schema.BoolAttribute{
+										Description: "Permission to merge devices.",
+										Optional:    true,
+									},
+									"request_deleted_data": schema.BoolAttribute{
+										Description: "Permission to request deleted data.",
+										Optional:    true,
+									},
+									"tags": schema.BoolAttribute{
+										Description: "Permission to manage device tags.",
+										Optional:    true,
+									},
+								},
+							},
+							"read": schema.BoolAttribute{
+								Description: "Permission to read devices.",
+								Optional:    true,
+							},
+						},
+					},
+					"policy": schema.SingleNestedAttribute{
+						Description: "Permissions for managing policies.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all policy permissions are enabled.",
+								Optional:    true,
+							},
+							"manage": schema.BoolAttribute{
+								Description: "Permission to manage policies.",
+								Optional:    true,
+							},
+							"read": schema.BoolAttribute{
+								Description: "Permission to read policies.",
+								Optional:    true,
+							},
+						},
+					},
+					"report": schema.SingleNestedAttribute{
+						Description: "Permissions for managing reports.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all report permissions are enabled.",
+								Optional:    true,
+							},
+							"export": schema.BoolAttribute{
+								Description: "Permission to export reports.",
+								Optional:    true,
+							},
+							"manage": schema.SingleNestedAttribute{
+								Description: "Permissions for managing reports.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all report management permissions are enabled.",
+										Optional:    true,
+									},
+									"create": schema.BoolAttribute{
+										Description: "Permission to create reports.",
+										Optional:    true,
+									},
+									"delete": schema.BoolAttribute{
+										Description: "Permission to delete reports.",
+										Optional:    true,
+									},
+									"edit": schema.BoolAttribute{
+										Description: "Permission to edit reports.",
+										Optional:    true,
+									},
+								},
+							},
+							"read": schema.BoolAttribute{
+								Description: "Permission to read reports.",
+								Optional:    true,
+							},
+						},
+					},
+					"risk_factor": schema.SingleNestedAttribute{
+						Description: "Permissions for managing risk factors.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all risk factor permissions are enabled.",
+								Optional:    true,
+							},
+							"manage": schema.SingleNestedAttribute{
+								Description: "Permissions for managing risk factors.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all risk factor management permissions are enabled.",
+										Optional:    true,
+									},
+									"customization": schema.SingleNestedAttribute{
+										Description: "Permissions for customizing risk factors.",
+										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all customization permissions are enabled.",
+												Optional:    true,
+											},
+											"create": schema.BoolAttribute{
+												Description: "Permission to create customizations.",
+												Optional:    true,
+											},
+											"disable": schema.BoolAttribute{
+												Description: "Permission to disable customizations.",
+												Optional:    true,
+											},
+											"edit": schema.BoolAttribute{
+												Description: "Permission to edit customizations.",
+												Optional:    true,
+											},
+										},
+									},
+									"status": schema.SingleNestedAttribute{
+										Description: "Permissions for managing risk factor status.",
+										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all status permissions are enabled.",
+												Optional:    true,
+											},
+											"ignore": schema.BoolAttribute{
+												Description: "Permission to ignore risk factors.",
+												Optional:    true,
+											},
+											"resolve": schema.BoolAttribute{
+												Description: "Permission to resolve risk factors.",
+												Optional:    true,
+											},
+										},
+									},
+								},
+							},
+							"read": schema.BoolAttribute{
+								Description: "Permission to read risk factors.",
+								Optional:    true,
+							},
+						},
+					},
+					"settings": schema.SingleNestedAttribute{
+						Description: "Permissions for managing settings.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all settings permissions are enabled.",
+								Optional:    true,
+							},
+							"audit_log": schema.BoolAttribute{
+								Description: "Permission to access audit logs.",
+								Optional:    true,
+							},
+							"boundary": schema.SingleNestedAttribute{
+								Description: "Permissions for managing boundaries.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all boundary permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.SingleNestedAttribute{
+										Description: "Permissions for managing boundaries.",
+										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all boundary management permissions are enabled.",
+												Optional:    true,
+											},
+											"create": schema.BoolAttribute{
+												Description: "Permission to create boundaries.",
+												Optional:    true,
+											},
+											"delete": schema.BoolAttribute{
+												Description: "Permission to delete boundaries.",
+												Optional:    true,
+											},
+											"edit": schema.BoolAttribute{
+												Description: "Permission to edit boundaries.",
+												Optional:    true,
+											},
+										},
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read boundaries.",
+										Optional:    true,
+									},
+								},
+							},
+							"business_impact": schema.SingleNestedAttribute{
+								Description: "Permissions for managing business impact.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all business impact permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage business impact.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read business impact.",
+										Optional:    true,
+									},
+								},
+							},
+							"collector": schema.SingleNestedAttribute{
+								Description: "Permissions for managing collectors.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all collector permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage collectors.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read collectors.",
+										Optional:    true,
+									},
+								},
+							},
+							"custom_properties": schema.SingleNestedAttribute{
+								Description: "Permissions for managing custom properties.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all custom properties permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage custom properties.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read custom properties.",
+										Optional:    true,
+									},
+								},
+							},
+							"integration": schema.SingleNestedAttribute{
+								Description: "Permissions for managing integrations.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all integration permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage integrations.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read integrations.",
+										Optional:    true,
+									},
+								},
+							},
+							"internal_ips": schema.SingleNestedAttribute{
+								Description: "Permissions for managing internal IPs.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all internal IPs permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage internal IPs.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read internal IPs.",
+										Optional:    true,
+									},
+								},
+							},
+							"notifications": schema.SingleNestedAttribute{
+								Description: "Permissions for managing notifications.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all notifications permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage notifications.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read notifications.",
+										Optional:    true,
+									},
+								},
+							},
+							"oidc": schema.SingleNestedAttribute{
+								Description: "Permissions for managing OIDC.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all OIDC permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage OIDC.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read OIDC.",
+										Optional:    true,
+									},
+								},
+							},
+							"saml": schema.SingleNestedAttribute{
+								Description: "Permissions for managing SAML.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all SAML permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.BoolAttribute{
+										Description: "Permission to manage SAML.",
+										Optional:    true,
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read SAML.",
+										Optional:    true,
+									},
+								},
+							},
+							"secret_key": schema.BoolAttribute{
+								Description: "Permission to access secret keys.",
+								Optional:    true,
+							},
+							"security_settings": schema.BoolAttribute{
+								Description: "Permission to access security settings.",
+								Optional:    true,
+							},
+							"sites_and_sensors": schema.SingleNestedAttribute{
+								Description: "Permissions for managing sites and sensors.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all sites and sensors permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.SingleNestedAttribute{
+										Description: "Permissions for managing sites and sensors.",
+										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all manage permissions are enabled.",
+												Optional:    true,
+											},
+											"sensors": schema.BoolAttribute{
+												Description: "Permission to manage sensors.",
+												Optional:    true,
+											},
+											"sites": schema.BoolAttribute{
+												Description: "Permission to manage sites.",
+												Optional:    true,
+											},
+										},
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read sites and sensors.",
+										Optional:    true,
+									},
+								},
+							},
+							"users_and_roles": schema.SingleNestedAttribute{
+								Description: "Permissions for managing users and roles.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all users and roles permissions are enabled.",
+										Optional:    true,
+									},
+									"manage": schema.SingleNestedAttribute{
+										Description: "Permissions for managing users and roles.",
+										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all manage permissions are enabled.",
+												Optional:    true,
+											},
+											"roles": schema.SingleNestedAttribute{
+												Description: "Permissions for managing roles.",
+												Optional:    true,
+												Attributes: map[string]schema.Attribute{
+													"all": schema.BoolAttribute{
+														Description: "Indicates if all role permissions are enabled.",
+														Optional:    true,
+													},
+													"create": schema.BoolAttribute{
+														Description: "Permission to create roles.",
+														Optional:    true,
+													},
+													"delete": schema.BoolAttribute{
+														Description: "Permission to delete roles.",
+														Optional:    true,
+													},
+													"edit": schema.BoolAttribute{
+														Description: "Permission to edit roles.",
+														Optional:    true,
+													},
+												},
+											},
+											"users": schema.SingleNestedAttribute{
+												Description: "Permissions for managing users.",
+												Optional:    true,
+												Attributes: map[string]schema.Attribute{
+													"all": schema.BoolAttribute{
+														Description: "Indicates if all user permissions are enabled.",
+														Optional:    true,
+													},
+													"create": schema.BoolAttribute{
+														Description: "Permission to create users.",
+														Optional:    true,
+													},
+													"delete": schema.BoolAttribute{
+														Description: "Permission to delete users.",
+														Optional:    true,
+													},
+													"edit": schema.BoolAttribute{
+														Description: "Permission to edit users.",
+														Optional:    true,
+													},
+												},
+											},
+										},
+									},
+									"read": schema.BoolAttribute{
+										Description: "Permission to read users and roles.",
+										Optional:    true,
+									},
+								},
+							},
+						},
+					},
+					"user": schema.SingleNestedAttribute{
+						Description: "Permissions for managing users.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all user permissions are enabled.",
+								Optional:    true,
+							},
+							"manage": schema.SingleNestedAttribute{
+								Description: "Permissions for managing users.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all user management permissions are enabled.",
+										Optional:    true,
+									},
+									"upsert": schema.BoolAttribute{
+										Description: "Permission to upsert users.",
+										Optional:    true,
+									},
+								},
+							},
+							"read": schema.BoolAttribute{
+								Description: "Permission to read users.",
+								Optional:    true,
+							},
+						},
+					},
+					"vulnerability": schema.SingleNestedAttribute{
+						Description: "Permissions for managing vulnerabilities.",
+						Optional:    true,
+						Attributes: map[string]schema.Attribute{
+							"all": schema.BoolAttribute{
+								Description: "Indicates if all vulnerability permissions are enabled.",
+								Optional:    true,
+							},
+							"manage": schema.SingleNestedAttribute{
+								Description: "Permissions for managing vulnerabilities.",
+								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all vulnerability management permissions are enabled.",
+										Optional:    true,
+									},
+									"ignore": schema.BoolAttribute{
+										Description: "Permission to ignore vulnerabilities.",
+										Optional:    true,
+									},
+									"resolve": schema.BoolAttribute{
+										Description: "Permission to resolve vulnerabilities.",
+										Optional:    true,
+									},
+									"write": schema.BoolAttribute{
+										Description: "Permission to write vulnerabilities.",
+										Optional:    true,
+									},
+								},
+							},
+							"read": schema.BoolAttribute{
+								Description: "Permission to read vulnerabilities.",
+								Optional:    true,
 							},
 						},
 					},
@@ -221,241 +729,6 @@ type RoleResourceModel struct {
 	Permissions *PermissionsModel `tfsdk:"permissions"`
 	ID          types.String      `tfsdk:"id"`
 }
-
-// PermissionsModel maps the Permissions schema data.
-type PermissionsModel struct {
-	AdvancedPermissions *AdvancedPermissionsModel `tfsdk:"advanced_permissions"`
-	Alert               *AlertModel               `tfsdk:"alert"`
-	// Device              DeviceModel              `tfsdk:"device"`
-	// Policy              PolicyModel              `tfsdk:"policy"`
-	// Report              ReportModel              `tfsdk:"report"`
-	// RiskFactor          RiskFactorModel          `tfsdk:"risk_factor"`
-	// Settings            SettingsModel            `tfsdk:"settings"`
-	// User                UserModel                `tfsdk:"user"`
-	// Vulnerability       VulnerabilityModel       `tfsdk:"vulnerability"`
-}
-
-// AdvancedPermissionsModel maps the AdvancedPermissions schema data.
-type AdvancedPermissionsModel struct {
-	All        types.Bool           `tfsdk:"all"`
-	Behavioral *BehavioralModel     `tfsdk:"behavioral"`
-	Device     *DeviceAdvancedModel `tfsdk:"device"`
-}
-
-// BehavioralModel maps the Behavioral schema data.
-type BehavioralModel struct {
-	All             types.Bool `tfsdk:"all"`
-	ApplicationName types.Bool `tfsdk:"application_name"`
-	HostName        types.Bool `tfsdk:"host_name"`
-	ServiceName     types.Bool `tfsdk:"service_name"`
-}
-
-// DeviceAdvancedModel maps the DeviceAdvanced schema data.
-type DeviceAdvancedModel struct {
-	All          types.Bool `tfsdk:"all"`
-	DeviceNames  types.Bool `tfsdk:"device_names"`
-	IPAddresses  types.Bool `tfsdk:"ip_addresses"`
-	MACAddresses types.Bool `tfsdk:"mac_addresses"`
-	PhoneNumbers types.Bool `tfsdk:"phone_numbers"`
-}
-
-// AlertModel maps the Alert schema data.
-type AlertModel struct {
-	All    types.Bool   `tfsdk:"all"`
-	Manage *ManageModel `tfsdk:"manage"`
-	Read   types.Bool   `tfsdk:"read"`
-}
-
-// ManageModel maps the Manage schema data.
-type ManageModel struct {
-	All              types.Bool `tfsdk:"all"`
-	Resolve          types.Bool `tfsdk:"resolve"`
-	Suppress         types.Bool `tfsdk:"suppress"`
-	WhitelistDevices types.Bool `tfsdk:"whitelist_devices"`
-}
-
-// // DeviceModel maps the Device schema data.
-// type DeviceModel struct {
-// 	All    types.Bool        `tfsdk:"all"`
-// 	Manage ManageDeviceModel `tfsdk:"manage"`
-// 	Read   PermissionModel   `tfsdk:"read"`
-// }
-//
-// // ManageDeviceModel maps the ManageDevice schema data.
-// type ManageDeviceModel struct {
-// 	All                types.Bool      `tfsdk:"all"`
-// 	Create             PermissionModel `tfsdk:"create"`
-// 	Delete             PermissionModel `tfsdk:"delete"`
-// 	Edit               PermissionModel `tfsdk:"edit"`
-// 	Enforce            EnforceModel    `tfsdk:"enforce"`
-// 	Merge              PermissionModel `tfsdk:"merge"`
-// 	RequestDeletedData PermissionModel `tfsdk:"request_deleted_data"`
-// 	Tags               PermissionModel `tfsdk:"tags"`
-// }
-//
-// // EnforceModel maps the Enforce schema data.
-// type EnforceModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Create PermissionModel `tfsdk:"create"`
-// 	Delete PermissionModel `tfsdk:"delete"`
-// }
-//
-// // PolicyModel maps the Policy schema data.
-// type PolicyModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Manage PermissionModel `tfsdk:"manage"`
-// 	Read   PermissionModel `tfsdk:"read"`
-// }
-//
-// // ReportModel maps the Report schema data.
-// type ReportModel struct {
-// 	All    types.Bool        `tfsdk:"all"`
-// 	Export PermissionModel   `tfsdk:"export"`
-// 	Manage ManageReportModel `tfsdk:"manage"`
-// 	Read   PermissionModel   `tfsdk:"read"`
-// }
-//
-// // ManageReportModel maps the ManageReport schema data.
-// type ManageReportModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Create PermissionModel `tfsdk:"create"`
-// 	Delete PermissionModel `tfsdk:"delete"`
-// 	Edit   PermissionModel `tfsdk:"edit"`
-// }
-//
-// // RiskFactorModel maps the RiskFactor schema data.
-// type RiskFactorModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Manage ManageRiskModel `tfsdk:"manage"`
-// 	Read   PermissionModel `tfsdk:"read"`
-// }
-//
-// // ManageRiskModel maps the ManageRisk schema data.
-// type ManageRiskModel struct {
-// 	All           types.Bool         `tfsdk:"all"`
-// 	Customization CustomizationModel `tfsdk:"customization"`
-// 	Status        StatusModel        `tfsdk:"status"`
-// }
-//
-// // CustomizationModel maps the Customization schema data.
-// type CustomizationModel struct {
-// 	All     types.Bool      `tfsdk:"all"`
-// 	Create  PermissionModel `tfsdk:"create"`
-// 	Disable PermissionModel `tfsdk:"disable"`
-// 	Edit    PermissionModel `tfsdk:"edit"`
-// }
-//
-// // StatusModel maps the Status schema data.
-// type StatusModel struct {
-// 	All     types.Bool      `tfsdk:"all"`
-// 	Ignore  PermissionModel `tfsdk:"ignore"`
-// 	Resolve PermissionModel `tfsdk:"resolve"`
-// }
-//
-// // SettingsModel maps the Settings schema data.
-// type SettingsModel struct {
-// 	All              types.Bool           `tfsdk:"all"`
-// 	AuditLog         PermissionModel      `tfsdk:"audit_log"`
-// 	Boundary         BoundaryModel        `tfsdk:"boundary"`
-// 	BusinessImpact   ManageAndReadModel   `tfsdk:"business_impact"`
-// 	Collector        ManageAndReadModel   `tfsdk:"collector"`
-// 	CustomProperties ManageAndReadModel   `tfsdk:"custom_properties"`
-// 	Integration      ManageAndReadModel   `tfsdk:"integration"`
-// 	InternalIps      ManageAndReadModel   `tfsdk:"internal_ips"`
-// 	Notifications    ManageAndReadModel   `tfsdk:"notifications"`
-// 	OIDC             ManageAndReadModel   `tfsdk:"oidc"`
-// 	SAML             ManageAndReadModel   `tfsdk:"saml"`
-// 	SecretKey        PermissionModel      `tfsdk:"secret_key"`
-// 	SecuritySettings PermissionModel      `tfsdk:"security_settings"`
-// 	SitesAndSensors  SitesAndSensorsModel `tfsdk:"sites_and_sensors"`
-// 	UsersAndRoles    UsersAndRolesModel   `tfsdk:"users_and_roles"`
-// }
-//
-// // BoundaryModel maps the Boundary schema data.
-// type BoundaryModel struct {
-// 	All    types.Bool          `tfsdk:"all"`
-// 	Manage ManageBoundaryModel `tfsdk:"manage"`
-// 	Read   PermissionModel     `tfsdk:"read"`
-// }
-//
-// // ManageBoundaryModel maps the ManageBoundary schema data.
-// type ManageBoundaryModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Create PermissionModel `tfsdk:"create"`
-// 	Delete PermissionModel `tfsdk:"delete"`
-// 	Edit   PermissionModel `tfsdk:"edit"`
-// }
-//
-// // ManageAndReadModel maps the ManageAndRead schema data.
-// type ManageAndReadModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Manage PermissionModel `tfsdk:"manage"`
-// 	Read   PermissionModel `tfsdk:"read"`
-// }
-//
-// // SitesAndSensorsModel maps the SitesAndSensors schema data.
-// type SitesAndSensorsModel struct {
-// 	All    types.Bool         `tfsdk:"all"`
-// 	Manage ManageSensorsModel `tfsdk:"manage"`
-// 	Read   PermissionModel    `tfsdk:"read"`
-// }
-//
-// // ManageSensorsModel maps the ManageSensors schema data.
-// type ManageSensorsModel struct {
-// 	All     types.Bool      `tfsdk:"all"`
-// 	Sensors PermissionModel `tfsdk:"sensors"`
-// 	Sites   PermissionModel `tfsdk:"sites"`
-// }
-//
-// // UsersAndRolesModel maps the UsersAndRoles schema data.
-// type UsersAndRolesModel struct {
-// 	All    types.Bool       `tfsdk:"all"`
-// 	Manage ManageUsersModel `tfsdk:"manage"`
-// 	Read   PermissionModel  `tfsdk:"read"`
-// }
-//
-// // ManageUsersModel maps the ManageUsers schema data.
-// type ManageUsersModel struct {
-// 	All   types.Bool       `tfsdk:"all"`
-// 	Roles UserActionsModel `tfsdk:"roles"`
-// 	Users UserActionsModel `tfsdk:"users"`
-// }
-//
-// // UserActionsModel maps the UserActions schema data.
-// type UserActionsModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Create PermissionModel `tfsdk:"create"`
-// 	Delete PermissionModel `tfsdk:"delete"`
-// 	Edit   PermissionModel `tfsdk:"edit"`
-// }
-//
-// // UserModel maps the User schema data.
-// type UserModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Manage ManageUserModel `tfsdk:"manage"`
-// 	Read   PermissionModel `tfsdk:"read"`
-// }
-//
-// // ManageUserModel maps the ManageUser schema data.
-// type ManageUserModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Upsert PermissionModel `tfsdk:"upsert"`
-// }
-//
-// // VulnerabilityModel maps the Vulnerability schema data.
-// type VulnerabilityModel struct {
-// 	All    types.Bool      `tfsdk:"all"`
-// 	Manage ManageVulnModel `tfsdk:"manage"`
-// 	Read   PermissionModel `tfsdk:"read"`
-// }
-//
-// // ManageVulnModel maps the ManageVuln schema data.
-// type ManageVulnModel struct {
-// 	All     types.Bool      `tfsdk:"all"`
-// 	Ignore  PermissionModel `tfsdk:"ignore"`
-// 	Resolve PermissionModel `tfsdk:"resolve"`
-// 	Write   PermissionModel `tfsdk:"write"`
-// }
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

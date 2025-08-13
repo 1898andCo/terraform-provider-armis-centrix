@@ -3,24 +3,28 @@
 
 package armis
 
-type CreateRoleApiResponse struct {
-	Success bool `json:"success,omitempty"`
+type BaseResponse struct {
+	Success bool `json:"success"`
 }
 
-type DeleteRoleApiResponse struct {
-	Success bool `json:"success,omitempty"`
+type CreateRoleAPIResponse struct {
+	BaseResponse
 }
 
-type RolesApiResponse struct {
-	Data    []RoleSettings `json:"data"`
-	Success bool           `json:"success,omitempty"`
+type DeleteRoleAPIResponse struct {
+	BaseResponse
+}
+
+type RolesAPIResponse struct {
+	Data []RoleSettings `json:"data,omitempty"`
+	BaseResponse
 }
 
 type RoleSettings struct {
 	Name        string      `json:"name"`
 	Permissions Permissions `json:"permissions"`
-	ID          int         `json:"roleId"`
-	ViprRole    bool        `json:"viprRole"`
+	ID          int         `json:"roleId,omitempty"`
+	ViprRole    bool        `json:"viprRole,omitempty"`
 }
 
 type Permissions struct {
