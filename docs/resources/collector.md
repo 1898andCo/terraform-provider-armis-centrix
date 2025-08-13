@@ -30,11 +30,8 @@ resource "armis_collector" "test_collector" {
 
 ### Required
 
-- `name` (String) The full name of the collector.
-
-### Optional
-
 - `deployment_type` (String) The type of deployment. Valid options include 'VHDX', 'AMI', 'QCOW2', 'OVA', and 'VHD'
+- `name` (String) The full name of the collector.
 
 ### Read-Only
 
