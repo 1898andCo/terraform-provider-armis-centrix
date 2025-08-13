@@ -59,7 +59,7 @@ type GetCollectorAPIResponse struct {
 	Success bool              `json:"success,omitempty"`
 }
 
-// UpdateCollectorAPIesponse struct for updating collector.
+// UpdateCollectorAPIResponse struct for updating collector.
 type UpdateCollectorAPIResponse struct {
 	Data    CollectorSettings `json:"data"`
 	Success bool              `json:"success"`

@@ -98,6 +98,7 @@ tasks:
     desc: "Prepare the provider"
     deps:
       - fmt
+      - lint
       - docs
       - install
     cmds:

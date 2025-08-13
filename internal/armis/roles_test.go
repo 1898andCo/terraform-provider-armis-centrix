@@ -16,15 +16,32 @@ func TestCreatingRole(t *testing.T) {
 	role := RoleSettings{
 		Name: "Test Role",
 		Permissions: Permissions{
-			AdvancedPermissions: AdvancedPermissions{All: true},
-			Alert:               Alert{All: true},
-			Device:              Device{All: true},
-			Policy:              Policy{All: true},
-			Report:              Report{All: true},
-			RiskFactor:          RiskFactor{All: true},
-			Settings:            Settings{All: true},
-			User:                User{All: true},
-			Vulnerability:       Vulnerability{All: true},
+			AdvancedPermissions: AdvancedPermissions{
+				All: true,
+				Behavioral: Behavioral{
+					All:             true,
+					ApplicationName: Permission{All: true},
+					HostName:        Permission{All: true},
+					ServiceName:     Permission{All: true},
+				},
+				Device: DeviceAdvanced{
+					All:          true,
+					DeviceNames:  Permission{All: true},
+					IPAddresses:  Permission{All: true},
+					MACAddresses: Permission{All: true},
+					PhoneNumbers: Permission{All: true},
+				},
+			},
+			Alert: Alert{
+				All: true,
+				Manage: Manage{
+					All:              true,
+					Resolve:          Permission{All: true},
+					Suppress:         Permission{All: true},
+					WhitelistDevices: Permission{All: true},
+				},
+				Read: Permission{All: true},
+			},
 		},
 	}
 

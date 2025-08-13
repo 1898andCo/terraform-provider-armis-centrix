@@ -72,7 +72,7 @@ func (r *collectorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The full name of the collector.",
 			},
 			"deployment_type": schema.StringAttribute{
-				Optional:    true,
+				Required:    true,
 				Description: "The type of deployment. Valid options include 'VHDX', 'AMI', 'QCOW2', 'OVA', and 'VHD'",
 				Validators: []validator.String{
 					stringvalidator.OneOf("VHDX", "AMI", "QCOW2", "OVA", "VHD"),

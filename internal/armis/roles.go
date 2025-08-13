@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strconv"
 )
@@ -24,7 +25,7 @@ func (c *Client) GetRoles(ctx context.Context) ([]RoleSettings, error) {
 		return nil, fmt.Errorf("failed to fetch roles: %w", err)
 	}
 
-	var response RolesApiResponse
+	var response RolesAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse roles response: %w", err)
 	}
@@ -91,10 +92,11 @@ func (c *Client) CreateRole(ctx context.Context, role RoleSettings) (bool, error
 
 	res, err := c.doRequest(req)
 	if err != nil {
+		slog.Error("CreateRole request failed", "error", err, "role", bytes.NewBuffer(roleData).String())
 		return false, fmt.Errorf("failed to create role: %w", err)
 	}
 
-	var response CreateRoleApiResponse
+	var response CreateRoleAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return false, fmt.Errorf("failed to parse role creation response: %w", err)
 	}
@@ -151,7 +153,7 @@ func (c *Client) DeleteRole(ctx context.Context, id string) (bool, error) {
 		return false, fmt.Errorf("failed to delete role: %w", err)
 	}
 
-	var response DeleteRoleApiResponse
+	var response DeleteRoleAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return false, fmt.Errorf("failed to parse role deletion response: %w", err)
 	}
