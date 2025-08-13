@@ -44,7 +44,7 @@ func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (*Poli
 		return nil, fmt.Errorf("failed to create policy %q: %w", policy.Name, err)
 	}
 
-	var apiResponse CreatePolicyApiResponse
+	var apiResponse CreatePolicyAPIResponse
 	if err := json.Unmarshal(res, &apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse policy response: %w", err)
 	}
@@ -102,7 +102,7 @@ func (c *Client) GetPolicy(ctx context.Context, policyID string) (*GetPolicySett
 	}
 
 	// Parse the response
-	var response GetPolicyApiResponse
+	var response GetPolicyAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse policy response: %w", err)
 	}
@@ -138,7 +138,7 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policy
 		return nil, fmt.Errorf("failed to update policy %q: %w", policy.Name, err)
 	}
 
-	var apiResponse UpdatePolicyApiResponse
+	var apiResponse UpdatePolicyAPIResponse
 	if err := json.Unmarshal(res, &apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse policy response: %w", err)
 	}
@@ -185,7 +185,7 @@ func (c *Client) DeletePolicy(ctx context.Context, policyID string) (bool, error
 	}
 
 	// Parse the response
-	var response DeletePolicyApiResponse
+	var response DeletePolicyAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return false, fmt.Errorf("failed to parse policy response: %w", err)
 	}
@@ -193,7 +193,7 @@ func (c *Client) DeletePolicy(ctx context.Context, policyID string) (bool, error
 	return response.Success, nil
 }
 
-// Ensure the policy rules exist.
+// Len ensures the policy rules exist.
 func (r Rules) Len() int {
 	return len(r.And)
 }

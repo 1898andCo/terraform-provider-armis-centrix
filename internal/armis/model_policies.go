@@ -4,24 +4,24 @@
 package armis
 
 // Struct to match the entire API response for creating policies.
-type CreatePolicyApiResponse struct {
+type CreatePolicyAPIResponse struct {
 	Data    PolicyId `json:"data"`
 	Success bool     `json:"success,omitempty"`
 }
 
 // Struct to match response for retrieving policies by ID.
-type GetPolicyApiResponse struct {
+type GetPolicyAPIResponse struct {
 	Data    GetPolicySettings `json:"data"`
 	Success bool              `json:"success,omitempty"`
 }
 
-type UpdatePolicyApiResponse struct {
+type UpdatePolicyAPIResponse struct {
 	Data    UpdatePolicySettings `json:"data"`
 	Success bool                 `json:"success,omitempty"`
 }
 
 // Structs for deleting policies.
-type DeletePolicyApiResponse struct {
+type DeletePolicyAPIResponse struct {
 	Success bool `json:"success"`
 }
 
