@@ -6,7 +6,8 @@ name: Tests
 on:
   pull_request:
     paths-ignore:
-      - 'README.md'
+      - '*.md'
+      - 'docs/**'
   push:
     branches:
       - main
