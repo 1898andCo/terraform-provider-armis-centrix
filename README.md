@@ -1,6 +1,6 @@
 <a href="https://opentofu.org">
   <picture>
-    <img src=".github/opentofu.png" alt="OpenTofu logo" title="OpenTofu" align="right" height="50">
+    <img src=".github/opentofu.svg" alt="OpenTofu logo" title="OpenTofu" align="right" height="50">
   </picture>
 </a>
 
