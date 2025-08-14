@@ -102,7 +102,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"mitre_attack_labels": schema.ListAttribute{
 				Optional:    true,
-				Description: "A list of MITRE ATT&CK labels to apply to the policy. When reading from the API, these will be flattened to technique IDs.",
+				Description: "A list of MITRE ATT&CK labels to apply to the policy.",
 				ElementType: types.StringType,
 			},
 			"rule_type": schema.StringAttribute{
