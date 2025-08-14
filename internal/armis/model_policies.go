@@ -3,13 +3,13 @@
 
 package armis
 
-// Struct to match the entire API response for creating policies.
+// CreatePolicyAPIResponse represents the response structure for creating a policy.
 type CreatePolicyAPIResponse struct {
-	Data    PolicyId `json:"data"`
+	Data    PolicyID `json:"data"`
 	Success bool     `json:"success,omitempty"`
 }
 
-// Struct to match response for retrieving policies by ID.
+// GetPolicyAPIResponse and UpdatePolicyAPIResponse represent the response structures for retrieving and updating policies, respectively.
 type GetPolicyAPIResponse struct {
 	Data    GetPolicySettings `json:"data"`
 	Success bool              `json:"success,omitempty"`
@@ -20,12 +20,12 @@ type UpdatePolicyAPIResponse struct {
 	Success bool                 `json:"success,omitempty"`
 }
 
-// Structs for deleting policies.
+// DeletePolicyAPIResponse represents the response structure for deleting a policy.
 type DeletePolicyAPIResponse struct {
 	Success bool `json:"success"`
 }
 
-type PolicyId struct {
+type PolicyID struct {
 	ID int `json:"id"`
 }
 
@@ -69,7 +69,7 @@ type PolicySettings struct {
 	Rules             Rules    `json:"rules,omitempty"`
 }
 
-// The API returns a separate response after updates that breaks the MITRE labels out.
+// UpdatePolicySettings represents the structure for updating policies.
 type UpdatePolicySettings struct {
 	Actions           []Action           `json:"actions,omitempty"`
 	Description       string             `json:"description,omitempty"`
@@ -81,7 +81,7 @@ type UpdatePolicySettings struct {
 	Rules             Rules              `json:"rules,omitempty"`
 }
 
-// The API returns a separate response after updates that breaks the MITRE labels out.
+// GetPolicySettings represents the structure for retrieving policies.
 type GetPolicySettings struct {
 	Actions           []Action           `json:"actions,omitempty"`
 	Description       string             `json:"description,omitempty"`

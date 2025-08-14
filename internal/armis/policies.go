@@ -23,37 +23,37 @@ var allowedRuleTypes = map[string]struct{}{
 }
 
 // CreatePolicy creates a new policy in Armis.
-func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (*PolicyId, error) {
+func (c *Client) CreatePolicy(ctx context.Context, policy PolicySettings) (PolicyID, error) {
 	err := policy.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate policy: %w", err)
+		return PolicyID{}, fmt.Errorf("failed to validate policy: %w", err)
 	}
 
 	policyData, err := json.Marshal(policy)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal policy data: %w", err)
+		return PolicyID{}, fmt.Errorf("failed to marshal policy data: %w", err)
 	}
 
 	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/api/%s/policies/", c.apiVersion), bytes.NewReader(policyData))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request for CreatePolicy: %w", err)
+		return PolicyID{}, fmt.Errorf("failed to create request for CreatePolicy: %w", err)
 	}
 
 	res, err := c.doRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create policy %q: %w", policy.Name, err)
+		return PolicyID{}, fmt.Errorf("failed to create policy %q: %w", policy.Name, err)
 	}
 
 	var apiResponse CreatePolicyAPIResponse
 	if err := json.Unmarshal(res, &apiResponse); err != nil {
-		return nil, fmt.Errorf("failed to parse policy response: %w", err)
+		return PolicyID{}, fmt.Errorf("failed to parse policy response: %w", err)
 	}
 
 	if !apiResponse.Success {
-		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
+		return PolicyID{}, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
 	}
 
-	return &apiResponse.Data, nil
+	return apiResponse.Data, nil
 }
 
 // Validate performs policy validation to ensure that a name and rules exist,
@@ -81,9 +81,9 @@ func (p PolicySettings) Validate() error {
 }
 
 // GetPolicy fetches a policy from Armis using the policy's ID.
-func (c *Client) GetPolicy(ctx context.Context, policyID string) (*GetPolicySettings, error) {
+func (c *Client) GetPolicy(ctx context.Context, policyID string) (GetPolicySettings, error) {
 	if policyID == "" {
-		return nil, fmt.Errorf("%w", ErrPolicyID)
+		return GetPolicySettings{}, fmt.Errorf("%w", ErrPolicyID)
 	}
 
 	// URL encode the policy ID
@@ -92,37 +92,37 @@ func (c *Client) GetPolicy(ctx context.Context, policyID string) (*GetPolicySett
 	// Create a new request
 	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyID), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request for Get Policy: %w", err)
+		return GetPolicySettings{}, fmt.Errorf("failed to create request for Get Policy: %w", err)
 	}
 
 	// Perform the request
 	res, err := c.doRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch policy: %w", err)
+		return GetPolicySettings{}, fmt.Errorf("failed to fetch policy: %w", err)
 	}
 
 	// Parse the response
 	var response GetPolicyAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse policy response: %w", err)
+		return GetPolicySettings{}, fmt.Errorf("failed to parse policy response: %w", err)
 	}
 
 	if !response.Success {
-		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, response)
+		return GetPolicySettings{}, fmt.Errorf("%w:%v", ErrHTTPResponse, response)
 	}
 
-	return &response.Data, nil
+	return response.Data, nil
 }
 
 // UpdatePolicy updates a policy in Armis.
-func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policyID string) (*UpdatePolicySettings, error) {
+func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policyID string) (UpdatePolicySettings, error) {
 	if err := validateUpdateInput(policy, policyID); err != nil {
-		return nil, err
+		return UpdatePolicySettings{}, err
 	}
 
 	policyData, err := json.Marshal(policy)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal policy data: %w", err)
+		return UpdatePolicySettings{}, fmt.Errorf("failed to marshal policy data: %w", err)
 	}
 
 	// URL encode the policy ID
@@ -130,25 +130,25 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policy
 
 	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/policies/%s/", c.apiVersion, encodedPolicyID), bytes.NewReader(policyData))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request for UpdatePolicy: %w", err)
+		return UpdatePolicySettings{}, fmt.Errorf("failed to create request for UpdatePolicy: %w", err)
 	}
 
 	res, err := c.doRequest(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update policy %q: %w", policy.Name, err)
+		return UpdatePolicySettings{}, fmt.Errorf("failed to update policy %q: %w", policy.Name, err)
 	}
 
 	var apiResponse UpdatePolicyAPIResponse
 	if err := json.Unmarshal(res, &apiResponse); err != nil {
-		return nil, fmt.Errorf("failed to parse policy response: %w", err)
+		return UpdatePolicySettings{}, fmt.Errorf("failed to parse policy response: %w", err)
 	}
 
 	if !apiResponse.Success {
-		return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
+		return UpdatePolicySettings{}, fmt.Errorf("%w:%v", ErrHTTPResponse, apiResponse)
 	}
 
 	// Return the parsed policy settings directly
-	return &apiResponse.Data, nil
+	return apiResponse.Data, nil
 }
 
 func validateUpdateInput(policy PolicySettings, id string) error {
