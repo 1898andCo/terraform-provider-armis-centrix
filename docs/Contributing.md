@@ -24,6 +24,18 @@ cd terraform-provider-armis-centrix
 task build
 ```
 
+In addition, you can run task install to set up a developer overrides in your `~/.terraformrc.` This will then allow you to use your locally built provider binary.
+
+```sh
+task install
+```
+
+When you are finished using a local version of the provider, running `task uninstall` will remove all developer overrides.
+
+```sh
+task uninstall
+```
+
 To use a released provider in your Terraform environment, run [`terraform init`](https://www.terraform.io/docs/commands/init.html) and Terraform will automatically install the provider. To specify a particular provider version when installing released providers, see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#version-provider-versions).
 
 To instead use a custom-built provider in your Terraform environment (e.g. the provider binary from the build instructions above), follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-plugins) After placing the custom-built provider into your plugins directory, run `terraform init` to initialize it.
@@ -46,3 +58,4 @@ export ARMIS_API_URL=<API_URL>
 # Runs provider tests
 task test
 ```
+
