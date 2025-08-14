@@ -548,8 +548,12 @@ func ConvertModelToRules(model RulesModel) (armis.Rules, diag.Diagnostics) {
 }
 
 // responseToPolicyFromGet converts armis.GetPolicySettings to PolicyResourceModel.
-func responseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings) (*PolicyResourceModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
+func responseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings) *PolicyResourceModel {
+	tflog.Debug(ctx, "Processing policy", map[string]any{
+		"policy_name":    policy.Name,
+		"policy_type":    policy.RuleType,
+		"policy_enabled": policy.IsEnabled,
+	})
 
 	// TODO: Handle MitreAttackLabels properly
 	emptyMitreLabels, _ := types.ListValue(types.StringType, []attr.Value{})
@@ -568,12 +572,16 @@ func responseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings
 		},
 	}
 
-	return result, diags
+	return result
 }
 
 // responseToPolicyFromUpdate converts armis.UpdatePolicySettings to PolicyResourceModel.
-func responseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySettings) (*PolicyResourceModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
+func responseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySettings) *PolicyResourceModel {
+	tflog.Debug(ctx, "Processing updated policy", map[string]any{
+		"policy_name":    policy.Name,
+		"policy_type":    policy.RuleType,
+		"policy_enabled": policy.IsEnabled,
+	})
 
 	// TODO: Handle MitreAttackLabels properly
 	emptyMitreLabels, _ := types.ListValue(types.StringType, []attr.Value{})
@@ -592,7 +600,7 @@ func responseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySe
 		},
 	}
 
-	return result, diags
+	return result
 }
 
 // Create decodes the plan into a model, converts it to an Armis
@@ -645,12 +653,9 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	// Update state with the retrieved policy data
-	result, diags := responseToPolicyFromGet(ctx, getResp)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	result := responseToPolicyFromGet(ctx, getResp)
 
+	// Preserve the MitreAttackLabels from state
 	result.MitreAttackLabels = state.MitreAttackLabels
 
 	// Preserve the ID from state
@@ -682,7 +687,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Update the plan with the response data
-	result, diags := responseToPolicyFromUpdate(ctx, updateResp)
+	result := responseToPolicyFromUpdate(ctx, updateResp)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -62,7 +62,7 @@ resource "armis_policy" "example_policy" {
 - `description` (String) The description of the policy.
 - `enabled` (Boolean) Whether the policy is enabled.
 - `labels` (List of String) A list of labels to apply to the policy.
-- `mitre_attack_labels` (List of String) A list of MITRE ATT&CK labels to apply to the policy.
+- `mitre_attack_labels` (List of String) A list of MITRE ATT&CK labels to apply to the policy. When reading from the API, these will be flattened to technique IDs.
 - `rule_type` (String) The type of rule to apply to the policy.
 
 ### Read-Only
