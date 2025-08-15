@@ -5,9 +5,12 @@ name: Tests
 # Optionally, you can turn it on using a schedule for regular testing.
 on:
   pull_request:
-    paths-ignore:
-      - '*.md'
-      - 'docs/**'
+    paths:
+      - "main.go"
+      - "internal/**.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/test.yml"
   push:
     branches:
       - main
