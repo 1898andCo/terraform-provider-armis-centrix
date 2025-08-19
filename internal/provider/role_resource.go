@@ -162,9 +162,15 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 							},
-							"read": schema.BoolAttribute{
+							"read": schema.SingleNestedAttribute{
 								Description: "Permission to read alerts.",
 								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all read permissions for alerts are enabled.",
+										Optional:    true,
+									},
+								},
 							},
 						},
 					},
@@ -228,9 +234,15 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 							},
-							"read": schema.BoolAttribute{
+							"read": schema.SingleNestedAttribute{
 								Description: "Permission to read devices.",
 								Optional:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all read permissions for devices are enabled.",
+										Optional:    true,
+									},
+								},
 							},
 						},
 					},
@@ -582,9 +594,15 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 											},
 										},
 									},
-									"read": schema.BoolAttribute{
+									"read": schema.SingleNestedAttribute{
 										Description: "Permission to read sites and sensors.",
 										Optional:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all read permissions for sites and sensors are enabled.",
+												Optional:    true,
+											},
+										},
 									},
 								},
 							},
@@ -765,6 +783,11 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	role := BuildRoleRequest(plan)
 
+	tflog.Debug(ctx, "Creating role request", map[string]any{
+		"name":        plan.Name.ValueString(),
+		"permissions": plan.Permissions,
+	})
+
 	// Call API to create the role
 	success, err := r.client.CreateRole(ctx, role)
 	if err != nil || !success {
@@ -816,9 +839,9 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	// Update the state with refreshed role details
-	BuildRoleResourceModel(role, state)
+	roleState := BuildRoleResourceModel(role, state)
 	tflog.Debug(ctx, "Setting refreshed state for role", map[string]any{"role_id": state.ID.ValueString()})
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, roleState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -854,6 +877,11 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Map the plan to role settings for the update
 	role := BuildRoleRequest(plan)
 
+	tflog.Debug(ctx, "Creating role request", map[string]any{
+		"name":        plan.Name.ValueString(),
+		"permissions": plan.Permissions,
+	})
+
 	// Update the role in the API
 	tflog.Debug(ctx, "Sending update request to Armis API", map[string]any{"role_id": state.ID.ValueString()})
 	_, err := r.client.UpdateRole(ctx, role, state.ID.ValueString())
@@ -876,11 +904,11 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map the updated role details back to the plan
-	BuildRoleResourceModel(updatedRole, plan)
+	updatedPlan := BuildRoleResourceModel(updatedRole, plan)
 
 	// Save the updated state
 	tflog.Info(ctx, "Setting updated state for role", map[string]any{"role_id": state.ID.ValueString()})
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, updatedPlan)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -958,7 +986,12 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					},
 				},
 				Read: armis.Permission{
-					All: role.Permissions.Alert.Read.ValueBool(),
+					All: func() bool {
+						if role.Permissions.Alert.Read != nil {
+							return role.Permissions.Alert.Read.All.ValueBool()
+						}
+						return false
+					}(),
 				},
 			},
 			Device: armis.Device{
@@ -994,7 +1027,12 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					},
 				},
 				Read: armis.Permission{
-					All: role.Permissions.Device.Read.ValueBool(),
+					All: func() bool {
+						if role.Permissions.Device.Read != nil {
+							return role.Permissions.Device.Read.All.ValueBool()
+						}
+						return false
+					}(),
 				},
 			},
 			Policy: armis.Policy{
@@ -1170,7 +1208,12 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 						},
 					},
 					Read: armis.Permission{
-						All: role.Permissions.Settings.SitesAndSensors.Read.ValueBool(),
+						All: func() bool {
+							if role.Permissions.Settings.SitesAndSensors.Read != nil {
+								return role.Permissions.Settings.SitesAndSensors.Read.All.ValueBool()
+							}
+							return false
+						}(),
 					},
 				},
 				UsersAndRoles: armis.UsersAndRoles{
@@ -1241,176 +1284,180 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	}
 }
 
-func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) {
-	model.Name = types.StringValue(role.Name)
+func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) RoleResourceModel {
+	result := model
+	result.Name = types.StringValue(role.Name)
+	result.ID = types.StringValue(strconv.Itoa(role.ID))
 
 	// Advanced Permissions
-	model.Permissions.AdvancedPermissions.All = types.BoolValue(role.Permissions.AdvancedPermissions.All)
+	result.Permissions.AdvancedPermissions.All = types.BoolValue(role.Permissions.AdvancedPermissions.All)
 
 	// Advanced Permissions - Behavioral
-	model.Permissions.AdvancedPermissions.Behavioral.All = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.All)
-	model.Permissions.AdvancedPermissions.Behavioral.ApplicationName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All)
-	model.Permissions.AdvancedPermissions.Behavioral.HostName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.HostName.All)
-	model.Permissions.AdvancedPermissions.Behavioral.ServiceName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All)
+	result.Permissions.AdvancedPermissions.Behavioral.All = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.All)
+	result.Permissions.AdvancedPermissions.Behavioral.ApplicationName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All)
+	result.Permissions.AdvancedPermissions.Behavioral.HostName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.HostName.All)
+	result.Permissions.AdvancedPermissions.Behavioral.ServiceName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All)
 
 	// Advanced Permissions - Device
-	model.Permissions.AdvancedPermissions.Device.All = types.BoolValue(role.Permissions.AdvancedPermissions.Device.All)
-	model.Permissions.AdvancedPermissions.Device.DeviceNames = types.BoolValue(role.Permissions.AdvancedPermissions.Device.DeviceNames.All)
-	model.Permissions.AdvancedPermissions.Device.IPAddresses = types.BoolValue(role.Permissions.AdvancedPermissions.Device.IPAddresses.All)
-	model.Permissions.AdvancedPermissions.Device.MACAddresses = types.BoolValue(role.Permissions.AdvancedPermissions.Device.MACAddresses.All)
-	model.Permissions.AdvancedPermissions.Device.PhoneNumbers = types.BoolValue(role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All)
+	result.Permissions.AdvancedPermissions.Device.All = types.BoolValue(role.Permissions.AdvancedPermissions.Device.All)
+	result.Permissions.AdvancedPermissions.Device.DeviceNames = types.BoolValue(role.Permissions.AdvancedPermissions.Device.DeviceNames.All)
+	result.Permissions.AdvancedPermissions.Device.IPAddresses = types.BoolValue(role.Permissions.AdvancedPermissions.Device.IPAddresses.All)
+	result.Permissions.AdvancedPermissions.Device.MACAddresses = types.BoolValue(role.Permissions.AdvancedPermissions.Device.MACAddresses.All)
+	result.Permissions.AdvancedPermissions.Device.PhoneNumbers = types.BoolValue(role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All)
 
 	// Alert Permissions
-	model.Permissions.Alert.All = types.BoolValue(role.Permissions.Alert.All)
-	model.Permissions.Alert.Read = types.BoolValue(role.Permissions.Alert.Read.All)
+	result.Permissions.Alert.All = types.BoolValue(role.Permissions.Alert.All)
+	result.Permissions.Alert.Read.All = types.BoolValue(role.Permissions.Alert.Read.All)
 
 	// Alert Manage Permissions
-	model.Permissions.Alert.Manage.All = types.BoolValue(role.Permissions.Alert.Manage.All)
-	model.Permissions.Alert.Manage.Resolve = types.BoolValue(role.Permissions.Alert.Manage.Resolve.All)
-	model.Permissions.Alert.Manage.Suppress = types.BoolValue(role.Permissions.Alert.Manage.Suppress.All)
-	model.Permissions.Alert.Manage.WhitelistDevices = types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All)
+	result.Permissions.Alert.Manage.All = types.BoolValue(role.Permissions.Alert.Manage.All)
+	result.Permissions.Alert.Manage.Resolve = types.BoolValue(role.Permissions.Alert.Manage.Resolve.All)
+	result.Permissions.Alert.Manage.Suppress = types.BoolValue(role.Permissions.Alert.Manage.Suppress.All)
+	result.Permissions.Alert.Manage.WhitelistDevices = types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All)
 
 	// Device Permissions
-	model.Permissions.Device.All = types.BoolValue(role.Permissions.Device.All)
-	model.Permissions.Device.Read = types.BoolValue(role.Permissions.Device.Read.All)
+	result.Permissions.Device.All = types.BoolValue(role.Permissions.Device.All)
+	result.Permissions.Device.Read.All = types.BoolValue(role.Permissions.Device.Read.All)
 
 	// Device Manage Permissions
-	model.Permissions.Device.Manage.All = types.BoolValue(role.Permissions.Device.Manage.All)
-	model.Permissions.Device.Manage.Create = types.BoolValue(role.Permissions.Device.Manage.Create.All)
-	model.Permissions.Device.Manage.Delete = types.BoolValue(role.Permissions.Device.Manage.Delete.All)
-	model.Permissions.Device.Manage.Edit = types.BoolValue(role.Permissions.Device.Manage.Edit.All)
-	model.Permissions.Device.Manage.Merge = types.BoolValue(role.Permissions.Device.Manage.Merge.All)
-	model.Permissions.Device.Manage.RequestDeletedData = types.BoolValue(role.Permissions.Device.Manage.RequestDeletedData.All)
-	model.Permissions.Device.Manage.Tags = types.BoolValue(role.Permissions.Device.Manage.Tags.All)
+	result.Permissions.Device.Manage.All = types.BoolValue(role.Permissions.Device.Manage.All)
+	result.Permissions.Device.Manage.Create = types.BoolValue(role.Permissions.Device.Manage.Create.All)
+	result.Permissions.Device.Manage.Delete = types.BoolValue(role.Permissions.Device.Manage.Delete.All)
+	result.Permissions.Device.Manage.Edit = types.BoolValue(role.Permissions.Device.Manage.Edit.All)
+	result.Permissions.Device.Manage.Merge = types.BoolValue(role.Permissions.Device.Manage.Merge.All)
+	result.Permissions.Device.Manage.RequestDeletedData = types.BoolValue(role.Permissions.Device.Manage.RequestDeletedData.All)
+	result.Permissions.Device.Manage.Tags = types.BoolValue(role.Permissions.Device.Manage.Tags.All)
 
 	// Device Enforce Permissions
-	model.Permissions.Device.Manage.Enforce.All = types.BoolValue(role.Permissions.Device.Manage.Enforce.All)
-	model.Permissions.Device.Manage.Enforce.Create = types.BoolValue(role.Permissions.Device.Manage.Enforce.Create.All)
-	model.Permissions.Device.Manage.Enforce.Delete = types.BoolValue(role.Permissions.Device.Manage.Enforce.Delete.All)
+	result.Permissions.Device.Manage.Enforce.All = types.BoolValue(role.Permissions.Device.Manage.Enforce.All)
+	result.Permissions.Device.Manage.Enforce.Create = types.BoolValue(role.Permissions.Device.Manage.Enforce.Create.All)
+	result.Permissions.Device.Manage.Enforce.Delete = types.BoolValue(role.Permissions.Device.Manage.Enforce.Delete.All)
 
 	// Policy Permissions
-	model.Permissions.Policy.All = types.BoolValue(role.Permissions.Policy.All)
-	model.Permissions.Policy.Manage = types.BoolValue(role.Permissions.Policy.Manage.All)
-	model.Permissions.Policy.Read = types.BoolValue(role.Permissions.Policy.Read.All)
+	result.Permissions.Policy.All = types.BoolValue(role.Permissions.Policy.All)
+	result.Permissions.Policy.Manage = types.BoolValue(role.Permissions.Policy.Manage.All)
+	result.Permissions.Policy.Read = types.BoolValue(role.Permissions.Policy.Read.All)
 
 	// Report Permissions
-	model.Permissions.Report.All = types.BoolValue(role.Permissions.Report.All)
-	model.Permissions.Report.Export = types.BoolValue(role.Permissions.Report.Export.All)
-	model.Permissions.Report.Read = types.BoolValue(role.Permissions.Report.Read.All)
+	result.Permissions.Report.All = types.BoolValue(role.Permissions.Report.All)
+	result.Permissions.Report.Export = types.BoolValue(role.Permissions.Report.Export.All)
+	result.Permissions.Report.Read = types.BoolValue(role.Permissions.Report.Read.All)
 
 	// Report Manage Permissions
-	model.Permissions.Report.Manage.All = types.BoolValue(role.Permissions.Report.Manage.All)
-	model.Permissions.Report.Manage.Create = types.BoolValue(role.Permissions.Report.Manage.Create.All)
-	model.Permissions.Report.Manage.Delete = types.BoolValue(role.Permissions.Report.Manage.Delete.All)
-	model.Permissions.Report.Manage.Edit = types.BoolValue(role.Permissions.Report.Manage.Edit.All)
+	result.Permissions.Report.Manage.All = types.BoolValue(role.Permissions.Report.Manage.All)
+	result.Permissions.Report.Manage.Create = types.BoolValue(role.Permissions.Report.Manage.Create.All)
+	result.Permissions.Report.Manage.Delete = types.BoolValue(role.Permissions.Report.Manage.Delete.All)
+	result.Permissions.Report.Manage.Edit = types.BoolValue(role.Permissions.Report.Manage.Edit.All)
 
 	// Risk Factor Permissions
-	model.Permissions.RiskFactor.All = types.BoolValue(role.Permissions.RiskFactor.All)
-	model.Permissions.RiskFactor.Read = types.BoolValue(role.Permissions.RiskFactor.Read.All)
+	result.Permissions.RiskFactor.All = types.BoolValue(role.Permissions.RiskFactor.All)
+	result.Permissions.RiskFactor.Read = types.BoolValue(role.Permissions.RiskFactor.Read.All)
 
 	// Risk Factor Manage Permissions
-	model.Permissions.RiskFactor.Manage.All = types.BoolValue(role.Permissions.RiskFactor.Manage.All)
+	result.Permissions.RiskFactor.Manage.All = types.BoolValue(role.Permissions.RiskFactor.Manage.All)
 
 	// Risk Factor Customization Permissions
-	model.Permissions.RiskFactor.Manage.Customization.All = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.All)
-	model.Permissions.RiskFactor.Manage.Customization.Create = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Create.All)
-	model.Permissions.RiskFactor.Manage.Customization.Disable = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Disable.All)
-	model.Permissions.RiskFactor.Manage.Customization.Edit = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Edit.All)
+	result.Permissions.RiskFactor.Manage.Customization.All = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.All)
+	result.Permissions.RiskFactor.Manage.Customization.Create = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Create.All)
+	result.Permissions.RiskFactor.Manage.Customization.Disable = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Disable.All)
+	result.Permissions.RiskFactor.Manage.Customization.Edit = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Edit.All)
 
 	// Risk Factor Status Permissions
-	model.Permissions.RiskFactor.Manage.Status.All = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.All)
-	model.Permissions.RiskFactor.Manage.Status.Ignore = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Ignore.All)
-	model.Permissions.RiskFactor.Manage.Status.Resolve = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Resolve.All)
+	result.Permissions.RiskFactor.Manage.Status.All = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.All)
+	result.Permissions.RiskFactor.Manage.Status.Ignore = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Ignore.All)
+	result.Permissions.RiskFactor.Manage.Status.Resolve = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Resolve.All)
 
 	// Settings Permissions
-	model.Permissions.Settings.All = types.BoolValue(role.Permissions.Settings.All)
-	model.Permissions.Settings.AuditLog = types.BoolValue(role.Permissions.Settings.AuditLog.All)
-	model.Permissions.Settings.SecretKey = types.BoolValue(role.Permissions.Settings.SecretKey.All)
-	model.Permissions.Settings.SecuritySettings = types.BoolValue(role.Permissions.Settings.SecuritySettings.All)
+	result.Permissions.Settings.All = types.BoolValue(role.Permissions.Settings.All)
+	result.Permissions.Settings.AuditLog = types.BoolValue(role.Permissions.Settings.AuditLog.All)
+	result.Permissions.Settings.SecretKey = types.BoolValue(role.Permissions.Settings.SecretKey.All)
+	result.Permissions.Settings.SecuritySettings = types.BoolValue(role.Permissions.Settings.SecuritySettings.All)
 
 	// Settings Boundary Permissions
-	model.Permissions.Settings.Boundary.All = types.BoolValue(role.Permissions.Settings.Boundary.All)
-	model.Permissions.Settings.Boundary.Read = types.BoolValue(role.Permissions.Settings.Boundary.Read.All)
-	model.Permissions.Settings.Boundary.Manage.All = types.BoolValue(role.Permissions.Settings.Boundary.Manage.All)
-	model.Permissions.Settings.Boundary.Manage.Create = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Create.All)
-	model.Permissions.Settings.Boundary.Manage.Delete = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Delete.All)
-	model.Permissions.Settings.Boundary.Manage.Edit = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Edit.All)
+	result.Permissions.Settings.Boundary.All = types.BoolValue(role.Permissions.Settings.Boundary.All)
+	result.Permissions.Settings.Boundary.Read = types.BoolValue(role.Permissions.Settings.Boundary.Read.All)
+	result.Permissions.Settings.Boundary.Manage.All = types.BoolValue(role.Permissions.Settings.Boundary.Manage.All)
+	result.Permissions.Settings.Boundary.Manage.Create = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Create.All)
+	result.Permissions.Settings.Boundary.Manage.Delete = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Delete.All)
+	result.Permissions.Settings.Boundary.Manage.Edit = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Edit.All)
 
 	// Settings Business Impact Permissions
-	model.Permissions.Settings.BusinessImpact.All = types.BoolValue(role.Permissions.Settings.BusinessImpact.All)
-	model.Permissions.Settings.BusinessImpact.Manage = types.BoolValue(role.Permissions.Settings.BusinessImpact.Manage.All)
-	model.Permissions.Settings.BusinessImpact.Read = types.BoolValue(role.Permissions.Settings.BusinessImpact.Read.All)
+	result.Permissions.Settings.BusinessImpact.All = types.BoolValue(role.Permissions.Settings.BusinessImpact.All)
+	result.Permissions.Settings.BusinessImpact.Manage = types.BoolValue(role.Permissions.Settings.BusinessImpact.Manage.All)
+	result.Permissions.Settings.BusinessImpact.Read = types.BoolValue(role.Permissions.Settings.BusinessImpact.Read.All)
 
 	// Settings Collector Permissions
-	model.Permissions.Settings.Collector.All = types.BoolValue(role.Permissions.Settings.Collector.All)
-	model.Permissions.Settings.Collector.Manage = types.BoolValue(role.Permissions.Settings.Collector.Manage.All)
-	model.Permissions.Settings.Collector.Read = types.BoolValue(role.Permissions.Settings.Collector.Read.All)
+	result.Permissions.Settings.Collector.All = types.BoolValue(role.Permissions.Settings.Collector.All)
+	result.Permissions.Settings.Collector.Manage = types.BoolValue(role.Permissions.Settings.Collector.Manage.All)
+	result.Permissions.Settings.Collector.Read = types.BoolValue(role.Permissions.Settings.Collector.Read.All)
 
 	// Settings Custom Properties Permissions
-	model.Permissions.Settings.CustomProperties.All = types.BoolValue(role.Permissions.Settings.CustomProperties.All)
-	model.Permissions.Settings.CustomProperties.Manage = types.BoolValue(role.Permissions.Settings.CustomProperties.Manage.All)
-	model.Permissions.Settings.CustomProperties.Read = types.BoolValue(role.Permissions.Settings.CustomProperties.Read.All)
+	result.Permissions.Settings.CustomProperties.All = types.BoolValue(role.Permissions.Settings.CustomProperties.All)
+	result.Permissions.Settings.CustomProperties.Manage = types.BoolValue(role.Permissions.Settings.CustomProperties.Manage.All)
+	result.Permissions.Settings.CustomProperties.Read = types.BoolValue(role.Permissions.Settings.CustomProperties.Read.All)
 
 	// Settings Integration Permissions
-	model.Permissions.Settings.Integration.All = types.BoolValue(role.Permissions.Settings.Integration.All)
-	model.Permissions.Settings.Integration.Manage = types.BoolValue(role.Permissions.Settings.Integration.Manage.All)
-	model.Permissions.Settings.Integration.Read = types.BoolValue(role.Permissions.Settings.Integration.Read.All)
+	result.Permissions.Settings.Integration.All = types.BoolValue(role.Permissions.Settings.Integration.All)
+	result.Permissions.Settings.Integration.Manage = types.BoolValue(role.Permissions.Settings.Integration.Manage.All)
+	result.Permissions.Settings.Integration.Read = types.BoolValue(role.Permissions.Settings.Integration.Read.All)
 
 	// Settings Internal IPs Permissions
-	model.Permissions.Settings.InternalIps.All = types.BoolValue(role.Permissions.Settings.InternalIps.All)
-	model.Permissions.Settings.InternalIps.Manage = types.BoolValue(role.Permissions.Settings.InternalIps.Manage.All)
-	model.Permissions.Settings.InternalIps.Read = types.BoolValue(role.Permissions.Settings.InternalIps.Read.All)
+	result.Permissions.Settings.InternalIps.All = types.BoolValue(role.Permissions.Settings.InternalIps.All)
+	result.Permissions.Settings.InternalIps.Manage = types.BoolValue(role.Permissions.Settings.InternalIps.Manage.All)
+	result.Permissions.Settings.InternalIps.Read = types.BoolValue(role.Permissions.Settings.InternalIps.Read.All)
 
 	// Settings Notifications Permissions
-	model.Permissions.Settings.Notifications.All = types.BoolValue(role.Permissions.Settings.Notifications.All)
-	model.Permissions.Settings.Notifications.Manage = types.BoolValue(role.Permissions.Settings.Notifications.Manage.All)
-	model.Permissions.Settings.Notifications.Read = types.BoolValue(role.Permissions.Settings.Notifications.Read.All)
+	result.Permissions.Settings.Notifications.All = types.BoolValue(role.Permissions.Settings.Notifications.All)
+	result.Permissions.Settings.Notifications.Manage = types.BoolValue(role.Permissions.Settings.Notifications.Manage.All)
+	result.Permissions.Settings.Notifications.Read = types.BoolValue(role.Permissions.Settings.Notifications.Read.All)
 
 	// Settings OIDC Permissions
-	model.Permissions.Settings.OIDC.All = types.BoolValue(role.Permissions.Settings.OIDC.All)
-	model.Permissions.Settings.OIDC.Manage = types.BoolValue(role.Permissions.Settings.OIDC.Manage.All)
-	model.Permissions.Settings.OIDC.Read = types.BoolValue(role.Permissions.Settings.OIDC.Read.All)
+	result.Permissions.Settings.OIDC.All = types.BoolValue(role.Permissions.Settings.OIDC.All)
+	result.Permissions.Settings.OIDC.Manage = types.BoolValue(role.Permissions.Settings.OIDC.Manage.All)
+	result.Permissions.Settings.OIDC.Read = types.BoolValue(role.Permissions.Settings.OIDC.Read.All)
 
 	// Settings SAML Permissions
-	model.Permissions.Settings.SAML.All = types.BoolValue(role.Permissions.Settings.SAML.All)
-	model.Permissions.Settings.SAML.Manage = types.BoolValue(role.Permissions.Settings.SAML.Manage.All)
-	model.Permissions.Settings.SAML.Read = types.BoolValue(role.Permissions.Settings.SAML.Read.All)
+	result.Permissions.Settings.SAML.All = types.BoolValue(role.Permissions.Settings.SAML.All)
+	result.Permissions.Settings.SAML.Manage = types.BoolValue(role.Permissions.Settings.SAML.Manage.All)
+	result.Permissions.Settings.SAML.Read = types.BoolValue(role.Permissions.Settings.SAML.Read.All)
 
 	// Settings Sites and Sensors Permissions
-	model.Permissions.Settings.SitesAndSensors.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.All)
-	model.Permissions.Settings.SitesAndSensors.Read = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All)
-	model.Permissions.Settings.SitesAndSensors.Manage.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All)
-	model.Permissions.Settings.SitesAndSensors.Manage.Sensors = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All)
-	model.Permissions.Settings.SitesAndSensors.Manage.Sites = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All)
+	result.Permissions.Settings.SitesAndSensors.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.All)
+	result.Permissions.Settings.SitesAndSensors.Read.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All)
+	result.Permissions.Settings.SitesAndSensors.Manage.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All)
+	result.Permissions.Settings.SitesAndSensors.Manage.Sensors = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All)
+	result.Permissions.Settings.SitesAndSensors.Manage.Sites = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All)
 
 	// Settings Users and Roles Permissions
-	model.Permissions.Settings.UsersAndRoles.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.All)
-	model.Permissions.Settings.UsersAndRoles.Read = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Read.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.All)
+	result.Permissions.Settings.UsersAndRoles.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.All)
+	result.Permissions.Settings.UsersAndRoles.Read = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Read.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.All)
 
 	// Settings Users and Roles - Roles Permissions
-	model.Permissions.Settings.UsersAndRoles.Manage.Roles.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.Roles.Create = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Create = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All)
 
 	// Settings Users and Roles - Users Permissions
-	model.Permissions.Settings.UsersAndRoles.Manage.Users.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.Users.Create = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.Users.Delete = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All)
-	model.Permissions.Settings.UsersAndRoles.Manage.Users.Edit = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.Create = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.Delete = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.Edit = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.All)
 
 	// User Permissions
-	model.Permissions.User.All = types.BoolValue(role.Permissions.User.All)
-	model.Permissions.User.Read = types.BoolValue(role.Permissions.User.Read.All)
-	model.Permissions.User.Manage.All = types.BoolValue(role.Permissions.User.Manage.All)
-	model.Permissions.User.Manage.Upsert = types.BoolValue(role.Permissions.User.Manage.Upsert.All)
+	result.Permissions.User.All = types.BoolValue(role.Permissions.User.All)
+	result.Permissions.User.Read = types.BoolValue(role.Permissions.User.Read.All)
+	result.Permissions.User.Manage.All = types.BoolValue(role.Permissions.User.Manage.All)
+	result.Permissions.User.Manage.Upsert = types.BoolValue(role.Permissions.User.Manage.Upsert.All)
 
 	// Vulnerability Permissions
-	model.Permissions.Vulnerability.All = types.BoolValue(role.Permissions.Vulnerability.All)
-	model.Permissions.Vulnerability.Read = types.BoolValue(role.Permissions.Vulnerability.Read.All)
-	model.Permissions.Vulnerability.Manage.All = types.BoolValue(role.Permissions.Vulnerability.Manage.All)
-	model.Permissions.Vulnerability.Manage.Ignore = types.BoolValue(role.Permissions.Vulnerability.Manage.Ignore.All)
-	model.Permissions.Vulnerability.Manage.Resolve = types.BoolValue(role.Permissions.Vulnerability.Manage.Resolve.All)
-	model.Permissions.Vulnerability.Manage.Write = types.BoolValue(role.Permissions.Vulnerability.Manage.Write.All)
+	result.Permissions.Vulnerability.All = types.BoolValue(role.Permissions.Vulnerability.All)
+	result.Permissions.Vulnerability.Read = types.BoolValue(role.Permissions.Vulnerability.Read.All)
+	result.Permissions.Vulnerability.Manage.All = types.BoolValue(role.Permissions.Vulnerability.Manage.All)
+	result.Permissions.Vulnerability.Manage.Ignore = types.BoolValue(role.Permissions.Vulnerability.Manage.Ignore.All)
+	result.Permissions.Vulnerability.Manage.Resolve = types.BoolValue(role.Permissions.Vulnerability.Manage.Resolve.All)
+	result.Permissions.Vulnerability.Manage.Write = types.BoolValue(role.Permissions.Vulnerability.Manage.Write.All)
+
+	return result
 }

@@ -162,9 +162,15 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 									},
 								},
 							},
-							"read": schema.BoolAttribute{
+							"read": schema.SingleNestedAttribute{
 								Description: "Permission to read alerts.",
 								Computed:    true,
+								Attributes: map[string]schema.Attribute{
+									"all": schema.BoolAttribute{
+										Description: "Indicates if all read permissions are enabled.",
+										Computed:    true,
+									},
+								},
 							},
 						},
 					},
@@ -582,9 +588,15 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 											},
 										},
 									},
-									"read": schema.BoolAttribute{
+									"read": schema.SingleNestedAttribute{
 										Description: "Permission to read sites and sensors.",
 										Computed:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all read permissions are enabled.",
+												Computed:    true,
+											},
+										},
 									},
 								},
 							},
@@ -650,9 +662,15 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 											},
 										},
 									},
-									"read": schema.BoolAttribute{
+									"read": schema.SingleNestedAttribute{
 										Description: "Permission to read users and roles.",
 										Computed:    true,
+										Attributes: map[string]schema.Attribute{
+											"all": schema.BoolAttribute{
+												Description: "Indicates if all read permissions are enabled.",
+												Computed:    true,
+											},
+										},
 									},
 								},
 							},
@@ -736,6 +754,11 @@ type RoleDataSourceModel struct {
 	ViprRole    types.Bool        `tfsdk:"vipr_role"`
 }
 
+// AllPermissionsModel defines the structure for all permissions.
+type AllPermissionsModel struct {
+	All types.Bool `tfsdk:"all"`
+}
+
 // PermissionsModel defines the structure for permissions.
 type PermissionsModel struct {
 	AdvancedPermissions *AdvancedPermissionsModel `tfsdk:"advanced_permissions"`
@@ -775,9 +798,9 @@ type DeviceAdvancedModel struct {
 
 // AlertModel defines the structure for alert permissions.
 type AlertModel struct {
-	All    types.Bool         `tfsdk:"all"`
-	Manage *ManageAlertsModel `tfsdk:"manage"`
-	Read   types.Bool         `tfsdk:"read"`
+	All    types.Bool           `tfsdk:"all"`
+	Manage *ManageAlertsModel   `tfsdk:"manage"`
+	Read   *AllPermissionsModel `tfsdk:"read"`
 }
 
 // ManageAlertsModel defines the structure for manage permissions.
@@ -790,9 +813,9 @@ type ManageAlertsModel struct {
 
 // DeviceModel defines the structure for device permissions.
 type DeviceModel struct {
-	All    types.Bool         `tfsdk:"all"`
-	Manage *ManageDeviceModel `tfsdk:"manage"`
-	Read   types.Bool         `tfsdk:"read"`
+	All    types.Bool           `tfsdk:"all"`
+	Manage *ManageDeviceModel   `tfsdk:"manage"`
+	Read   *AllPermissionsModel `tfsdk:"read"`
 }
 
 // ManageDeviceModel defines the structure for device management permissions.
@@ -911,7 +934,7 @@ type ManageAndReadModel struct {
 type SitesAndSensorsModel struct {
 	All    types.Bool                  `tfsdk:"all"`
 	Manage *ManageSitesAndSensorsModel `tfsdk:"manage"`
-	Read   types.Bool                  `tfsdk:"read"`
+	Read   *AllPermissionsModel        `tfsdk:"read"`
 }
 
 // ManageSitesAndSensorsModel defines the structure for managing sites and sensors permissions.
@@ -1044,7 +1067,9 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
 					WhitelistDevices: types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All),
 				},
-				Read: types.BoolValue(role.Permissions.Alert.Read.All),
+				Read: &AllPermissionsModel{
+					All: types.BoolValue(role.Permissions.Alert.Read.All),
+				},
 			},
 			Policy: &PolicyModel{
 				All:    types.BoolValue(role.Permissions.Policy.All),
@@ -1141,7 +1166,9 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 						Sensors: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All),
 						Sites:   types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All),
 					},
-					Read: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
+					Read: &AllPermissionsModel{
+						All: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
+					},
 				},
 				UsersAndRoles: &UsersAndRolesModel{
 					All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.All),
