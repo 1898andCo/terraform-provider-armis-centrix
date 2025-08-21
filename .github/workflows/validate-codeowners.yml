@@ -1,0 +1,31 @@
+name: Validate Codeowners
+on:
+  workflow_dispatch:
+
+  pull_request:
+
+jobs:
+  validate-codeowners:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checkout source code at current commit"
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      # Leave pinned at 0.7.1 until https://github.com/mszostok/codeowners-validator/issues/173 is resolved
+    - uses: mszostok/codeowners-validator@2f478ec3b2c8a321d46fca773f6285a447234f6a # v0.7.1
+      if: github.event.pull_request.head.repo.full_name == github.repository
+      name: "Full check of CODEOWNERS"
+      with:
+        # For now, remove "files" check to allow CODEOWNERS to specify non-existent
+        # files so we can use the same CODEOWNERS file for Terraform and non-Terraform repos
+        #   checks: "files,syntax,owners,duppatterns"
+        # TODO Restore owners check once access token with appropriate permissions is available
+        #checks: "syntax,owners,duppatterns"
+        checks: "syntax,duppatterns"
+        # GitHub access token is required only if the `owners` check is enabled
+        github_access_token: "${{ secrets.GITHUB_TOKEN }}"
+      # Leave pinned at 0.7.1 until https://github.com/mszostok/codeowners-validator/issues/173 is resolved
+    - uses: mszostok/codeowners-validator@2f478ec3b2c8a321d46fca773f6285a447234f6a # v0.7.1
+      if: github.event.pull_request.head.repo.full_name != github.repository
+      name: "Syntax check of CODEOWNERS"
+      with:
+        checks: "syntax,duppatterns"
