@@ -163,15 +163,9 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 							},
-							"read": schema.SingleNestedAttribute{
+							"read": schema.BoolAttribute{
 								Description: "Permission to read alerts.",
 								Optional:    true,
-								Attributes: map[string]schema.Attribute{
-									"all": schema.BoolAttribute{
-										Description: "Indicates if all read permissions for alerts are enabled.",
-										Optional:    true,
-									},
-								},
 							},
 						},
 					},
@@ -235,15 +229,9 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 							},
-							"read": schema.SingleNestedAttribute{
+							"read": schema.BoolAttribute{
 								Description: "Permission to read devices.",
 								Optional:    true,
-								Attributes: map[string]schema.Attribute{
-									"all": schema.BoolAttribute{
-										Description: "Indicates if all read permissions for devices are enabled.",
-										Optional:    true,
-									},
-								},
 							},
 						},
 					},
@@ -595,15 +583,9 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 											},
 										},
 									},
-									"read": schema.SingleNestedAttribute{
+									"read": schema.BoolAttribute{
 										Description: "Permission to read sites and sensors.",
 										Optional:    true,
-										Attributes: map[string]schema.Attribute{
-											"all": schema.BoolAttribute{
-												Description: "Indicates if all read permissions for sites and sensors are enabled.",
-												Optional:    true,
-											},
-										},
 									},
 								},
 							},

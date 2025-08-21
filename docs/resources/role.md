@@ -114,7 +114,7 @@ Optional:
 
 - `all` (Boolean) Indicates if all alert permissions are enabled.
 - `manage` (Attributes) Permissions for managing alerts. (see [below for nested schema](#nestedatt--permissions--alert--manage))
-- `read` (Attributes) Permission to read alerts. (see [below for nested schema](#nestedatt--permissions--alert--read))
+- `read` (Boolean) Permission to read alerts.
 
 <a id="nestedatt--permissions--alert--manage"></a>
 ### Nested Schema for `permissions.alert.manage`
@@ -127,14 +127,6 @@ Optional:
 - `whitelist_devices` (Boolean) Permission to whitelist devices in alerts.
 
 
-<a id="nestedatt--permissions--alert--read"></a>
-### Nested Schema for `permissions.alert.read`
-
-Optional:
-
-- `all` (Boolean) Indicates if all read permissions for alerts are enabled.
-
-
 
 <a id="nestedatt--permissions--device"></a>
 ### Nested Schema for `permissions.device`
@@ -143,7 +135,7 @@ Optional:
 
 - `all` (Boolean) Indicates if all device permissions are enabled.
 - `manage` (Attributes) Permissions for managing devices. (see [below for nested schema](#nestedatt--permissions--device--manage))
-- `read` (Attributes) Permission to read devices. (see [below for nested schema](#nestedatt--permissions--device--read))
+- `read` (Boolean) Permission to read devices.
 
 <a id="nestedatt--permissions--device--manage"></a>
 ### Nested Schema for `permissions.device.manage`
@@ -168,14 +160,6 @@ Optional:
 - `create` (Boolean) Permission to create enforcement policies.
 - `delete` (Boolean) Permission to delete enforcement policies.
 
-
-
-<a id="nestedatt--permissions--device--read"></a>
-### Nested Schema for `permissions.device.read`
-
-Optional:
-
-- `all` (Boolean) Indicates if all read permissions for devices are enabled.
 
 
 
@@ -381,7 +365,7 @@ Optional:
 
 - `all` (Boolean) Indicates if all sites and sensors permissions are enabled.
 - `manage` (Attributes) Permissions for managing sites and sensors. (see [below for nested schema](#nestedatt--permissions--settings--sites_and_sensors--manage))
-- `read` (Attributes) Permission to read sites and sensors. (see [below for nested schema](#nestedatt--permissions--settings--sites_and_sensors--read))
+- `read` (Boolean) Permission to read sites and sensors.
 
 <a id="nestedatt--permissions--settings--sites_and_sensors--manage"></a>
 ### Nested Schema for `permissions.settings.sites_and_sensors.manage`
@@ -391,14 +375,6 @@ Optional:
 - `all` (Boolean) Indicates if all manage permissions are enabled.
 - `sensors` (Boolean) Permission to manage sensors.
 - `sites` (Boolean) Permission to manage sites.
-
-
-<a id="nestedatt--permissions--settings--sites_and_sensors--read"></a>
-### Nested Schema for `permissions.settings.sites_and_sensors.read`
-
-Optional:
-
-- `all` (Boolean) Indicates if all read permissions for sites and sensors are enabled.
 
 
 

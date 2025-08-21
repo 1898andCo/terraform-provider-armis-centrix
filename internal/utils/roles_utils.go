@@ -60,12 +60,7 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					},
 				},
 				Read: armis.Permission{
-					All: func() bool {
-						if role.Permissions.Alert.Read != nil {
-							return role.Permissions.Alert.Read.All.ValueBool()
-						}
-						return false
-					}(),
+					All: role.Permissions.Alert.Read.ValueBool(),
 				},
 			},
 			Device: armis.Device{
@@ -101,12 +96,7 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					},
 				},
 				Read: armis.Permission{
-					All: func() bool {
-						if role.Permissions.Device.Read != nil {
-							return role.Permissions.Device.Read.All.ValueBool()
-						}
-						return false
-					}(),
+					All: role.Permissions.Device.Read.ValueBool(),
 				},
 			},
 			Policy: armis.Policy{
@@ -282,12 +272,7 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 						},
 					},
 					Read: armis.Permission{
-						All: func() bool {
-							if role.Permissions.Settings.SitesAndSensors.Read != nil {
-								return role.Permissions.Settings.SitesAndSensors.Read.All.ValueBool()
-							}
-							return false
-						}(),
+						All: role.Permissions.Settings.SitesAndSensors.Read.ValueBool(),
 					},
 				},
 				UsersAndRoles: armis.UsersAndRoles{
@@ -381,7 +366,7 @@ func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) R
 
 	// Alert Permissions
 	result.Permissions.Alert.All = types.BoolValue(role.Permissions.Alert.All)
-	result.Permissions.Alert.Read.All = types.BoolValue(role.Permissions.Alert.Read.All)
+	result.Permissions.Alert.Read = types.BoolValue(role.Permissions.Alert.Read.All)
 
 	// Alert Manage Permissions
 	result.Permissions.Alert.Manage.All = types.BoolValue(role.Permissions.Alert.Manage.All)
@@ -391,7 +376,7 @@ func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) R
 
 	// Device Permissions
 	result.Permissions.Device.All = types.BoolValue(role.Permissions.Device.All)
-	result.Permissions.Device.Read.All = types.BoolValue(role.Permissions.Device.Read.All)
+	result.Permissions.Device.Read = types.BoolValue(role.Permissions.Device.Read.All)
 
 	// Device Manage Permissions
 	result.Permissions.Device.Manage.All = types.BoolValue(role.Permissions.Device.Manage.All)
@@ -497,7 +482,7 @@ func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) R
 
 	// Settings Sites and Sensors Permissions
 	result.Permissions.Settings.SitesAndSensors.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.All)
-	result.Permissions.Settings.SitesAndSensors.Read.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All)
+	result.Permissions.Settings.SitesAndSensors.Read = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All)
 	result.Permissions.Settings.SitesAndSensors.Manage.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All)
 	result.Permissions.Settings.SitesAndSensors.Manage.Sensors = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All)
 	result.Permissions.Settings.SitesAndSensors.Manage.Sites = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All)
@@ -566,9 +551,7 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
 					WhitelistDevices: types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All),
 				},
-				Read: &AllPermissionsModel{
-					All: types.BoolValue(role.Permissions.Alert.Read.All),
-				},
+				Read: types.BoolValue(role.Permissions.Alert.Read.All),
 			},
 			Policy: &PolicyModel{
 				All:    types.BoolValue(role.Permissions.Policy.All),
@@ -665,9 +648,7 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 						Sensors: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All),
 						Sites:   types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All),
 					},
-					Read: &AllPermissionsModel{
-						All: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
-					},
+					Read: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
 				},
 				UsersAndRoles: &UsersAndRolesModel{
 					All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.All),

@@ -162,15 +162,9 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 									},
 								},
 							},
-							"read": schema.SingleNestedAttribute{
+							"read": schema.BoolAttribute{
 								Description: "Permission to read alerts.",
 								Computed:    true,
-								Attributes: map[string]schema.Attribute{
-									"all": schema.BoolAttribute{
-										Description: "Indicates if all read permissions are enabled.",
-										Computed:    true,
-									},
-								},
 							},
 						},
 					},
@@ -588,15 +582,9 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 											},
 										},
 									},
-									"read": schema.SingleNestedAttribute{
+									"read": schema.BoolAttribute{
 										Description: "Permission to read sites and sensors.",
 										Computed:    true,
-										Attributes: map[string]schema.Attribute{
-											"all": schema.BoolAttribute{
-												Description: "Indicates if all read permissions are enabled.",
-												Computed:    true,
-											},
-										},
 									},
 								},
 							},
@@ -662,15 +650,9 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 											},
 										},
 									},
-									"read": schema.SingleNestedAttribute{
+									"read": schema.BoolAttribute{
 										Description: "Permission to read users and roles.",
 										Computed:    true,
-										Attributes: map[string]schema.Attribute{
-											"all": schema.BoolAttribute{
-												Description: "Indicates if all read permissions are enabled.",
-												Computed:    true,
-											},
-										},
 									},
 								},
 							},

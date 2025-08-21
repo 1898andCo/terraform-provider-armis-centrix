@@ -1,4 +1,4 @@
-// Copyright (c) 1898 & Co.
+// copyright (c) 1898 & co.
 // SPDX-License-Identifier: Apache-2.0
 
 package utils
@@ -20,11 +20,6 @@ type RoleDataSourceModel struct {
 	Permissions *PermissionsModel `tfsdk:"permissions"`
 	ID          types.String      `tfsdk:"role_id"`
 	ViprRole    types.Bool        `tfsdk:"vipr_role"`
-}
-
-// AllPermissionsModel defines the structure for all permissions.
-type AllPermissionsModel struct {
-	All types.Bool `tfsdk:"all"`
 }
 
 // PermissionsModel defines the structure for permissions.
@@ -66,9 +61,9 @@ type DeviceAdvancedModel struct {
 
 // AlertModel defines the structure for alert permissions.
 type AlertModel struct {
-	All    types.Bool           `tfsdk:"all"`
-	Manage *ManageAlertsModel   `tfsdk:"manage"`
-	Read   *AllPermissionsModel `tfsdk:"read"`
+	All    types.Bool         `tfsdk:"all"`
+	Manage *ManageAlertsModel `tfsdk:"manage"`
+	Read   types.Bool         `tfsdk:"read"`
 }
 
 // ManageAlertsModel defines the structure for manage permissions.
@@ -81,9 +76,9 @@ type ManageAlertsModel struct {
 
 // DeviceModel defines the structure for device permissions.
 type DeviceModel struct {
-	All    types.Bool           `tfsdk:"all"`
-	Manage *ManageDeviceModel   `tfsdk:"manage"`
-	Read   *AllPermissionsModel `tfsdk:"read"`
+	All    types.Bool         `tfsdk:"all"`
+	Manage *ManageDeviceModel `tfsdk:"manage"`
+	Read   types.Bool         `tfsdk:"read"`
 }
 
 // ManageDeviceModel defines the structure for device management permissions.
@@ -202,7 +197,7 @@ type ManageAndReadModel struct {
 type SitesAndSensorsModel struct {
 	All    types.Bool                  `tfsdk:"all"`
 	Manage *ManageSitesAndSensorsModel `tfsdk:"manage"`
-	Read   *AllPermissionsModel        `tfsdk:"read"`
+	Read   types.Bool                  `tfsdk:"read"`
 }
 
 // ManageSitesAndSensorsModel defines the structure for managing sites and sensors permissions.

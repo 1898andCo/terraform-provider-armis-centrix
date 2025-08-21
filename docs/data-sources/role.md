@@ -92,7 +92,7 @@ Read-Only:
 
 - `all` (Boolean) Indicates if all alert permissions are enabled.
 - `manage` (Attributes) Permissions for managing alerts. (see [below for nested schema](#nestedatt--permissions--alert--manage))
-- `read` (Attributes) Permission to read alerts. (see [below for nested schema](#nestedatt--permissions--alert--read))
+- `read` (Boolean) Permission to read alerts.
 
 <a id="nestedatt--permissions--alert--manage"></a>
 ### Nested Schema for `permissions.alert.manage`
@@ -103,14 +103,6 @@ Read-Only:
 - `resolve` (Boolean) Permission to resolve alerts.
 - `suppress` (Boolean) Permission to suppress alerts.
 - `whitelist_devices` (Boolean) Permission to whitelist devices in alerts.
-
-
-<a id="nestedatt--permissions--alert--read"></a>
-### Nested Schema for `permissions.alert.read`
-
-Read-Only:
-
-- `all` (Boolean) Indicates if all read permissions are enabled.
 
 
 
@@ -351,7 +343,7 @@ Read-Only:
 
 - `all` (Boolean) Indicates if all sites and sensors permissions are enabled.
 - `manage` (Attributes) Permissions for managing sites and sensors. (see [below for nested schema](#nestedatt--permissions--settings--sites_and_sensors--manage))
-- `read` (Attributes) Permission to read sites and sensors. (see [below for nested schema](#nestedatt--permissions--settings--sites_and_sensors--read))
+- `read` (Boolean) Permission to read sites and sensors.
 
 <a id="nestedatt--permissions--settings--sites_and_sensors--manage"></a>
 ### Nested Schema for `permissions.settings.sites_and_sensors.manage`
@@ -363,14 +355,6 @@ Read-Only:
 - `sites` (Boolean) Permission to manage sites.
 
 
-<a id="nestedatt--permissions--settings--sites_and_sensors--read"></a>
-### Nested Schema for `permissions.settings.sites_and_sensors.read`
-
-Read-Only:
-
-- `all` (Boolean) Indicates if all read permissions are enabled.
-
-
 
 <a id="nestedatt--permissions--settings--users_and_roles"></a>
 ### Nested Schema for `permissions.settings.users_and_roles`
@@ -379,7 +363,7 @@ Read-Only:
 
 - `all` (Boolean) Indicates if all users and roles permissions are enabled.
 - `manage` (Attributes) Permissions for managing users and roles. (see [below for nested schema](#nestedatt--permissions--settings--users_and_roles--manage))
-- `read` (Attributes) Permission to read users and roles. (see [below for nested schema](#nestedatt--permissions--settings--users_and_roles--read))
+- `read` (Boolean) Permission to read users and roles.
 
 <a id="nestedatt--permissions--settings--users_and_roles--manage"></a>
 ### Nested Schema for `permissions.settings.users_and_roles.manage`
@@ -411,14 +395,6 @@ Read-Only:
 - `delete` (Boolean) Permission to delete users.
 - `edit` (Boolean) Permission to edit users.
 
-
-
-<a id="nestedatt--permissions--settings--users_and_roles--read"></a>
-### Nested Schema for `permissions.settings.users_and_roles.read`
-
-Read-Only:
-
-- `all` (Boolean) Indicates if all read permissions are enabled.
 
 
 
