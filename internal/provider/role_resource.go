@@ -9,9 +9,12 @@ import (
 	"strconv"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
+	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -64,6 +67,9 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "Unique identifier for the role.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"permissions": schema.SingleNestedAttribute{
 				Description: "Permissions associated with the role.",
@@ -723,17 +729,9 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-// RoleResourceModel maps the RoleSettings schema data.
-type RoleResourceModel struct {
-	Name        types.String      `tfsdk:"name"`
-	Permissions *PermissionsModel `tfsdk:"permissions"`
-	ID          types.String      `tfsdk:"id"`
-}
-
 // Create creates the resource and sets the initial Terraform state.
 func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan RoleResourceModel
-	tflog.Info(ctx, "Starting role creation")
+	var plan u.RoleResourceModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -741,13 +739,12 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Define the role to create
-	tflog.Debug(ctx, "Creating role with provided plan", map[string]any{"name": plan.Name.ValueString()})
+	tflog.Debug(ctx, "Creating role", map[string]any{"name": plan.Name.ValueString()})
 
 	if plan.Permissions == nil {
 		resp.Diagnostics.AddError(
 			"Invalid Configuration",
-			"Permissions block is required but not provided.",
+			"Permissions are required but not provided.",
 		)
 		return
 	}
@@ -755,12 +752,17 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if plan.Permissions.AdvancedPermissions == nil {
 		resp.Diagnostics.AddError(
 			"Invalid Configuration",
-			"Advanced permissions block is required but not provided.",
+			"Advanced permissions are required but not provided.",
 		)
 		return
 	}
 
-	role := mapPlanToRoleSettings(plan)
+	role := u.BuildRoleRequest(plan)
+
+	tflog.Debug(ctx, "Creating role request", map[string]any{
+		"name":        plan.Name.ValueString(),
+		"permissions": plan.Permissions,
+	})
 
 	// Call API to create the role
 	success, err := r.client.CreateRole(ctx, role)
@@ -792,7 +794,7 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 // Read reads the role's current state.
 func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state RoleResourceModel
+	var state u.RoleResourceModel
 	tflog.Info(ctx, "Reading role state")
 
 	diags := req.State.Get(ctx, &state)
@@ -813,9 +815,9 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	// Update the state with refreshed role details
-	mapRoleSettingsToPlan(role, &state)
+	roleState := u.BuildRoleResourceModel(role, state)
 	tflog.Debug(ctx, "Setting refreshed state for role", map[string]any{"role_id": state.ID.ValueString()})
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, roleState)
 	resp.Diagnostics.Append(diags...)
 }
 
@@ -824,7 +826,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	tflog.Info(ctx, "Updating role")
 
 	// Retrieve values from the plan
-	var plan RoleResourceModel
+	var plan u.RoleResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -832,7 +834,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Retrieve the current state to get the role ID
-	var state RoleResourceModel
+	var state u.RoleResourceModel
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -849,7 +851,12 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map the plan to role settings for the update
-	role := mapPlanToRoleSettings(plan)
+	role := u.BuildRoleRequest(plan)
+
+	tflog.Debug(ctx, "Creating role request", map[string]any{
+		"name":        plan.Name.ValueString(),
+		"permissions": plan.Permissions,
+	})
 
 	// Update the role in the API
 	tflog.Debug(ctx, "Sending update request to Armis API", map[string]any{"role_id": state.ID.ValueString()})
@@ -873,17 +880,17 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map the updated role details back to the plan
-	mapRoleSettingsToPlan(updatedRole, &plan)
+	updatedPlan := u.BuildRoleResourceModel(updatedRole, plan)
 
 	// Save the updated state
 	tflog.Info(ctx, "Setting updated state for role", map[string]any{"role_id": state.ID.ValueString()})
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, updatedPlan)
 	resp.Diagnostics.Append(diags...)
 }
 
 // Delete deletes the role.
 func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state RoleResourceModel
+	var state u.RoleResourceModel
 	tflog.Info(ctx, "Deleting role")
 
 	diags := req.State.Get(ctx, &state)
@@ -904,51 +911,4 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	tflog.Info(ctx, "Role deleted successfully", map[string]any{"role_id": state.ID.ValueString()})
-}
-
-// Utility Functions
-
-// mapPlanToRoleSettings converts a RoleResourceModel to an Armis RoleSettings object.
-func mapPlanToRoleSettings(plan RoleResourceModel) armis.RoleSettings {
-	var permissions armis.Permissions
-
-	if plan.Permissions != nil {
-		if plan.Permissions.AdvancedPermissions != nil {
-			permissions.AdvancedPermissions = armis.AdvancedPermissions{
-				All: plan.Permissions.AdvancedPermissions.All.ValueBool(),
-			}
-
-			if plan.Permissions.AdvancedPermissions.Behavioral != nil {
-				permissions.AdvancedPermissions.Behavioral = armis.Behavioral{
-					All: plan.Permissions.AdvancedPermissions.Behavioral.All.ValueBool(),
-					ApplicationName: armis.Permission{
-						All: plan.Permissions.AdvancedPermissions.Behavioral.ApplicationName.ValueBool(),
-					},
-					HostName: armis.Permission{
-						All: plan.Permissions.AdvancedPermissions.Behavioral.HostName.ValueBool(),
-					},
-					ServiceName: armis.Permission{
-						All: plan.Permissions.AdvancedPermissions.Behavioral.ServiceName.ValueBool(),
-					},
-				}
-			}
-		}
-
-		if plan.Permissions.Alert != nil {
-			permissions.Alert = armis.Alert{
-				All: plan.Permissions.Alert.All.ValueBool(),
-			}
-		}
-	}
-
-	return armis.RoleSettings{
-		Name:        plan.Name.ValueString(),
-		Permissions: permissions,
-	}
-}
-
-// mapRoleSettingsToPlan updates a RoleResourceModel with data from a RoleSettings object.
-func mapRoleSettingsToPlan(role *armis.RoleSettings, plan *RoleResourceModel) {
-	plan.Name = types.StringValue(role.Name)
-	plan.ID = types.StringValue(strconv.Itoa(role.ID))
 }
