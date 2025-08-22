@@ -1,6 +1,10 @@
 // Copyright (c) 1898 & Co.
 // SPDX-License-Identifier: Apache-2.0
 
+// Package utils provides utility functions and resource and data source models
+// for managing resources in the Armis Centrix Terraform provider.
+// This includes building request models, converting API responses to Terraform models,
+// and defining the structure of Armis Centrix resources and data sources.
 package utils
 
 import (
