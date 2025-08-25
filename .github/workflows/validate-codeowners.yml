@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: "Checkout source code at current commit"
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       # Leave pinned at 0.7.1 until https://github.com/mszostok/codeowners-validator/issues/173 is resolved
     - uses: mszostok/codeowners-validator@2f478ec3b2c8a321d46fca773f6285a447234f6a # v0.7.1
       if: github.event.pull_request.head.repo.full_name == github.repository
