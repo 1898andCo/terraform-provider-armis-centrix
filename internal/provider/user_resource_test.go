@@ -18,7 +18,7 @@ func TestAcc_UserResource(t *testing.T) {
 			{
 				Config: testAccUserResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "Test User"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "phone", "8675309"),
 					resource.TestCheckResourceAttr(resourceName, "location", "Houston"),
 					resource.TestCheckResourceAttr(resourceName, "username", "test.user@test.com"),
@@ -34,7 +34,7 @@ func TestAcc_UserResource(t *testing.T) {
 func testAccUserResourceConfig() string {
 	return `
 resource "armis_user" "test" {
-  name = "Test User"
+  name = "test"
 
   phone    = "8675309"
   location = "Houston"
