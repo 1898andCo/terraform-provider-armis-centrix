@@ -83,14 +83,27 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: "3.x"
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
       - run: go mod download
-      - env:
+      - name: Run Acceptance Tests
+        env:
           TF_ACC: "1"
           ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
           ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
         run: go test -v ./internal/provider/
         timeout-minutes: 10
+      - name: Cleanup Dangling Resources
+        env:
+          TF_ACC: "1"
+          ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
+          ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
+        run: task sweep
+        timeout-minutes: 5

@@ -9,6 +9,7 @@ import "errors"
 
 var (
 	ErrGetKey       = errors.New("failed to get API key")
+	ErrGetURL       = errors.New("failed to get API URL")
 	ErrNoAPIKey     = errors.New("missing API key")
 	ErrAuthFailed   = errors.New("failed to authenticate")
 	ErrHTTPResponse = errors.New("HTTP response error")
