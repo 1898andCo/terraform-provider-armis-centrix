@@ -21,7 +21,7 @@ tasks:
       - terraform-provider-armis-centrix
 
   test:
-    desc: "run acceptance tests against the provider"
+    desc: "Run acceptance tests against the provider"
     env:
       TF_ACC: "true"
     cmds:
