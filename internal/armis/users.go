@@ -26,7 +26,7 @@ func (c *Client) GetUsers(ctx context.Context) ([]UserSettings, error) {
 	}
 
 	// Parse the response
-	var response UserApiResponse
+	var response UserAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse users response: %w", err)
 	}
@@ -35,16 +35,16 @@ func (c *Client) GetUsers(ctx context.Context) ([]UserSettings, error) {
 }
 
 // GetUser fetches a user from Armis using the user's ID or email.
-func (c *Client) GetUser(ctx context.Context, userId string) (*UserSettings, error) {
-	if userId == "" {
+func (c *Client) GetUser(ctx context.Context, userID string) (*UserSettings, error) {
+	if userID == "" {
 		return nil, fmt.Errorf("%w", ErrUserID)
 	}
 
 	// URL encode the user ID
-	encodedUserId := url.QueryEscape(userId)
+	encodedUserID := url.QueryEscape(userID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/%s/", c.apiVersion, encodedUserId), nil)
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/users/%s/", c.apiVersion, encodedUserID), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for Get User: %w", err)
 	}
@@ -56,7 +56,7 @@ func (c *Client) GetUser(ctx context.Context, userId string) (*UserSettings, err
 	}
 
 	// Parse the response
-	var response GetUserApiResponse
+	var response GetUserAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse user response: %w", err)
 	}
@@ -93,7 +93,7 @@ func (c *Client) CreateUser(ctx context.Context, user UserSettings) (*UserSettin
 		return nil, fmt.Errorf("failed to create user %q: %w", user.Name, err)
 	}
 
-	var apiResponse CreateUserApiResponse
+	var apiResponse CreateUserAPIResponse
 	if err := json.Unmarshal(res, &apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse user response: %w", err)
 	}
@@ -107,7 +107,7 @@ func (c *Client) CreateUser(ctx context.Context, user UserSettings) (*UserSettin
 }
 
 // UpdateUser updates a user in Armis.
-func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId string) (*UserSettings, error) {
+func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userID string) (*UserSettings, error) {
 	if user.Name == "" {
 		return nil, fmt.Errorf("%w", ErrUserName)
 	}
@@ -116,7 +116,7 @@ func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId strin
 		return nil, fmt.Errorf("%w", ErrUserEmail)
 	}
 
-	if userId == "" {
+	if userID == "" {
 		return nil, fmt.Errorf("%w", ErrUserID)
 	}
 
@@ -126,9 +126,9 @@ func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId strin
 	}
 
 	// URL encode the user ID
-	encodedUserId := url.QueryEscape(userId)
+	encodedUserID := url.QueryEscape(userID)
 
-	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/users/%s/", c.apiVersion, encodedUserId), bytes.NewReader(userData))
+	req, err := c.newRequest(ctx, "PATCH", fmt.Sprintf("/api/%s/users/%s/", c.apiVersion, encodedUserID), bytes.NewReader(userData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for UpdateUser: %w", err)
 	}
@@ -138,7 +138,7 @@ func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId strin
 		return nil, fmt.Errorf("failed to update user %q: %w", user.Name, err)
 	}
 
-	var apiResponse UpdateUserApiResponse
+	var apiResponse UpdateUserAPIResponse
 	if err := json.Unmarshal(res, &apiResponse); err != nil {
 		return nil, fmt.Errorf("failed to parse user response: %w", err)
 	}
@@ -152,16 +152,16 @@ func (c *Client) UpdateUser(ctx context.Context, user UserSettings, userId strin
 }
 
 // DeleteUser deletes a user from Armis.
-func (c *Client) DeleteUser(ctx context.Context, userId string) (bool, error) {
-	if userId == "" {
+func (c *Client) DeleteUser(ctx context.Context, userID string) (bool, error) {
+	if userID == "" {
 		return false, fmt.Errorf("%w", ErrUserID)
 	}
 
 	// URL encode the user ID
-	encodedUserId := url.QueryEscape(userId)
+	encodedUserID := url.QueryEscape(userID)
 
 	// Create a new request
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/users/%s/", c.apiVersion, encodedUserId), nil)
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/api/%s/users/%s/", c.apiVersion, encodedUserID), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request for DeleteUser: %w", err)
 	}
@@ -173,7 +173,7 @@ func (c *Client) DeleteUser(ctx context.Context, userId string) (bool, error) {
 	}
 
 	// Parse the response
-	var response DeleteUserApiResponse
+	var response DeleteUserAPIResponse
 	if err := json.Unmarshal(res, &response); err != nil {
 		return false, fmt.Errorf("failed to parse user response: %w", err)
 	}

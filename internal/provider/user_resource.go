@@ -6,15 +6,18 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -78,6 +81,12 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"email": schema.StringAttribute{
 				Required:    true,
 				Description: "The email address of the user.",
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$`),
+						"must be a valid email address",
+					),
+				},
 			},
 			"location": schema.StringAttribute{
 				Optional:    true,
@@ -88,6 +97,9 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:    true,
 				Computed:    true,
 				Description: "The job title or designation of the user.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"username": schema.StringAttribute{
 				Required:    true,
@@ -98,20 +110,19 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Description:   "A unique identifier for the user resource.",
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"role_assignments": schema.ListNestedAttribute{
+			"role_assignments": schema.SingleNestedAttribute{
 				Required:    true,
-				Description: "A list of role assignments for the user. Each role specifies the associated sites.",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Required:    true,
-							Description: "The name of the role assigned to the user.",
-						},
-						"sites": schema.ListAttribute{
-							ElementType: types.StringType,
-							Required:    true,
-							Description: "A list of site identifiers associated with the role.",
-						},
+				Description: "A list of role assignments for the user.",
+				Attributes: map[string]schema.Attribute{
+					"name": schema.ListAttribute{
+						ElementType: types.StringType,
+						Required:    true,
+						Description: "The names of the roles assigned to the user.",
+					},
+					"sites": schema.ListAttribute{
+						ElementType: types.StringType,
+						Required:    true,
+						Description: "A list of site identifiers associated with the role.",
 					},
 				},
 			},
@@ -121,18 +132,18 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 // userResourceModel maps the resource schema data.
 type userResourceModel struct {
-	ID              types.String     `tfsdk:"id"`
-	Name            types.String     `tfsdk:"name"`
-	Phone           types.String     `tfsdk:"phone"`
-	Email           types.String     `tfsdk:"email"`
-	Location        types.String     `tfsdk:"location"`
-	Title           types.String     `tfsdk:"title"`
-	Username        types.String     `tfsdk:"username"`
-	RoleAssignments []roleAssignment `tfsdk:"role_assignments"`
+	ID              types.String   `tfsdk:"id"`
+	Name            types.String   `tfsdk:"name"`
+	Phone           types.String   `tfsdk:"phone"`
+	Email           types.String   `tfsdk:"email"`
+	Location        types.String   `tfsdk:"location"`
+	Title           types.String   `tfsdk:"title"`
+	Username        types.String   `tfsdk:"username"`
+	RoleAssignments roleAssignment `tfsdk:"role_assignments"`
 }
 
 type roleAssignment struct {
-	Name  types.String   `tfsdk:"name"`
+	Name  []types.String `tfsdk:"name"`
 	Sites []types.String `tfsdk:"sites"`
 }
 
@@ -149,12 +160,10 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Map the Terraform model to the API's user struct
-	roleAssignments := make([]armis.RoleAssignment, len(plan.RoleAssignments))
-	for i, role := range plan.RoleAssignments {
-		roleAssignments[i] = armis.RoleAssignment{
-			Name:  []string{role.Name.ValueString()},
-			Sites: convertToStringSlice(role.Sites),
-		}
+	roleAssignments := make([]armis.RoleAssignment, 1)
+	roleAssignments[0] = armis.RoleAssignment{
+		Name:  convertToStringSlice(plan.RoleAssignments.Name),
+		Sites: convertToStringSlice(plan.RoleAssignments.Sites),
 	}
 
 	user := armis.UserSettings{
@@ -273,12 +282,10 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map the Terraform model to the API's user struct
-	roleAssignments := make([]armis.RoleAssignment, len(plan.RoleAssignments))
-	for i, role := range plan.RoleAssignments {
-		roleAssignments[i] = armis.RoleAssignment{
-			Name:  []string{role.Name.ValueString()},
-			Sites: convertToStringSlice(role.Sites),
-		}
+	roleAssignments := make([]armis.RoleAssignment, 1)
+	roleAssignments[0] = armis.RoleAssignment{
+		Name:  convertToStringSlice(plan.RoleAssignments.Name),
+		Sites: convertToStringSlice(plan.RoleAssignments.Sites),
 	}
 
 	user := armis.UserSettings{
