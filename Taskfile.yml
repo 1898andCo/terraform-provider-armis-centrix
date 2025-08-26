@@ -21,13 +21,13 @@ tasks:
       - terraform-provider-armis-centrix
 
   test:
-    desc: "Run acceptance tests against the provider"
+    desc: "run acceptance tests against the provider"
     env:
       TF_ACC: "true"
-      TF_LOG: "INFO"  # Change to DEBUG for deeper logging
     cmds:
       - go mod tidy
       - go test ./internal/provider/... -v -timeout=30m
+      - task: sweep
 
   install-tools:
     desc: "Install required tools"
