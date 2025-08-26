@@ -14,8 +14,8 @@ Retrieves Armis user information. If an email is provided, the data source will 
 
 ```terraform
 # Read in user information
-data "armis_user" "user" {
-  email = armis_user.test_user.email
+data "armis_user" "manager" {
+  email = "lab.manager@lab.com"
 }
 ```
 

@@ -1,4 +1,5 @@
 # Read in user information
-data "armis_user" "user" {
-  email = armis_user.test_user.email
+data "armis_user" "manager" {
+  email = "lab.manager@lab.com"
 }
+

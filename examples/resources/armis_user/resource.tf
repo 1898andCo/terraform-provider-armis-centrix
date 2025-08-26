@@ -1,13 +1,14 @@
-resource "armis_user" "test_user" {
-  name = "Test User"
+resource "armis_user" "manager" {
+  name = "Lab Manager"
 
-  phone    = "8675309"
+  phone    = "867-5309"
   location = "Houston"
-  username = "test.user@test.com"
-  email    = "test.user@test.com"
+  username = "lab.manager@lab.com"
+  email    = "lab.manager@lab.com"
 
-  role_assignments = [{
-    name  = "Read Only"
+  role_assignments = {
+    name  = ["Asset Manager", "User Manager", "Integrations Manager"]
     sites = ["Lab"]
-  }]
+  }
 }
+

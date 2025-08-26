@@ -17,18 +17,18 @@ Provides an Armis user
 ## Example Usage
 
 ```terraform
-resource "armis_user" "test_user" {
-  name = "Test User"
+resource "armis_user" "manager" {
+  name = "Lab Manager"
 
-  phone    = "8675309"
+  phone    = "867-5309"
   location = "Houston"
-  username = "test.user@test.com"
-  email    = "test.user@test.com"
+  username = "lab.manager@lab.com"
+  email    = "lab.manager@lab.com"
 
-  role_assignments = [{
-    name  = "Read Only"
+  role_assignments = {
+    name  = ["Asset Manager", "User Manager", "Integrations Manager"]
     sites = ["Lab"]
-  }]
+  }
 }
 ```
 
@@ -39,7 +39,7 @@ resource "armis_user" "test_user" {
 
 - `email` (String) The email address of the user.
 - `name` (String) The full name of the user.
-- `role_assignments` (Attributes List) A list of role assignments for the user. Each role specifies the associated sites. (see [below for nested schema](#nestedatt--role_assignments))
+- `role_assignments` (Attributes) A list of role assignments for the user. (see [below for nested schema](#nestedatt--role_assignments))
 - `username` (String) The unique username of the user.
 
 ### Optional
@@ -57,5 +57,5 @@ resource "armis_user" "test_user" {
 
 Required:
 
-- `name` (String) The name of the role assigned to the user.
+- `name` (List of String) The names of the roles assigned to the user.
 - `sites` (List of String) A list of site identifiers associated with the role.
