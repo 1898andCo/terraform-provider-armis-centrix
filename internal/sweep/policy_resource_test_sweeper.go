@@ -32,13 +32,13 @@ func SweepArmisPolicies(name string) *resource.Sweeper {
 				return fmt.Errorf("error getting Armis policies: %w", err)
 			}
 
-			prefix := "test."
+			prefix := "test"
 			for _, policy := range policies {
 				if strings.HasPrefix(policy.Name, prefix) {
 					log.Printf("[INFO] Deleting Armis policy: %s", policy.Name)
-					_, err := client.DeleteCollector(ctx, policy.ID)
+					_, err := client.DeletePolicy(ctx, policy.ID)
 					if err != nil {
-						log.Printf("[ERROR] Failed to delete Armis collector %s: %s", policy.Name, err)
+						log.Printf("[ERROR] Failed to delete Armis policy %s: %s", policy.Name, err)
 					}
 				}
 			}
