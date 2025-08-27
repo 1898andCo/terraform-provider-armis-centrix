@@ -114,6 +114,47 @@ func (c *Client) GetPolicy(ctx context.Context, policyID string) (GetPolicySetti
 	return response.Data, nil
 }
 
+func (c *Client) GetAllPolicies(ctx context.Context) ([]SinglePolicy, error) {
+	var allPolicies []SinglePolicy
+	from := 0
+	length := 100
+
+	for {
+		req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/api/%s/policies/?from=%d&length=%d", c.apiVersion, from, length), nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request for Get All Policies: %w", err)
+		}
+
+		res, err := c.doRequest(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch policies page (from=%d): %w", from, err)
+		}
+
+		var response GetAllPoliciesAPIResponse
+		if err := json.Unmarshal(res, &response); err != nil {
+			return nil, fmt.Errorf("failed to parse policies response: %w", err)
+		}
+
+		if !response.Success {
+			return nil, fmt.Errorf("%w:%v", ErrHTTPResponse, response)
+		}
+
+		if len(allPolicies) == 0 {
+			allPolicies = make([]SinglePolicy, 0, response.Data.Total)
+		}
+
+		allPolicies = append(allPolicies, response.Data.Policies...)
+
+		if response.Data.Next == nil {
+			break
+		}
+
+		from = *response.Data.Next
+	}
+
+	return allPolicies, nil
+}
+
 // UpdatePolicy updates a policy in Armis.
 func (c *Client) UpdatePolicy(ctx context.Context, policy PolicySettings, policyID string) (UpdatePolicySettings, error) {
 	if err := validateUpdateInput(policy, policyID); err != nil {
