@@ -15,6 +15,11 @@ type GetPolicyAPIResponse struct {
 	Success bool              `json:"success,omitempty"`
 }
 
+type GetAllPoliciesAPIResponse struct {
+	Data    GetAllPolicySettings `json:"data"`
+	Success bool                 `json:"success,omitempty"`
+}
+
 type UpdatePolicyAPIResponse struct {
 	Data    UpdatePolicySettings `json:"data"`
 	Success bool                 `json:"success,omitempty"`
@@ -98,4 +103,28 @@ type MitreAttackLabel struct {
 	SubTechnique string `json:"subTechnique"`
 	Tactic       string `json:"tactic"`
 	Technique    string `json:"technique"`
+}
+
+// GetAllPolicySettings represents the structure for retrieving multiple policies.
+type GetAllPolicySettings struct {
+	Count    int            `json:"count"`
+	Next     *int           `json:"next"`
+	Prev     *int           `json:"prev"`
+	Total    int            `json:"total"`
+	Policies []SinglePolicy `json:"policies"`
+}
+
+// SinglePolicy represents an individual policy in the list of policies.
+type SinglePolicy struct {
+	Action            Action             `json:"action"`
+	Actions           []Action           `json:"actions"`
+	Description       string             `json:"description"`
+	ID                string             `json:"id"`
+	IsEnabled         bool               `json:"isEnabled"`
+	Labels            []string           `json:"labels"`
+	MitreAttackLabels []MitreAttackLabel `json:"mitreAttackLabels"`
+	Name              string             `json:"name"`
+	RiskFactorData    *any               `json:"riskFactorData"`
+	RuleType          string             `json:"ruleType"`
+	Rules             Rules              `json:"rules"`
 }

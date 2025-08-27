@@ -89,6 +89,17 @@ func TestCreatingTagPolicy(t *testing.T) {
 	prettyPrint(res)
 }
 
+func TestGettingAllPolicies(t *testing.T) {
+	t.Parallel()
+	client := integrationClient(t)
+
+	res, err := client.GetAllPolicies(context.Background())
+	if err != nil {
+		t.Fatalf("get policies: %v", err)
+	}
+	prettyPrint(res)
+}
+
 func TestGettingPolicy(t *testing.T) {
 	t.Parallel()
 	client := integrationClient(t)

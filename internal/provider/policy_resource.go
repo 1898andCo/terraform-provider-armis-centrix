@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -102,6 +103,9 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional:    true,
 				Description: "A list of MITRE ATT&CK labels to apply to the policy.",
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"rule_type": schema.StringAttribute{
 				Optional:    true,
@@ -249,11 +253,9 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Update state with the retrieved policy data
 	result := u.ResponseToPolicyFromGet(ctx, getResp)
 
-	// Preserve the MitreAttackLabels from state
-	result.MitreAttackLabels = state.MitreAttackLabels
-
-	// Preserve the ID from state
+	// Preserve the ID and MITRE labels from state
 	result.ID = state.ID
+	result.MitreAttackLabels = state.MitreAttackLabels
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 }
 
@@ -287,8 +289,9 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	// Preserve the ID
+	// Preserve the ID and MITRE labels
 	result.ID = state.ID
+	result.MitreAttackLabels = plan.MitreAttackLabels
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 }
 

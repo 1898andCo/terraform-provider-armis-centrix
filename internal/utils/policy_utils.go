@@ -304,17 +304,13 @@ func ResponseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings
 		"policy_enabled": policy.IsEnabled,
 	})
 
-	// TODO: Handle MitreAttackLabels properly
-	emptyMitreLabels, _ := types.ListValue(types.StringType, []attr.Value{})
-
 	result := &PolicyResourceModel{
-		Name:              types.StringValue(policy.Name),
-		Description:       types.StringValue(policy.Description),
-		IsEnabled:         types.BoolValue(policy.IsEnabled),
-		Labels:            ConvertStringSliceToList(policy.Labels),
-		MitreAttackLabels: emptyMitreLabels,
-		RuleType:          types.StringValue(policy.RuleType),
-		Actions:           ConvertActionsToList(policy.Actions),
+		Name:        types.StringValue(policy.Name),
+		Description: types.StringValue(policy.Description),
+		IsEnabled:   types.BoolValue(policy.IsEnabled),
+		Labels:      ConvertStringSliceToList(policy.Labels),
+		RuleType:    types.StringValue(policy.RuleType),
+		Actions:     ConvertActionsToList(policy.Actions),
 		Rules: RulesModel{
 			And: ConvertSliceToList(policy.Rules.And),
 			Or:  ConvertSliceToList(policy.Rules.Or),
@@ -332,17 +328,13 @@ func ResponseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySe
 		"policy_enabled": policy.IsEnabled,
 	})
 
-	// TODO: Handle MitreAttackLabels properly
-	emptyMitreLabels, _ := types.ListValue(types.StringType, []attr.Value{})
-
 	result := &PolicyResourceModel{
-		Name:              types.StringValue(policy.Name),
-		Description:       types.StringValue(policy.Description),
-		IsEnabled:         types.BoolValue(policy.IsEnabled),
-		Labels:            ConvertStringSliceToList(policy.Labels),
-		MitreAttackLabels: emptyMitreLabels,
-		RuleType:          types.StringValue(policy.RuleType),
-		Actions:           ConvertActionsToList(policy.Actions),
+		Name:        types.StringValue(policy.Name),
+		Description: types.StringValue(policy.Description),
+		IsEnabled:   types.BoolValue(policy.IsEnabled),
+		Labels:      ConvertStringSliceToList(policy.Labels),
+		RuleType:    types.StringValue(policy.RuleType),
+		Actions:     ConvertActionsToList(policy.Actions),
 		Rules: RulesModel{
 			And: ConvertSliceToList(policy.Rules.And),
 			Or:  ConvertSliceToList(policy.Rules.Or),
@@ -357,11 +349,12 @@ func BuildPolicySettings(model *PolicyResourceModel) (armis.PolicySettings, diag
 	var diags diag.Diagnostics
 
 	policy := armis.PolicySettings{
-		Name:        model.Name.ValueString(),
-		Description: model.Description.ValueString(),
-		IsEnabled:   model.IsEnabled.ValueBool(),
-		RuleType:    model.RuleType.ValueString(),
-		Labels:      ConvertListToStringSlice(model.Labels),
+		Name:              model.Name.ValueString(),
+		Description:       model.Description.ValueString(),
+		IsEnabled:         model.IsEnabled.ValueBool(),
+		RuleType:          model.RuleType.ValueString(),
+		MitreAttackLabels: ConvertListToStringSlice(model.MitreAttackLabels),
+		Labels:            ConvertListToStringSlice(model.Labels),
 	}
 
 	// Convert actions

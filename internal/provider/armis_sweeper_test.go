@@ -21,4 +21,5 @@ func init() {
 	resource.AddTestSweepers("collectors", sweep.SweepArmisCollectors("collectors"))
 	resource.AddTestSweepers("users", sweep.SweepArmisUsers("users"))
 	resource.AddTestSweepers("roles", sweep.SweepArmisRoles("roles"))
+	resource.AddTestSweepers("policies", sweep.SweepArmisPolicies("policies"))
 }
