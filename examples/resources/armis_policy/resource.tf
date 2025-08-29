@@ -1,3 +1,6 @@
+# Import an existing policy using its ID:
+# terraform import armis_policy.example_policy 123
+
 resource "armis_policy" "example_policy" {
   name                = "BMS Security Alert Policy"
   description         = "This is an example security policy with all options."

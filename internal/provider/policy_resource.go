@@ -14,6 +14,7 @@ import (
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -27,8 +28,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &policyResource{}
-	_ resource.ResourceWithConfigure = &policyResource{}
+	_ resource.Resource                = &policyResource{}
+	_ resource.ResourceWithConfigure   = &policyResource{}
+	_ resource.ResourceWithImportState = &policyResource{}
 )
 
 type policyResource struct {
@@ -312,4 +314,21 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	if !deleteResp {
 		resp.Diagnostics.AddError("Error deleting policy", "Delete operation was not successful")
 	}
+}
+
+// ImportState imports a policy resource by ID.
+func (r *policyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// The ID provided in the import command will be the policy ID
+	policyID := req.ID
+
+	if policyID == "" {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			"Policy ID cannot be empty. Please provide a valid policy ID.",
+		)
+		return
+	}
+
+	// Set the ID in the state so the Read method can fetch the policy details
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), policyID)...)
 }

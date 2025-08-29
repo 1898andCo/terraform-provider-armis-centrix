@@ -34,6 +34,11 @@ func TestAcc_PolicyResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rules.and.0", "protocol:BMS"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -71,3 +76,6 @@ resource "armis_policy" "test" {
 }
 `
 }
+
+// Note: Unit tests for ImportState require proper Terraform framework setup
+// The acceptance test above includes import testing which is the standard approach
