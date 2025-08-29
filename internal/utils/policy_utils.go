@@ -14,6 +14,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// ConvertObjectToRulesModel converts types.Object to RulesModel.
+func ConvertObjectToRulesModel(obj types.Object) (RulesModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var model RulesModel
+
+	if obj.IsNull() || obj.IsUnknown() {
+		return model, diags
+	}
+
+	diags.Append(obj.As(context.Background(), &model, basetypes.ObjectAsOptions{})...)
+	return model, diags
+}
+
+// ConvertRulesModelToObject converts RulesModel to types.Object.
+func ConvertRulesModelToObject(model RulesModel) types.Object {
+	attrs := map[string]attr.Value{
+		"and": model.And,
+		"or":  model.Or,
+	}
+
+	objValue, _ := types.ObjectValue(map[string]attr.Type{
+		"and": types.ListType{ElemType: types.StringType},
+		"or":  types.ListType{ElemType: types.StringType},
+	}, attrs)
+
+	return objValue
+}
+
+// ConvertObjectToRules converts types.Object to armis.Rules.
+func ConvertObjectToRules(obj types.Object) (armis.Rules, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	rules := armis.Rules{}
+
+	if obj.IsNull() || obj.IsUnknown() {
+		return rules, diags
+	}
+
+	model, convertDiags := ConvertObjectToRulesModel(obj)
+	diags.Append(convertDiags...)
+	if diags.HasError() {
+		return rules, diags
+	}
+
+	return ConvertModelToRules(model)
+}
+
 // ConvertModelToRules converts RulesModel to armis.Rules.
 func ConvertModelToRules(model RulesModel) (armis.Rules, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -304,6 +350,11 @@ func ResponseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings
 		"policy_enabled": policy.IsEnabled,
 	})
 
+	rulesModel := RulesModel{
+		And: ConvertSliceToList(policy.Rules.And),
+		Or:  ConvertSliceToList(policy.Rules.Or),
+	}
+
 	result := &PolicyResourceModel{
 		Name:        types.StringValue(policy.Name),
 		Description: types.StringValue(policy.Description),
@@ -311,10 +362,7 @@ func ResponseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings
 		Labels:      ConvertStringSliceToList(policy.Labels),
 		RuleType:    types.StringValue(policy.RuleType),
 		Actions:     ConvertActionsToList(policy.Actions),
-		Rules: RulesModel{
-			And: ConvertSliceToList(policy.Rules.And),
-			Or:  ConvertSliceToList(policy.Rules.Or),
-		},
+		Rules:       ConvertRulesModelToObject(rulesModel),
 	}
 
 	return result
@@ -328,6 +376,11 @@ func ResponseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySe
 		"policy_enabled": policy.IsEnabled,
 	})
 
+	rulesModel := RulesModel{
+		And: ConvertSliceToList(policy.Rules.And),
+		Or:  ConvertSliceToList(policy.Rules.Or),
+	}
+
 	result := &PolicyResourceModel{
 		Name:        types.StringValue(policy.Name),
 		Description: types.StringValue(policy.Description),
@@ -335,10 +388,7 @@ func ResponseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySe
 		Labels:      ConvertStringSliceToList(policy.Labels),
 		RuleType:    types.StringValue(policy.RuleType),
 		Actions:     ConvertActionsToList(policy.Actions),
-		Rules: RulesModel{
-			And: ConvertSliceToList(policy.Rules.And),
-			Or:  ConvertSliceToList(policy.Rules.Or),
-		},
+		Rules:       ConvertRulesModelToObject(rulesModel),
 	}
 
 	return result
@@ -363,7 +413,7 @@ func BuildPolicySettings(model *PolicyResourceModel) (armis.PolicySettings, diag
 	policy.Actions = actions
 
 	// Convert rules
-	rules, ruleDiags := ConvertModelToRules(model.Rules)
+	rules, ruleDiags := ConvertObjectToRules(model.Rules)
 	diags.Append(ruleDiags...)
 	policy.Rules = rules
 
