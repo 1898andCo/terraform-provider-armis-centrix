@@ -15,7 +15,7 @@ type PolicyResourceModel struct {
 	MitreAttackLabels types.List   `tfsdk:"mitre_attack_labels"`
 	RuleType          types.String `tfsdk:"rule_type"`
 	Actions           types.List   `tfsdk:"actions"`
-	Rules             RulesModel   `tfsdk:"rules"`
+	Rules             *RulesModel  `tfsdk:"rules"`
 }
 
 // ActionModel maps the action schema data.

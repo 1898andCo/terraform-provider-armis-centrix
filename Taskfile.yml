@@ -32,7 +32,7 @@ tasks:
   install-tools:
     desc: "Install required tools"
     cmds:
-      - go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@v0.21.0
+      - go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@v0.22.0
       - go install github.com/goreleaser/goreleaser/v2@latest
       - go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
     status:

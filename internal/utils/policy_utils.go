@@ -311,7 +311,7 @@ func ResponseToPolicyFromGet(ctx context.Context, policy armis.GetPolicySettings
 		Labels:      ConvertStringSliceToList(policy.Labels),
 		RuleType:    types.StringValue(policy.RuleType),
 		Actions:     ConvertActionsToList(policy.Actions),
-		Rules: RulesModel{
+		Rules: &RulesModel{
 			And: ConvertSliceToList(policy.Rules.And),
 			Or:  ConvertSliceToList(policy.Rules.Or),
 		},
@@ -335,7 +335,7 @@ func ResponseToPolicyFromUpdate(ctx context.Context, policy armis.UpdatePolicySe
 		Labels:      ConvertStringSliceToList(policy.Labels),
 		RuleType:    types.StringValue(policy.RuleType),
 		Actions:     ConvertActionsToList(policy.Actions),
-		Rules: RulesModel{
+		Rules: &RulesModel{
 			And: ConvertSliceToList(policy.Rules.And),
 			Or:  ConvertSliceToList(policy.Rules.Or),
 		},
@@ -363,7 +363,7 @@ func BuildPolicySettings(model *PolicyResourceModel) (armis.PolicySettings, diag
 	policy.Actions = actions
 
 	// Convert rules
-	rules, ruleDiags := ConvertModelToRules(model.Rules)
+	rules, ruleDiags := ConvertModelToRules(*model.Rules)
 	diags.Append(ruleDiags...)
 	policy.Rules = rules
 
