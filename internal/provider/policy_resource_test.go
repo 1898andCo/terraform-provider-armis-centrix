@@ -34,6 +34,11 @@ func TestAcc_PolicyResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rules.and.0", "protocol:BMS"),
 				),
 			},
+			// ImportState testing
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
 		},
 	})
 }
