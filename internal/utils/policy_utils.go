@@ -6,7 +6,7 @@ package utils
 import (
 	"context"
 
-	"github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
+	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"

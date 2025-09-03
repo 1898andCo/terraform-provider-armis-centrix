@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
-	armis "github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
+	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"

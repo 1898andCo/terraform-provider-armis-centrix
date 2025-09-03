@@ -2,7 +2,7 @@
 
 ## Armis Centrix Go SDK
 
-The Armis Centrix Go SDK for authenticating and provisioning resources is located in the `internal/armis` directory. This location may be temporary as we plan to migrate the SDK to a separate, versioned repository. Within this directory, `client.go` and `auth.go` handle authentication and provider requests, requiring an API key and the Armis instance URL to communicate and manage resources. The `models_` files define the Go structs used for API calls and responses. When creating a new data source or resource, a model and a corresponding CRUD operations file (e.g., `roles.go`, `collectors.go`, or `users.go`) must be implemented to interact with the API. Once these components are created and tested, they can be utilized by the provider in the `internal/provider` directory.
+The Armis Centrix Go SDK for authenticating and provisioning resources is located in the `armis` directory. This location may be temporary as we plan to migrate the SDK to a separate, versioned repository. Within this directory, `client.go` and `auth.go` handle authentication and provider requests, requiring an API key and the Armis instance URL to communicate and manage resources. The `models_` files define the Go structs used for API calls and responses. When creating a new data source or resource, a model and a corresponding CRUD operations file (e.g., `roles.go`, `collectors.go`, or `users.go`) must be implemented to interact with the API. Once these components are created and tested, they can be utilized by the provider in the `internal/provider` directory.
 
 ## Building the Provider
 

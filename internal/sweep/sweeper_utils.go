@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
+	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
 )
 
 // ConfigureSweeperClient initializes an Armis client using environment variables

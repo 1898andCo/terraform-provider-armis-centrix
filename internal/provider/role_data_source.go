@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/1898andCo/terraform-provider-armis-centrix/internal/armis"
+	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
