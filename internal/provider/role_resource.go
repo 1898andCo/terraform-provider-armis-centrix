@@ -914,7 +914,6 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	tflog.Info(ctx, "Role deleted successfully", map[string]any{"role_id": state.ID.ValueString()})
 }
-
 func (r *roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
