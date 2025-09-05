@@ -11,8 +11,8 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
