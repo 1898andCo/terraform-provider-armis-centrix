@@ -65,6 +65,12 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
 			},
+			// ImportState testing
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				// ImportStateVerify: true, // enable if we want to strict equality verification
+			},
 		},
 	})
 }
