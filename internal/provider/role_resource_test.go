@@ -12,8 +12,7 @@ import (
 )
 
 func TestAcc_RoleResource(t *testing.T) {
-	// Generate a unique name to avoid 400s from duplicate role names in CI.
-	roleName := fmt.Sprintf("tf-acc-role-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum))
+	roleName := fmt.Sprintf("test-%s", acctest.RandString(8))
 	resourceName := "armis_role.test"
 
 	resource.Test(t, resource.TestCase{
@@ -70,7 +69,6 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
 			},
-			// Minimal import step
 			{
 				ResourceName: resourceName,
 				ImportState:  true,
