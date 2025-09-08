@@ -15,6 +15,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// safeBool executes a nested boolean accessor and returns false if any
+// intermediate pointer is nil (preventing panics on sparse API responses).
+func safeBool(get func() bool) (val bool) {
+	defer func() {
+		if r := recover(); r != nil {
+			val = false
+		}
+	}()
+	val = get()
+	return
+}
+
 func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	return armis.RoleSettings{
 		Name: role.Name.ValueString(),
@@ -353,174 +365,174 @@ func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) R
 	result.ID = types.StringValue(strconv.Itoa(role.ID))
 
 	// Advanced Permissions
-	result.Permissions.AdvancedPermissions.All = types.BoolValue(role.Permissions.AdvancedPermissions.All)
+	result.Permissions.AdvancedPermissions.All = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.All }))
 
 	// Advanced Permissions - Behavioral
-	result.Permissions.AdvancedPermissions.Behavioral.All = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.All)
-	result.Permissions.AdvancedPermissions.Behavioral.ApplicationName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All)
-	result.Permissions.AdvancedPermissions.Behavioral.HostName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.HostName.All)
-	result.Permissions.AdvancedPermissions.Behavioral.ServiceName = types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All)
+	result.Permissions.AdvancedPermissions.Behavioral.All = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.All }))
+	result.Permissions.AdvancedPermissions.Behavioral.ApplicationName = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All }))
+	result.Permissions.AdvancedPermissions.Behavioral.HostName = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.HostName.All }))
+	result.Permissions.AdvancedPermissions.Behavioral.ServiceName = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All }))
 
 	// Advanced Permissions - Device
-	result.Permissions.AdvancedPermissions.Device.All = types.BoolValue(role.Permissions.AdvancedPermissions.Device.All)
-	result.Permissions.AdvancedPermissions.Device.DeviceNames = types.BoolValue(role.Permissions.AdvancedPermissions.Device.DeviceNames.All)
-	result.Permissions.AdvancedPermissions.Device.IPAddresses = types.BoolValue(role.Permissions.AdvancedPermissions.Device.IPAddresses.All)
-	result.Permissions.AdvancedPermissions.Device.MACAddresses = types.BoolValue(role.Permissions.AdvancedPermissions.Device.MACAddresses.All)
-	result.Permissions.AdvancedPermissions.Device.PhoneNumbers = types.BoolValue(role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All)
+	result.Permissions.AdvancedPermissions.Device.All = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.All }))
+	result.Permissions.AdvancedPermissions.Device.DeviceNames = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.DeviceNames.All }))
+	result.Permissions.AdvancedPermissions.Device.IPAddresses = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.IPAddresses.All }))
+	result.Permissions.AdvancedPermissions.Device.MACAddresses = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.MACAddresses.All }))
+	result.Permissions.AdvancedPermissions.Device.PhoneNumbers = types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All }))
 
 	// Alert Permissions
-	result.Permissions.Alert.All = types.BoolValue(role.Permissions.Alert.All)
-	result.Permissions.Alert.Read = types.BoolValue(role.Permissions.Alert.Read.All)
+	result.Permissions.Alert.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.All }))
+	result.Permissions.Alert.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Read.All }))
 
 	// Alert Manage Permissions
-	result.Permissions.Alert.Manage.All = types.BoolValue(role.Permissions.Alert.Manage.All)
-	result.Permissions.Alert.Manage.Resolve = types.BoolValue(role.Permissions.Alert.Manage.Resolve.All)
-	result.Permissions.Alert.Manage.Suppress = types.BoolValue(role.Permissions.Alert.Manage.Suppress.All)
-	result.Permissions.Alert.Manage.WhitelistDevices = types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All)
+	result.Permissions.Alert.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.All }))
+	result.Permissions.Alert.Manage.Resolve = types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.Resolve.All }))
+	result.Permissions.Alert.Manage.Suppress = types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.Suppress.All }))
+	result.Permissions.Alert.Manage.WhitelistDevices = types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.WhitelistDevices.All }))
 
 	// Device Permissions
-	result.Permissions.Device.All = types.BoolValue(role.Permissions.Device.All)
-	result.Permissions.Device.Read = types.BoolValue(role.Permissions.Device.Read.All)
+	result.Permissions.Device.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.All }))
+	result.Permissions.Device.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Read.All }))
 
 	// Device Manage Permissions
-	result.Permissions.Device.Manage.All = types.BoolValue(role.Permissions.Device.Manage.All)
-	result.Permissions.Device.Manage.Create = types.BoolValue(role.Permissions.Device.Manage.Create.All)
-	result.Permissions.Device.Manage.Delete = types.BoolValue(role.Permissions.Device.Manage.Delete.All)
-	result.Permissions.Device.Manage.Edit = types.BoolValue(role.Permissions.Device.Manage.Edit.All)
-	result.Permissions.Device.Manage.Merge = types.BoolValue(role.Permissions.Device.Manage.Merge.All)
-	result.Permissions.Device.Manage.RequestDeletedData = types.BoolValue(role.Permissions.Device.Manage.RequestDeletedData.All)
-	result.Permissions.Device.Manage.Tags = types.BoolValue(role.Permissions.Device.Manage.Tags.All)
+	result.Permissions.Device.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.All }))
+	result.Permissions.Device.Manage.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Create.All }))
+	result.Permissions.Device.Manage.Delete = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Delete.All }))
+	result.Permissions.Device.Manage.Edit = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Edit.All }))
+	result.Permissions.Device.Manage.Merge = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Merge.All }))
+	result.Permissions.Device.Manage.RequestDeletedData = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.RequestDeletedData.All }))
+	result.Permissions.Device.Manage.Tags = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Tags.All }))
 
 	// Device Enforce Permissions
-	result.Permissions.Device.Manage.Enforce.All = types.BoolValue(role.Permissions.Device.Manage.Enforce.All)
-	result.Permissions.Device.Manage.Enforce.Create = types.BoolValue(role.Permissions.Device.Manage.Enforce.Create.All)
-	result.Permissions.Device.Manage.Enforce.Delete = types.BoolValue(role.Permissions.Device.Manage.Enforce.Delete.All)
+	result.Permissions.Device.Manage.Enforce.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Enforce.All }))
+	result.Permissions.Device.Manage.Enforce.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Enforce.Create.All }))
+	result.Permissions.Device.Manage.Enforce.Delete = types.BoolValue(safeBool(func() bool { return role.Permissions.Device.Manage.Enforce.Delete.All }))
 
 	// Policy Permissions
-	result.Permissions.Policy.All = types.BoolValue(role.Permissions.Policy.All)
-	result.Permissions.Policy.Manage = types.BoolValue(role.Permissions.Policy.Manage.All)
-	result.Permissions.Policy.Read = types.BoolValue(role.Permissions.Policy.Read.All)
+	result.Permissions.Policy.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Policy.All }))
+	result.Permissions.Policy.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Policy.Manage.All }))
+	result.Permissions.Policy.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Policy.Read.All }))
 
 	// Report Permissions
-	result.Permissions.Report.All = types.BoolValue(role.Permissions.Report.All)
-	result.Permissions.Report.Export = types.BoolValue(role.Permissions.Report.Export.All)
-	result.Permissions.Report.Read = types.BoolValue(role.Permissions.Report.Read.All)
+	result.Permissions.Report.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.All }))
+	result.Permissions.Report.Export = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Export.All }))
+	result.Permissions.Report.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Read.All }))
 
 	// Report Manage Permissions
-	result.Permissions.Report.Manage.All = types.BoolValue(role.Permissions.Report.Manage.All)
-	result.Permissions.Report.Manage.Create = types.BoolValue(role.Permissions.Report.Manage.Create.All)
-	result.Permissions.Report.Manage.Delete = types.BoolValue(role.Permissions.Report.Manage.Delete.All)
-	result.Permissions.Report.Manage.Edit = types.BoolValue(role.Permissions.Report.Manage.Edit.All)
+	result.Permissions.Report.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.All }))
+	result.Permissions.Report.Manage.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.Create.All }))
+	result.Permissions.Report.Manage.Delete = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.Delete.All }))
+	result.Permissions.Report.Manage.Edit = types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.Edit.All }))
 
 	// Risk Factor Permissions
-	result.Permissions.RiskFactor.All = types.BoolValue(role.Permissions.RiskFactor.All)
-	result.Permissions.RiskFactor.Read = types.BoolValue(role.Permissions.RiskFactor.Read.All)
+	result.Permissions.RiskFactor.All = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.All }))
+	result.Permissions.RiskFactor.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Read.All }))
 
 	// Risk Factor Manage Permissions
-	result.Permissions.RiskFactor.Manage.All = types.BoolValue(role.Permissions.RiskFactor.Manage.All)
+	result.Permissions.RiskFactor.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.All }))
 
 	// Risk Factor Customization Permissions
-	result.Permissions.RiskFactor.Manage.Customization.All = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.All)
-	result.Permissions.RiskFactor.Manage.Customization.Create = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Create.All)
-	result.Permissions.RiskFactor.Manage.Customization.Disable = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Disable.All)
-	result.Permissions.RiskFactor.Manage.Customization.Edit = types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Edit.All)
+	result.Permissions.RiskFactor.Manage.Customization.All = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.All }))
+	result.Permissions.RiskFactor.Manage.Customization.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.Create.All }))
+	result.Permissions.RiskFactor.Manage.Customization.Disable = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.Disable.All }))
+	result.Permissions.RiskFactor.Manage.Customization.Edit = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.Edit.All }))
 
 	// Risk Factor Status Permissions
-	result.Permissions.RiskFactor.Manage.Status.All = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.All)
-	result.Permissions.RiskFactor.Manage.Status.Ignore = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Ignore.All)
-	result.Permissions.RiskFactor.Manage.Status.Resolve = types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Resolve.All)
+	result.Permissions.RiskFactor.Manage.Status.All = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Status.All }))
+	result.Permissions.RiskFactor.Manage.Status.Ignore = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Status.Ignore.All }))
+	result.Permissions.RiskFactor.Manage.Status.Resolve = types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Status.Resolve.All }))
 
 	// Settings Permissions
-	result.Permissions.Settings.All = types.BoolValue(role.Permissions.Settings.All)
-	result.Permissions.Settings.AuditLog = types.BoolValue(role.Permissions.Settings.AuditLog.All)
-	result.Permissions.Settings.SecretKey = types.BoolValue(role.Permissions.Settings.SecretKey.All)
-	result.Permissions.Settings.SecuritySettings = types.BoolValue(role.Permissions.Settings.SecuritySettings.All)
+	result.Permissions.Settings.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.All }))
+	result.Permissions.Settings.AuditLog = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.AuditLog.All }))
+	result.Permissions.Settings.SecretKey = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SecretKey.All }))
+	result.Permissions.Settings.SecuritySettings = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SecuritySettings.All }))
 
 	// Settings Boundary Permissions
-	result.Permissions.Settings.Boundary.All = types.BoolValue(role.Permissions.Settings.Boundary.All)
-	result.Permissions.Settings.Boundary.Read = types.BoolValue(role.Permissions.Settings.Boundary.Read.All)
-	result.Permissions.Settings.Boundary.Manage.All = types.BoolValue(role.Permissions.Settings.Boundary.Manage.All)
-	result.Permissions.Settings.Boundary.Manage.Create = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Create.All)
-	result.Permissions.Settings.Boundary.Manage.Delete = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Delete.All)
-	result.Permissions.Settings.Boundary.Manage.Edit = types.BoolValue(role.Permissions.Settings.Boundary.Manage.Edit.All)
+	result.Permissions.Settings.Boundary.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.All }))
+	result.Permissions.Settings.Boundary.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Read.All }))
+	result.Permissions.Settings.Boundary.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.All }))
+	result.Permissions.Settings.Boundary.Manage.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.Create.All }))
+	result.Permissions.Settings.Boundary.Manage.Delete = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.Delete.All }))
+	result.Permissions.Settings.Boundary.Manage.Edit = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.Edit.All }))
 
 	// Settings Business Impact Permissions
-	result.Permissions.Settings.BusinessImpact.All = types.BoolValue(role.Permissions.Settings.BusinessImpact.All)
-	result.Permissions.Settings.BusinessImpact.Manage = types.BoolValue(role.Permissions.Settings.BusinessImpact.Manage.All)
-	result.Permissions.Settings.BusinessImpact.Read = types.BoolValue(role.Permissions.Settings.BusinessImpact.Read.All)
+	result.Permissions.Settings.BusinessImpact.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.BusinessImpact.All }))
+	result.Permissions.Settings.BusinessImpact.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.BusinessImpact.Manage.All }))
+	result.Permissions.Settings.BusinessImpact.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.BusinessImpact.Read.All }))
 
 	// Settings Collector Permissions
-	result.Permissions.Settings.Collector.All = types.BoolValue(role.Permissions.Settings.Collector.All)
-	result.Permissions.Settings.Collector.Manage = types.BoolValue(role.Permissions.Settings.Collector.Manage.All)
-	result.Permissions.Settings.Collector.Read = types.BoolValue(role.Permissions.Settings.Collector.Read.All)
+	result.Permissions.Settings.Collector.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Collector.All }))
+	result.Permissions.Settings.Collector.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Collector.Manage.All }))
+	result.Permissions.Settings.Collector.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Collector.Read.All }))
 
 	// Settings Custom Properties Permissions
-	result.Permissions.Settings.CustomProperties.All = types.BoolValue(role.Permissions.Settings.CustomProperties.All)
-	result.Permissions.Settings.CustomProperties.Manage = types.BoolValue(role.Permissions.Settings.CustomProperties.Manage.All)
-	result.Permissions.Settings.CustomProperties.Read = types.BoolValue(role.Permissions.Settings.CustomProperties.Read.All)
+	result.Permissions.Settings.CustomProperties.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.CustomProperties.All }))
+	result.Permissions.Settings.CustomProperties.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.CustomProperties.Manage.All }))
+	result.Permissions.Settings.CustomProperties.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.CustomProperties.Read.All }))
 
 	// Settings Integration Permissions
-	result.Permissions.Settings.Integration.All = types.BoolValue(role.Permissions.Settings.Integration.All)
-	result.Permissions.Settings.Integration.Manage = types.BoolValue(role.Permissions.Settings.Integration.Manage.All)
-	result.Permissions.Settings.Integration.Read = types.BoolValue(role.Permissions.Settings.Integration.Read.All)
+	result.Permissions.Settings.Integration.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Integration.All }))
+	result.Permissions.Settings.Integration.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Integration.Manage.All }))
+	result.Permissions.Settings.Integration.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Integration.Read.All }))
 
 	// Settings Internal IPs Permissions
-	result.Permissions.Settings.InternalIps.All = types.BoolValue(role.Permissions.Settings.InternalIps.All)
-	result.Permissions.Settings.InternalIps.Manage = types.BoolValue(role.Permissions.Settings.InternalIps.Manage.All)
-	result.Permissions.Settings.InternalIps.Read = types.BoolValue(role.Permissions.Settings.InternalIps.Read.All)
+	result.Permissions.Settings.InternalIps.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.InternalIps.All }))
+	result.Permissions.Settings.InternalIps.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.InternalIps.Manage.All }))
+	result.Permissions.Settings.InternalIps.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.InternalIps.Read.All }))
 
 	// Settings Notifications Permissions
-	result.Permissions.Settings.Notifications.All = types.BoolValue(role.Permissions.Settings.Notifications.All)
-	result.Permissions.Settings.Notifications.Manage = types.BoolValue(role.Permissions.Settings.Notifications.Manage.All)
-	result.Permissions.Settings.Notifications.Read = types.BoolValue(role.Permissions.Settings.Notifications.Read.All)
+	result.Permissions.Settings.Notifications.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Notifications.All }))
+	result.Permissions.Settings.Notifications.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Notifications.Manage.All }))
+	result.Permissions.Settings.Notifications.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Notifications.Read.All }))
 
 	// Settings OIDC Permissions
-	result.Permissions.Settings.OIDC.All = types.BoolValue(role.Permissions.Settings.OIDC.All)
-	result.Permissions.Settings.OIDC.Manage = types.BoolValue(role.Permissions.Settings.OIDC.Manage.All)
-	result.Permissions.Settings.OIDC.Read = types.BoolValue(role.Permissions.Settings.OIDC.Read.All)
+	result.Permissions.Settings.OIDC.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.OIDC.All }))
+	result.Permissions.Settings.OIDC.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.OIDC.Manage.All }))
+	result.Permissions.Settings.OIDC.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.OIDC.Read.All }))
 
 	// Settings SAML Permissions
-	result.Permissions.Settings.SAML.All = types.BoolValue(role.Permissions.Settings.SAML.All)
-	result.Permissions.Settings.SAML.Manage = types.BoolValue(role.Permissions.Settings.SAML.Manage.All)
-	result.Permissions.Settings.SAML.Read = types.BoolValue(role.Permissions.Settings.SAML.Read.All)
+	result.Permissions.Settings.SAML.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SAML.All }))
+	result.Permissions.Settings.SAML.Manage = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SAML.Manage.All }))
+	result.Permissions.Settings.SAML.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SAML.Read.All }))
 
 	// Settings Sites and Sensors Permissions
-	result.Permissions.Settings.SitesAndSensors.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.All)
-	result.Permissions.Settings.SitesAndSensors.Read = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All)
-	result.Permissions.Settings.SitesAndSensors.Manage.All = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All)
-	result.Permissions.Settings.SitesAndSensors.Manage.Sensors = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All)
-	result.Permissions.Settings.SitesAndSensors.Manage.Sites = types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All)
+	result.Permissions.Settings.SitesAndSensors.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.All }))
+	result.Permissions.Settings.SitesAndSensors.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Read.All }))
+	result.Permissions.Settings.SitesAndSensors.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Manage.All }))
+	result.Permissions.Settings.SitesAndSensors.Manage.Sensors = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All }))
+	result.Permissions.Settings.SitesAndSensors.Manage.Sites = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Manage.Sites.All }))
 
 	// Settings Users and Roles Permissions
-	result.Permissions.Settings.UsersAndRoles.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.All)
-	result.Permissions.Settings.UsersAndRoles.Read = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Read.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.All)
+	result.Permissions.Settings.UsersAndRoles.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.All }))
+	result.Permissions.Settings.UsersAndRoles.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Read.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.All }))
 
 	// Settings Users and Roles - Roles Permissions
-	result.Permissions.Settings.UsersAndRoles.Manage.Roles.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Create = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All }))
 
 	// Settings Users and Roles - Users Permissions
-	result.Permissions.Settings.UsersAndRoles.Manage.Users.All = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.Users.Create = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.Users.Delete = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All)
-	result.Permissions.Settings.UsersAndRoles.Manage.Users.Edit = types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.All)
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.Create = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.Delete = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All }))
+	result.Permissions.Settings.UsersAndRoles.Manage.Users.Edit = types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.All }))
 
 	// User Permissions
-	result.Permissions.User.All = types.BoolValue(role.Permissions.User.All)
-	result.Permissions.User.Read = types.BoolValue(role.Permissions.User.Read.All)
-	result.Permissions.User.Manage.All = types.BoolValue(role.Permissions.User.Manage.All)
-	result.Permissions.User.Manage.Upsert = types.BoolValue(role.Permissions.User.Manage.Upsert.All)
+	result.Permissions.User.All = types.BoolValue(safeBool(func() bool { return role.Permissions.User.All }))
+	result.Permissions.User.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.User.Read.All }))
+	result.Permissions.User.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.User.Manage.All }))
+	result.Permissions.User.Manage.Upsert = types.BoolValue(safeBool(func() bool { return role.Permissions.User.Manage.Upsert.All }))
 
 	// Vulnerability Permissions
-	result.Permissions.Vulnerability.All = types.BoolValue(role.Permissions.Vulnerability.All)
-	result.Permissions.Vulnerability.Read = types.BoolValue(role.Permissions.Vulnerability.Read.All)
-	result.Permissions.Vulnerability.Manage.All = types.BoolValue(role.Permissions.Vulnerability.Manage.All)
-	result.Permissions.Vulnerability.Manage.Ignore = types.BoolValue(role.Permissions.Vulnerability.Manage.Ignore.All)
-	result.Permissions.Vulnerability.Manage.Resolve = types.BoolValue(role.Permissions.Vulnerability.Manage.Resolve.All)
-	result.Permissions.Vulnerability.Manage.Write = types.BoolValue(role.Permissions.Vulnerability.Manage.Write.All)
+	result.Permissions.Vulnerability.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.All }))
+	result.Permissions.Vulnerability.Read = types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Read.All }))
+	result.Permissions.Vulnerability.Manage.All = types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.All }))
+	result.Permissions.Vulnerability.Manage.Ignore = types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.Ignore.All }))
+	result.Permissions.Vulnerability.Manage.Resolve = types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.Resolve.All }))
+	result.Permissions.Vulnerability.Manage.Write = types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.Write.All }))
 
 	return result
 }
@@ -532,165 +544,165 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 		ViprRole: types.BoolValue(role.ViprRole),
 		Permissions: &PermissionsModel{
 			AdvancedPermissions: &AdvancedPermissionsModel{
-				All: types.BoolValue(role.Permissions.AdvancedPermissions.All),
+				All: types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.All })),
 				Behavioral: &BehavioralModel{
-					All:             types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.All),
-					ApplicationName: types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All),
-					HostName:        types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.HostName.All),
-					ServiceName:     types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All),
+					All:             types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.All })),
+					ApplicationName: types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All })),
+					HostName:        types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.HostName.All })),
+					ServiceName:     types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All })),
 				},
 				Device: &DeviceAdvancedModel{
-					All:          types.BoolValue(role.Permissions.AdvancedPermissions.Device.All),
-					DeviceNames:  types.BoolValue(role.Permissions.AdvancedPermissions.Device.DeviceNames.All),
-					IPAddresses:  types.BoolValue(role.Permissions.AdvancedPermissions.Device.IPAddresses.All),
-					MACAddresses: types.BoolValue(role.Permissions.AdvancedPermissions.Device.MACAddresses.All),
-					PhoneNumbers: types.BoolValue(role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All),
+					All:          types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.All })),
+					DeviceNames:  types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.DeviceNames.All })),
+					IPAddresses:  types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.IPAddresses.All })),
+					MACAddresses: types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.MACAddresses.All })),
+					PhoneNumbers: types.BoolValue(safeBool(func() bool { return role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All })),
 				},
 			},
 			Alert: &AlertModel{
-				All: types.BoolValue(role.Permissions.Alert.All),
+				All: types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.All })),
 				Manage: &ManageAlertsModel{
-					All:              types.BoolValue(role.Permissions.Alert.Manage.All),
-					Resolve:          types.BoolValue(role.Permissions.Alert.Manage.Resolve.All),
-					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
-					WhitelistDevices: types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All),
+					All:              types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.All })),
+					Resolve:          types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.Resolve.All })),
+					Suppress:         types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.Suppress.All })),
+					WhitelistDevices: types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Manage.WhitelistDevices.All })),
 				},
-				Read: types.BoolValue(role.Permissions.Alert.Read.All),
+				Read: types.BoolValue(safeBool(func() bool { return role.Permissions.Alert.Read.All })),
 			},
 			Policy: &PolicyModel{
-				All:    types.BoolValue(role.Permissions.Policy.All),
-				Manage: types.BoolValue(role.Permissions.Policy.Manage.All),
-				Read:   types.BoolValue(role.Permissions.Policy.Read.All),
+				All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Policy.All })),
+				Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Policy.Manage.All })),
+				Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Policy.Read.All })),
 			},
 			Report: &ReportModel{
-				All:    types.BoolValue(role.Permissions.Report.All),
-				Export: types.BoolValue(role.Permissions.Report.Export.All),
+				All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Report.All })),
+				Export: types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Export.All })),
 				Manage: &ManageReportModel{
-					All:    types.BoolValue(role.Permissions.Report.All),
-					Create: types.BoolValue(role.Permissions.Report.Manage.Create.All),
-					Delete: types.BoolValue(role.Permissions.Report.Manage.Delete.All),
-					Edit:   types.BoolValue(role.Permissions.Report.Manage.Edit.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Report.All })),
+					Create: types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.Create.All })),
+					Delete: types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.Delete.All })),
+					Edit:   types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Manage.Edit.All })),
 				},
-				Read: types.BoolValue(role.Permissions.Report.Read.All),
+				Read: types.BoolValue(safeBool(func() bool { return role.Permissions.Report.Read.All })),
 			},
 			RiskFactor: &RiskFactorModel{
-				All: types.BoolValue(role.Permissions.RiskFactor.All),
+				All: types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.All })),
 				Manage: &ManageRiskModel{
-					All: types.BoolValue(role.Permissions.RiskFactor.Manage.All),
+					All: types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.All })),
 					Customization: &CustomizationModel{
-						All:     types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.All),
-						Create:  types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Create.All),
-						Disable: types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Disable.All),
-						Edit:    types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Edit.All),
+						All:     types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.All })),
+						Create:  types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.Create.All })),
+						Disable: types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.Disable.All })),
+						Edit:    types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Customization.Edit.All })),
 					},
 					Status: &StatusModel{
-						All:     types.BoolValue(role.Permissions.RiskFactor.Manage.Status.All),
-						Ignore:  types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Ignore.All),
-						Resolve: types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Resolve.All),
+						All:     types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Status.All })),
+						Ignore:  types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Status.Ignore.All })),
+						Resolve: types.BoolValue(safeBool(func() bool { return role.Permissions.RiskFactor.Manage.Status.Resolve.All })),
 					},
 				},
 			},
 			Settings: &SettingsModel{
-				All:      types.BoolValue(role.Permissions.Settings.All),
-				AuditLog: types.BoolValue(role.Permissions.Settings.AuditLog.All),
+				All:      types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.All })),
+				AuditLog: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.AuditLog.All })),
 				Boundary: &BoundaryModel{
-					All: types.BoolValue(role.Permissions.Settings.Boundary.All),
+					All: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.All })),
 					Manage: &ManageBoundaryModel{
-						All:    types.BoolValue(role.Permissions.Settings.Boundary.Manage.All),
-						Create: types.BoolValue(role.Permissions.Settings.Boundary.Manage.Create.All),
-						Delete: types.BoolValue(role.Permissions.Settings.Boundary.Manage.Delete.All),
-						Edit:   types.BoolValue(role.Permissions.Settings.Boundary.Manage.Edit.All),
+						All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.All })),
+						Create: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.Create.All })),
+						Delete: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.Delete.All })),
+						Edit:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Manage.Edit.All })),
 					},
-					Read: types.BoolValue(role.Permissions.Settings.Boundary.Read.All),
+					Read: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Boundary.Read.All })),
 				},
 				BusinessImpact: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.BusinessImpact.All),
-					Manage: types.BoolValue(role.Permissions.Settings.BusinessImpact.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.BusinessImpact.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.BusinessImpact.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.BusinessImpact.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.BusinessImpact.Read.All })),
 				},
 				Collector: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.Collector.All),
-					Manage: types.BoolValue(role.Permissions.Settings.Collector.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.Collector.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Collector.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Collector.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Collector.Read.All })),
 				},
 				CustomProperties: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.CustomProperties.All),
-					Manage: types.BoolValue(role.Permissions.Settings.CustomProperties.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.CustomProperties.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.CustomProperties.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.CustomProperties.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.CustomProperties.Read.All })),
 				},
 				Integration: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.Integration.All),
-					Manage: types.BoolValue(role.Permissions.Settings.Integration.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.Integration.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Integration.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Integration.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Integration.Read.All })),
 				},
 				InternalIps: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.InternalIps.All),
-					Manage: types.BoolValue(role.Permissions.Settings.InternalIps.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.InternalIps.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.InternalIps.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.InternalIps.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.InternalIps.Read.All })),
 				},
 				Notifications: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.Notifications.All),
-					Manage: types.BoolValue(role.Permissions.Settings.Notifications.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.Notifications.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Notifications.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Notifications.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.Notifications.Read.All })),
 				},
 				OIDC: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.OIDC.All),
-					Manage: types.BoolValue(role.Permissions.Settings.OIDC.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.OIDC.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.OIDC.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.OIDC.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.OIDC.Read.All })),
 				},
 				SAML: &ManageAndReadModel{
-					All:    types.BoolValue(role.Permissions.Settings.SAML.All),
-					Manage: types.BoolValue(role.Permissions.Settings.SAML.Manage.All),
-					Read:   types.BoolValue(role.Permissions.Settings.SAML.Read.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SAML.All })),
+					Manage: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SAML.Manage.All })),
+					Read:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SAML.Read.All })),
 				},
-				SecretKey:        types.BoolValue(role.Permissions.Settings.SecretKey.All),
-				SecuritySettings: types.BoolValue(role.Permissions.Settings.SecuritySettings.All),
+				SecretKey:        types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SecretKey.All })),
+				SecuritySettings: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SecuritySettings.All })),
 				SitesAndSensors: &SitesAndSensorsModel{
-					All: types.BoolValue(role.Permissions.Settings.SitesAndSensors.All),
+					All: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.All })),
 					Manage: &ManageSitesAndSensorsModel{
-						All:     types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All),
-						Sensors: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All),
-						Sites:   types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All),
+						All:     types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Manage.All })),
+						Sensors: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All })),
+						Sites:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Manage.Sites.All })),
 					},
-					Read: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
+					Read: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.SitesAndSensors.Read.All })),
 				},
 				UsersAndRoles: &UsersAndRolesModel{
-					All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.All),
+					All: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.All })),
 					Manage: &ManageUsersAndRolesModel{
-						All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.All),
+						All: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.All })),
 						Roles: &ManageRolesModel{
-							All:    types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.All),
-							Create: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All),
-							Delete: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All),
-							Edit:   types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All),
+							All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.All })),
+							Create: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All })),
+							Delete: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All })),
+							Edit:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All })),
 						},
 						Users: &ManageUsersModel{
-							All:    types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.All),
-							Create: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All),
-							Delete: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All),
-							Edit:   types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.All),
+							All:    types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.All })),
+							Create: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All })),
+							Delete: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All })),
+							Edit:   types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.All })),
 						},
 					},
-					Read: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Read.All),
+					Read: types.BoolValue(safeBool(func() bool { return role.Permissions.Settings.UsersAndRoles.Read.All })),
 				},
 			},
 			User: &UserModel{
-				All: types.BoolValue(role.Permissions.User.All),
+				All: types.BoolValue(safeBool(func() bool { return role.Permissions.User.All })),
 				Manage: &ManageUserModel{
-					All:    types.BoolValue(role.Permissions.User.Manage.All),
-					Upsert: types.BoolValue(role.Permissions.User.Manage.Upsert.All),
+					All:    types.BoolValue(safeBool(func() bool { return role.Permissions.User.Manage.All })),
+					Upsert: types.BoolValue(safeBool(func() bool { return role.Permissions.User.Manage.Upsert.All })),
 				},
-				Read: types.BoolValue(role.Permissions.User.Read.All),
+				Read: types.BoolValue(safeBool(func() bool { return role.Permissions.User.Read.All })),
 			},
 			Vulnerability: &VulnerabilityModel{
-				All: types.BoolValue(role.Permissions.Vulnerability.All),
+				All: types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.All })),
 				Manage: &ManageVulnerabilityModel{
-					All:     types.BoolValue(role.Permissions.Vulnerability.Manage.All),
-					Ignore:  types.BoolValue(role.Permissions.Vulnerability.Manage.Ignore.All),
-					Resolve: types.BoolValue(role.Permissions.Vulnerability.Manage.Resolve.All),
-					Write:   types.BoolValue(role.Permissions.Vulnerability.Manage.Write.All),
+					All:     types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.All })),
+					Ignore:  types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.Ignore.All })),
+					Resolve: types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.Resolve.All })),
+					Write:   types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Manage.Write.All })),
 				},
-				Read: types.BoolValue(role.Permissions.Vulnerability.Read.All),
+				Read: types.BoolValue(safeBool(func() bool { return role.Permissions.Vulnerability.Read.All })),
 			},
 		},
 	}
