@@ -632,3 +632,24 @@ Optional:
 - `ignore` (Boolean) Permission to ignore vulnerabilities.
 - `resolve` (Boolean) Permission to resolve vulnerabilities.
 - `write` (Boolean) Permission to write vulnerabilities.
+
+### Import
+
+Import an existing role by its ID.
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+**Import block:**
+```hcl
+resource "armis_role" "example" {}
+
+import {
+  to = armis_role.example
+  id = "92012"
+}
+```
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+terraform import armis_role.example 92012
+```
