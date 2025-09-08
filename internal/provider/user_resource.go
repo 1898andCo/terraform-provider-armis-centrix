@@ -13,6 +13,7 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,8 +25,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &userResource{}
-	_ resource.ResourceWithConfigure = &userResource{}
+	_ resource.Resource                = &userResource{}
+	_ resource.ResourceWithConfigure   = &userResource{}
+	_ resource.ResourceWithImportState = &userResource{} // <-- added for import support
 )
 
 type userResource struct {
@@ -217,7 +219,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if err != nil {
 		// Handle 404 Not Found by removing resource from state
 		if strings.Contains(err.Error(), "Status Code: 404") {
-			tflog.Warn(ctx, "User not found, remvoving from state", map[string]any{
+			tflog.Warn(ctx, "User not found, removing from state", map[string]any{
 				"user_id": state.ID.ValueString(),
 			})
 			resp.State.RemoveResource(ctx)
@@ -239,7 +241,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	//	Overwrite users with refreshed state
+	// Overwrite users with refreshed state
 	state.Name = types.StringValue(user.Name)
 	state.Phone = types.StringValue(user.Phone)
 	state.Email = types.StringValue(user.Email)
@@ -298,8 +300,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		RoleAssignment: roleAssignments,
 	}
 
-	// Update existing user
-	// and then fetch the updated user from the API.
+	// Update existing user and then fetch the updated user from the API.
 	_, err := r.client.UpdateUser(ctx, user, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -309,8 +310,6 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Fetch updated user from UpdateUser as GetUser items are not
-	// populated.
 	updatedUser, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -320,7 +319,6 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Update resource state with updated user options and timestamp
 	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(updatedUser.ID))
 	plan.Name = types.StringValue(updatedUser.Name)
@@ -346,7 +344,7 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	// Delete existing order
+	// Delete existing user
 	success, err := r.client.DeleteUser(ctx, state.ID.ValueString())
 	if err != nil || !success {
 		resp.Diagnostics.AddError(
@@ -355,6 +353,15 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		)
 		return
 	}
+}
+
+// ImportState allows `terraform import armis_user.example <id>` and import blocks.
+func (r *userResource) ImportState(
+	ctx context.Context,
+	req resource.ImportStateRequest,
+	resp *resource.ImportStateResponse,
+) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Helper function to convert []types.String to []string.
