@@ -4,21 +4,26 @@
 package provider_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_RoleResource(t *testing.T) {
+	// Generate a unique name to avoid 400s from duplicate role names in CI.
+	roleName := fmt.Sprintf("tf-acc-role-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum))
 	resourceName := "armis_role.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleResourceConfig(),
+				Config: testAccRoleResourceConfig(roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", roleName),
 
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.all", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.behavioral.all", "false"),
@@ -65,20 +70,19 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
 			},
-			// ImportState testing
+			// Minimal import step
 			{
 				ResourceName: resourceName,
 				ImportState:  true,
-				// ImportStateVerify: true, // enable if we want to strict equality verification
 			},
 		},
 	})
 }
 
-func testAccRoleResourceConfig() string {
-	return `
+func testAccRoleResourceConfig(name string) string {
+	return fmt.Sprintf(`
 resource "armis_role" "test" {
-  name = "test"
+  name = %q
 
   permissions = {
     advanced_permissions = {
@@ -282,5 +286,5 @@ resource "armis_role" "test" {
     }
   }
 }
-`
+`, name)
 }
