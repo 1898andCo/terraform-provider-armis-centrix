@@ -9,17 +9,17 @@ import (
 
 // RoleResourceModel maps the RoleSettings schema data.
 type RoleResourceModel struct {
-	Name        types.String    `tfsdk:"name"`
-	Permissions PermissionsModel `tfsdk:"permissions"`
-	ID          types.String    `tfsdk:"id"`
+	Name        types.String      `tfsdk:"name"`
+	Permissions *PermissionsModel `tfsdk:"permissions"` // top-level pointer, inner values
+	ID          types.String      `tfsdk:"id"`
 }
 
 // RoleDataSourceModel defines the structure for the role data source model.
 type RoleDataSourceModel struct {
-	Name        types.String    `tfsdk:"name"`
-	Permissions PermissionsModel `tfsdk:"permissions"`
-	ID          types.String    `tfsdk:"role_id"`
-	ViprRole    types.Bool      `tfsdk:"vipr_role"`
+	Name        types.String      `tfsdk:"name"`
+	Permissions *PermissionsModel `tfsdk:"permissions"` // top-level pointer, inner values
+	ID          types.String      `tfsdk:"role_id"`
+	ViprRole    types.Bool        `tfsdk:"vipr_role"`
 }
 
 // PermissionsModel defines the structure for permissions.
@@ -37,9 +37,9 @@ type PermissionsModel struct {
 
 // AdvancedPermissionsModel defines the structure for advanced permissions.
 type AdvancedPermissionsModel struct {
-	All        types.Bool           `tfsdk:"all"`
-	Behavioral BehavioralModel      `tfsdk:"behavioral"`
-	Device     DeviceAdvancedModel  `tfsdk:"device"`
+	All        types.Bool          `tfsdk:"all"`
+	Behavioral BehavioralModel     `tfsdk:"behavioral"`
+	Device     DeviceAdvancedModel `tfsdk:"device"`
 }
 
 // BehavioralModel defines the structure for behavioral permissions.
@@ -76,9 +76,9 @@ type ManageAlertsModel struct {
 
 // DeviceModel defines the structure for device permissions.
 type DeviceModel struct {
-	All    types.Bool         `tfsdk:"all"`
-	Manage ManageDeviceModel  `tfsdk:"manage"`
-	Read   types.Bool         `tfsdk:"read"`
+	All    types.Bool        `tfsdk:"all"`
+	Manage ManageDeviceModel `tfsdk:"manage"`
+	Read   types.Bool        `tfsdk:"read"`
 }
 
 // ManageDeviceModel defines the structure for device management permissions.
@@ -109,10 +109,10 @@ type PolicyModel struct {
 
 // ReportModel defines the structure for report permissions.
 type ReportModel struct {
-	All    types.Bool         `tfsdk:"all"`
-	Export types.Bool         `tfsdk:"export"`
-	Manage ManageReportModel  `tfsdk:"manage"`
-	Read   types.Bool         `tfsdk:"read"`
+	All    types.Bool        `tfsdk:"all"`
+	Export types.Bool        `tfsdk:"export"`
+	Manage ManageReportModel `tfsdk:"manage"`
+	Read   types.Bool        `tfsdk:"read"`
 }
 
 // ManageReportModel defines the structure for report management permissions.
@@ -252,9 +252,9 @@ type ManageUserModel struct {
 
 // VulnerabilityModel defines the structure for vulnerability permissions.
 type VulnerabilityModel struct {
-	All    types.Bool                 `tfsdk:"all"`
-	Manage ManageVulnerabilityModel   `tfsdk:"manage"`
-	Read   types.Bool                 `tfsdk:"read"`
+	All    types.Bool               `tfsdk:"all"`
+	Manage ManageVulnerabilityModel `tfsdk:"manage"`
+	Read   types.Bool               `tfsdk:"read"`
 }
 
 // ManageVulnerabilityModel defines the structure for managing vulnerabilities permissions.

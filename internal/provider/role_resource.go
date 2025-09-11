@@ -751,13 +751,13 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	if plan.Permissions.AdvancedPermissions == nil {
-		resp.Diagnostics.AddError(
-			"Invalid Configuration",
-			"Advanced permissions are required but not provided.",
-		)
-		return
-	}
+	// if plan.Permissions.AdvancedPermissions == nil {
+	// 	resp.Diagnostics.AddError(
+	// 		"Invalid Configuration",
+	// 		"Advanced permissions are required but not provided.",
+	// 	)
+	// 	return
+	// }
 
 	role := u.BuildRoleRequest(plan)
 
