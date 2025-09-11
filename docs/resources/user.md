@@ -59,3 +59,24 @@ Required:
 
 - `name` (List of String) The names of the roles assigned to the user.
 - `sites` (List of String) A list of site identifiers associated with the role.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+resource "armis_user" "example" {}
+
+import {
+  to = armis_user.example
+  id = "92012"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```sh
+terraform import armis_user.example 92012
+```
