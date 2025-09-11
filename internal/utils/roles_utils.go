@@ -3,6 +3,8 @@
 
 // Package utils provides utility functions and resource and data source models
 // for managing resources in the Armis Centrix Terraform provider.
+// This includes building request models, converting API responses to Terraform models,
+// and defining the structure of Armis Centrix resources and data sources.
 package utils
 
 import (
@@ -13,338 +15,466 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
-	// Guard the top-level pointer only; inner structs are values.
-	p := &PermissionsModel{}
-	if role.Permissions != nil {
-		p = role.Permissions
+// ensureRoleModelInit allocates pointer subtrees that BuildRoleResourceModel writes into.
+// Without this, import/refresh paths (where the prior model can be empty) can panic.
+func ensureRoleModelInit(m *RoleResourceModel) {
+	if m.Permissions == nil {
+		m.Permissions = &PermissionsModel{}
 	}
 
+	// Advanced Permissions
+	if m.Permissions.AdvancedPermissions == nil {
+		m.Permissions.AdvancedPermissions = &AdvancedPermissionsModel{}
+	}
+	if m.Permissions.AdvancedPermissions.Behavioral == nil {
+		m.Permissions.AdvancedPermissions.Behavioral = &BehavioralModel{}
+	}
+	if m.Permissions.AdvancedPermissions.Device == nil {
+		m.Permissions.AdvancedPermissions.Device = &DeviceAdvancedModel{}
+	}
+
+	// Alert
+	if m.Permissions.Alert == nil {
+		m.Permissions.Alert = &AlertModel{}
+	}
+	if m.Permissions.Alert.Manage == nil {
+		m.Permissions.Alert.Manage = &ManageAlertsModel{}
+	}
+
+	// Device
+	if m.Permissions.Device == nil {
+		m.Permissions.Device = &DeviceModel{}
+	}
+	if m.Permissions.Device.Manage == nil {
+		m.Permissions.Device.Manage = &ManageDeviceModel{}
+	}
+	if m.Permissions.Device.Manage.Enforce == nil {
+		m.Permissions.Device.Manage.Enforce = &EnforceModel{}
+	}
+
+	// Policy
+	if m.Permissions.Policy == nil {
+		m.Permissions.Policy = &PolicyModel{}
+	}
+
+	// Report
+	if m.Permissions.Report == nil {
+		m.Permissions.Report = &ReportModel{}
+	}
+	if m.Permissions.Report.Manage == nil {
+		m.Permissions.Report.Manage = &ManageReportModel{}
+	}
+
+	// Risk Factor
+	if m.Permissions.RiskFactor == nil {
+		m.Permissions.RiskFactor = &RiskFactorModel{}
+	}
+	if m.Permissions.RiskFactor.Manage == nil {
+		m.Permissions.RiskFactor.Manage = &ManageRiskModel{}
+	}
+	if m.Permissions.RiskFactor.Manage.Customization == nil {
+		m.Permissions.RiskFactor.Manage.Customization = &CustomizationModel{}
+	}
+	if m.Permissions.RiskFactor.Manage.Status == nil {
+		m.Permissions.RiskFactor.Manage.Status = &StatusModel{}
+	}
+
+	// Settings
+	if m.Permissions.Settings == nil {
+		m.Permissions.Settings = &SettingsModel{}
+	}
+	if m.Permissions.Settings.Boundary == nil {
+		m.Permissions.Settings.Boundary = &BoundaryModel{}
+	}
+	if m.Permissions.Settings.Boundary.Manage == nil {
+		m.Permissions.Settings.Boundary.Manage = &ManageBoundaryModel{}
+	}
+	if m.Permissions.Settings.BusinessImpact == nil {
+		m.Permissions.Settings.BusinessImpact = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.Collector == nil {
+		m.Permissions.Settings.Collector = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.CustomProperties == nil {
+		m.Permissions.Settings.CustomProperties = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.Integration == nil {
+		m.Permissions.Settings.Integration = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.InternalIps == nil {
+		m.Permissions.Settings.InternalIps = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.Notifications == nil {
+		m.Permissions.Settings.Notifications = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.OIDC == nil {
+		m.Permissions.Settings.OIDC = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.SAML == nil {
+		m.Permissions.Settings.SAML = &ManageAndReadModel{}
+	}
+	if m.Permissions.Settings.SitesAndSensors == nil {
+		m.Permissions.Settings.SitesAndSensors = &SitesAndSensorsModel{}
+	}
+	if m.Permissions.Settings.SitesAndSensors.Manage == nil {
+		m.Permissions.Settings.SitesAndSensors.Manage = &ManageSitesAndSensorsModel{}
+	}
+	if m.Permissions.Settings.UsersAndRoles == nil {
+		m.Permissions.Settings.UsersAndRoles = &UsersAndRolesModel{}
+	}
+	if m.Permissions.Settings.UsersAndRoles.Manage == nil {
+		m.Permissions.Settings.UsersAndRoles.Manage = &ManageUsersAndRolesModel{}
+	}
+	if m.Permissions.Settings.UsersAndRoles.Manage.Roles == nil {
+		m.Permissions.Settings.UsersAndRoles.Manage.Roles = &ManageRolesModel{}
+	}
+	if m.Permissions.Settings.UsersAndRoles.Manage.Users == nil {
+		m.Permissions.Settings.UsersAndRoles.Manage.Users = &ManageUsersModel{}
+	}
+
+	// User
+	if m.Permissions.User == nil {
+		m.Permissions.User = &UserModel{}
+	}
+	if m.Permissions.User.Manage == nil {
+		m.Permissions.User.Manage = &ManageUserModel{}
+	}
+
+	// Vulnerability
+	if m.Permissions.Vulnerability == nil {
+		m.Permissions.Vulnerability = &VulnerabilityModel{}
+	}
+	if m.Permissions.Vulnerability.Manage == nil {
+		m.Permissions.Vulnerability.Manage = &ManageVulnerabilityModel{}
+	}
+}
+
+func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	return armis.RoleSettings{
 		Name: role.Name.ValueString(),
 		Permissions: armis.Permissions{
 			AdvancedPermissions: armis.AdvancedPermissions{
-				All: p.AdvancedPermissions.All.ValueBool(),
+				All: role.Permissions.AdvancedPermissions.All.ValueBool(),
 				Behavioral: armis.Behavioral{
-					All: p.AdvancedPermissions.Behavioral.All.ValueBool(),
+					All: role.Permissions.AdvancedPermissions.Behavioral.All.ValueBool(),
 					ApplicationName: armis.Permission{
-						All: p.AdvancedPermissions.Behavioral.ApplicationName.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.ValueBool(),
 					},
 					HostName: armis.Permission{
-						All: p.AdvancedPermissions.Behavioral.HostName.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Behavioral.HostName.ValueBool(),
 					},
 					ServiceName: armis.Permission{
-						All: p.AdvancedPermissions.Behavioral.ServiceName.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Behavioral.ServiceName.ValueBool(),
 					},
 				},
 				Device: armis.DeviceAdvanced{
-					All: p.AdvancedPermissions.Device.All.ValueBool(),
+					All: role.Permissions.AdvancedPermissions.Device.All.ValueBool(),
 					DeviceNames: armis.Permission{
-						All: p.AdvancedPermissions.Device.DeviceNames.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Device.DeviceNames.ValueBool(),
 					},
 					IPAddresses: armis.Permission{
-						All: p.AdvancedPermissions.Device.IPAddresses.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Device.IPAddresses.ValueBool(),
 					},
 					MACAddresses: armis.Permission{
-						All: p.AdvancedPermissions.Device.MACAddresses.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Device.MACAddresses.ValueBool(),
 					},
 					PhoneNumbers: armis.Permission{
-						All: p.AdvancedPermissions.Device.PhoneNumbers.ValueBool(),
+						All: role.Permissions.AdvancedPermissions.Device.PhoneNumbers.ValueBool(),
 					},
 				},
 			},
 			Alert: armis.Alert{
-				All: p.Alert.All.ValueBool(),
+				All: role.Permissions.Alert.All.ValueBool(),
 				Manage: armis.Manage{
-					All: p.Alert.Manage.All.ValueBool(),
+					All: role.Permissions.Alert.Manage.All.ValueBool(),
 					Resolve: armis.Permission{
-						All: p.Alert.Manage.Resolve.ValueBool(),
+						All: role.Permissions.Alert.Manage.Resolve.ValueBool(),
 					},
 					Suppress: armis.Permission{
-						All: p.Alert.Manage.Suppress.ValueBool(),
+						All: role.Permissions.Alert.Manage.Suppress.ValueBool(),
 					},
 					WhitelistDevices: armis.Permission{
-						All: p.Alert.Manage.WhitelistDevices.ValueBool(),
+						All: role.Permissions.Alert.Manage.WhitelistDevices.ValueBool(),
 					},
 				},
 				Read: armis.Permission{
-					All: p.Alert.Read.ValueBool(),
+					All: role.Permissions.Alert.Read.ValueBool(),
 				},
 			},
 			Device: armis.Device{
-				All: p.Device.All.ValueBool(),
+				All: role.Permissions.Device.All.ValueBool(),
 				Manage: armis.ManageDevice{
-					All: p.Device.Manage.All.ValueBool(),
+					All: role.Permissions.Device.Manage.All.ValueBool(),
 					Create: armis.Permission{
-						All: p.Device.Manage.Create.ValueBool(),
+						All: role.Permissions.Device.Manage.Create.ValueBool(),
 					},
 					Delete: armis.Permission{
-						All: p.Device.Manage.Delete.ValueBool(),
+						All: role.Permissions.Device.Manage.Delete.ValueBool(),
 					},
 					Edit: armis.Permission{
-						All: p.Device.Manage.Edit.ValueBool(),
+						All: role.Permissions.Device.Manage.Edit.ValueBool(),
 					},
 					Enforce: armis.Enforce{
-						All: p.Device.Manage.Enforce.All.ValueBool(),
+						All: role.Permissions.Device.Manage.Enforce.All.ValueBool(),
 						Create: armis.Permission{
-							All: p.Device.Manage.Enforce.Create.ValueBool(),
+							All: role.Permissions.Device.Manage.Enforce.Create.ValueBool(),
 						},
 						Delete: armis.Permission{
-							All: p.Device.Manage.Enforce.Delete.ValueBool(),
+							All: role.Permissions.Device.Manage.Enforce.Delete.ValueBool(),
 						},
 					},
 					Merge: armis.Permission{
-						All: p.Device.Manage.Merge.ValueBool(),
+						All: role.Permissions.Device.Manage.Merge.ValueBool(),
 					},
 					RequestDeletedData: armis.Permission{
-						All: p.Device.Manage.RequestDeletedData.ValueBool(),
+						All: role.Permissions.Device.Manage.RequestDeletedData.ValueBool(),
 					},
 					Tags: armis.Permission{
-						All: p.Device.Manage.Tags.ValueBool(),
+						All: role.Permissions.Device.Manage.Tags.ValueBool(),
 					},
 				},
 				Read: armis.Permission{
-					All: p.Device.Read.ValueBool(),
+					All: role.Permissions.Device.Read.ValueBool(),
 				},
 			},
 			Policy: armis.Policy{
-				All: p.Policy.All.ValueBool(),
+				All: role.Permissions.Policy.All.ValueBool(),
 				Manage: armis.Permission{
-					All: p.Policy.Manage.ValueBool(),
+					All: role.Permissions.Policy.Manage.ValueBool(),
 				},
 				Read: armis.Permission{
-					All: p.Policy.Read.ValueBool(),
+					All: role.Permissions.Policy.Read.ValueBool(),
 				},
 			},
 			Report: armis.Report{
-				All: p.Report.All.ValueBool(),
+				All: role.Permissions.Report.All.ValueBool(),
 				Export: armis.Permission{
-					All: p.Report.Export.ValueBool(),
+					All: role.Permissions.Report.Export.ValueBool(),
 				},
 				Manage: armis.ManageReport{
-					All: p.Report.Manage.All.ValueBool(),
+					All: role.Permissions.Report.Manage.All.ValueBool(),
 					Create: armis.Permission{
-						All: p.Report.Manage.Create.ValueBool(),
+						All: role.Permissions.Report.Manage.Create.ValueBool(),
 					},
 					Delete: armis.Permission{
-						All: p.Report.Manage.Delete.ValueBool(),
+						All: role.Permissions.Report.Manage.Delete.ValueBool(),
 					},
 					Edit: armis.Permission{
-						All: p.Report.Manage.Edit.ValueBool(),
+						All: role.Permissions.Report.Manage.Edit.ValueBool(),
 					},
 				},
 				Read: armis.Permission{
-					All: p.Report.Read.ValueBool(),
+					All: role.Permissions.Report.Read.ValueBool(),
 				},
 			},
 			RiskFactor: armis.RiskFactor{
-				All: p.RiskFactor.All.ValueBool(),
+				All: role.Permissions.RiskFactor.All.ValueBool(),
 				Manage: armis.ManageRisk{
-					All: p.RiskFactor.Manage.All.ValueBool(),
+					All: role.Permissions.RiskFactor.Manage.All.ValueBool(),
 					Customization: armis.Customization{
-						All: p.RiskFactor.Manage.Customization.All.ValueBool(),
+						All: role.Permissions.RiskFactor.Manage.Customization.All.ValueBool(),
 						Create: armis.Permission{
-							All: p.RiskFactor.Manage.Customization.Create.ValueBool(),
+							All: role.Permissions.RiskFactor.Manage.Customization.Create.ValueBool(),
 						},
 						Disable: armis.Permission{
-							All: p.RiskFactor.Manage.Customization.Disable.ValueBool(),
+							All: role.Permissions.RiskFactor.Manage.Customization.Disable.ValueBool(),
 						},
 						Edit: armis.Permission{
-							All: p.RiskFactor.Manage.Customization.Edit.ValueBool(),
+							All: role.Permissions.RiskFactor.Manage.Customization.Edit.ValueBool(),
 						},
 					},
 					Status: armis.Status{
-						All: p.RiskFactor.Manage.Status.All.ValueBool(),
+						All: role.Permissions.RiskFactor.Manage.Status.All.ValueBool(),
 						Ignore: armis.Permission{
-							All: p.RiskFactor.Manage.Status.Ignore.ValueBool(),
+							All: role.Permissions.RiskFactor.Manage.Status.Ignore.ValueBool(),
 						},
 						Resolve: armis.Permission{
-							All: p.RiskFactor.Manage.Status.Resolve.ValueBool(),
+							All: role.Permissions.RiskFactor.Manage.Status.Resolve.ValueBool(),
 						},
 					},
 				},
 				Read: armis.Permission{
-					All: p.RiskFactor.Read.ValueBool(),
+					All: role.Permissions.RiskFactor.Read.ValueBool(),
 				},
 			},
 			Settings: armis.Settings{
-				All: p.Settings.All.ValueBool(),
+				All: role.Permissions.Settings.All.ValueBool(),
 				AuditLog: armis.Permission{
-					All: p.Settings.AuditLog.ValueBool(),
+					All: role.Permissions.Settings.AuditLog.ValueBool(),
 				},
 				Boundary: armis.Boundary{
-					All: p.Settings.Boundary.All.ValueBool(),
+					All: role.Permissions.Settings.Boundary.All.ValueBool(),
 					Manage: armis.ManageBoundary{
-						All: p.Settings.Boundary.Manage.All.ValueBool(),
+						All: role.Permissions.Settings.Boundary.Manage.All.ValueBool(),
 						Create: armis.Permission{
-							All: p.Settings.Boundary.Manage.Create.ValueBool(),
+							All: role.Permissions.Settings.Boundary.Manage.Create.ValueBool(),
 						},
 						Delete: armis.Permission{
-							All: p.Settings.Boundary.Manage.Delete.ValueBool(),
+							All: role.Permissions.Settings.Boundary.Manage.Delete.ValueBool(),
 						},
 						Edit: armis.Permission{
-							All: p.Settings.Boundary.Manage.Edit.ValueBool(),
+							All: role.Permissions.Settings.Boundary.Manage.Edit.ValueBool(),
 						},
 					},
 					Read: armis.Permission{
-						All: p.Settings.Boundary.Read.ValueBool(),
+						All: role.Permissions.Settings.Boundary.Read.ValueBool(),
 					},
 				},
 				BusinessImpact: armis.ManageAndRead{
-					All: p.Settings.BusinessImpact.All.ValueBool(),
+					All: role.Permissions.Settings.BusinessImpact.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.BusinessImpact.Manage.ValueBool(),
+						All: role.Permissions.Settings.BusinessImpact.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.BusinessImpact.Read.ValueBool(),
+						All: role.Permissions.Settings.BusinessImpact.Read.ValueBool(),
 					},
 				},
 				Collector: armis.ManageAndRead{
-					All: p.Settings.Collector.All.ValueBool(),
+					All: role.Permissions.Settings.Collector.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.Collector.Manage.ValueBool(),
+						All: role.Permissions.Settings.Collector.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.Collector.Read.ValueBool(),
+						All: role.Permissions.Settings.Collector.Read.ValueBool(),
 					},
 				},
 				CustomProperties: armis.ManageAndRead{
-					All: p.Settings.CustomProperties.All.ValueBool(),
+					All: role.Permissions.Settings.CustomProperties.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.CustomProperties.Manage.ValueBool(),
+						All: role.Permissions.Settings.CustomProperties.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.CustomProperties.Read.ValueBool(),
+						All: role.Permissions.Settings.CustomProperties.Read.ValueBool(),
 					},
 				},
 				Integration: armis.ManageAndRead{
-					All: p.Settings.Integration.All.ValueBool(),
+					All: role.Permissions.Settings.Integration.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.Integration.Manage.ValueBool(),
+						All: role.Permissions.Settings.Integration.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.Integration.Read.ValueBool(),
+						All: role.Permissions.Settings.Integration.Read.ValueBool(),
 					},
 				},
 				InternalIps: armis.ManageAndRead{
-					All: p.Settings.InternalIps.All.ValueBool(),
+					All: role.Permissions.Settings.InternalIps.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.InternalIps.Manage.ValueBool(),
+						All: role.Permissions.Settings.InternalIps.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.InternalIps.Read.ValueBool(),
+						All: role.Permissions.Settings.InternalIps.Read.ValueBool(),
 					},
 				},
 				Notifications: armis.ManageAndRead{
-					All: p.Settings.Notifications.All.ValueBool(),
+					All: role.Permissions.Settings.Notifications.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.Notifications.Manage.ValueBool(),
+						All: role.Permissions.Settings.Notifications.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.Notifications.Read.ValueBool(),
+						All: role.Permissions.Settings.Notifications.Read.ValueBool(),
 					},
 				},
 				OIDC: armis.ManageAndRead{
-					All: p.Settings.OIDC.All.ValueBool(),
+					All: role.Permissions.Settings.OIDC.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.OIDC.Manage.ValueBool(),
+						All: role.Permissions.Settings.OIDC.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.OIDC.Read.ValueBool(),
+						All: role.Permissions.Settings.OIDC.Read.ValueBool(),
 					},
 				},
 				SAML: armis.ManageAndRead{
-					All: p.Settings.SAML.All.ValueBool(),
+					All: role.Permissions.Settings.SAML.All.ValueBool(),
 					Manage: armis.Permission{
-						All: p.Settings.SAML.Manage.ValueBool(),
+						All: role.Permissions.Settings.SAML.Manage.ValueBool(),
 					},
 					Read: armis.Permission{
-						All: p.Settings.SAML.Read.ValueBool(),
+						All: role.Permissions.Settings.SAML.Read.ValueBool(),
 					},
 				},
 				SecretKey: armis.Permission{
-					All: p.Settings.SecretKey.ValueBool(),
+					All: role.Permissions.Settings.SecretKey.ValueBool(),
 				},
 				SecuritySettings: armis.Permission{
-					All: p.Settings.SecuritySettings.ValueBool(),
+					All: role.Permissions.Settings.SecuritySettings.ValueBool(),
 				},
 				SitesAndSensors: armis.SitesAndSensors{
-					All: p.Settings.SitesAndSensors.All.ValueBool(),
+					All: role.Permissions.Settings.SitesAndSensors.All.ValueBool(),
 					Manage: armis.ManageSensors{
-						All: p.Settings.SitesAndSensors.Manage.All.ValueBool(),
+						All: role.Permissions.Settings.SitesAndSensors.Manage.All.ValueBool(),
 						Sensors: armis.Permission{
-							All: p.Settings.SitesAndSensors.Manage.Sensors.ValueBool(),
+							All: role.Permissions.Settings.SitesAndSensors.Manage.Sensors.ValueBool(),
 						},
 						Sites: armis.Permission{
-							All: p.Settings.SitesAndSensors.Manage.Sites.ValueBool(),
+							All: role.Permissions.Settings.SitesAndSensors.Manage.Sites.ValueBool(),
 						},
 					},
 					Read: armis.Permission{
-						All: p.Settings.SitesAndSensors.Read.ValueBool(),
+						All: role.Permissions.Settings.SitesAndSensors.Read.ValueBool(),
 					},
 				},
 				UsersAndRoles: armis.UsersAndRoles{
-					All: p.Settings.UsersAndRoles.All.ValueBool(),
+					All: role.Permissions.Settings.UsersAndRoles.All.ValueBool(),
 					Manage: armis.ManageUsers{
-						All: p.Settings.UsersAndRoles.Manage.All.ValueBool(),
+						All: role.Permissions.Settings.UsersAndRoles.Manage.All.ValueBool(),
 						Roles: armis.UserActions{
-							All: p.Settings.UsersAndRoles.Manage.Roles.All.ValueBool(),
+							All: role.Permissions.Settings.UsersAndRoles.Manage.Roles.All.ValueBool(),
 							Create: armis.Permission{
-								All: p.Settings.UsersAndRoles.Manage.Roles.Create.ValueBool(),
+								All: role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.ValueBool(),
 							},
 							Delete: armis.Permission{
-								All: p.Settings.UsersAndRoles.Manage.Roles.Delete.ValueBool(),
+								All: role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.ValueBool(),
 							},
 							Edit: armis.Permission{
-								All: p.Settings.UsersAndRoles.Manage.Roles.Edit.ValueBool(),
+								All: role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.ValueBool(),
 							},
 						},
 						Users: armis.UserActions{
-							All: p.Settings.UsersAndRoles.Manage.Users.All.ValueBool(),
+							All: role.Permissions.Settings.UsersAndRoles.Manage.Users.All.ValueBool(),
 							Create: armis.Permission{
-								All: p.Settings.UsersAndRoles.Manage.Users.Create.ValueBool(),
+								All: role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.ValueBool(),
 							},
 							Delete: armis.Permission{
-								All: p.Settings.UsersAndRoles.Manage.Users.Delete.ValueBool(),
+								All: role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.ValueBool(),
 							},
 							Edit: armis.Permission{
-								All: p.Settings.UsersAndRoles.Manage.Users.Edit.ValueBool(),
+								All: role.Permissions.Settings.UsersAndRoles.Manage.Users.Edit.ValueBool(),
 							},
 						},
 					},
 					Read: armis.Permission{
-						All: p.Settings.UsersAndRoles.Read.ValueBool(),
+						All: role.Permissions.Settings.UsersAndRoles.Read.ValueBool(),
 					},
 				},
 			},
 			User: armis.User{
-				All: p.User.All.ValueBool(),
+				All: role.Permissions.User.All.ValueBool(),
 				Manage: armis.ManageUser{
-					All: p.User.Manage.All.ValueBool(),
+					All: role.Permissions.User.Manage.All.ValueBool(),
 					Upsert: armis.Permission{
-						All: p.User.Manage.Upsert.ValueBool(),
+						All: role.Permissions.User.Manage.Upsert.ValueBool(),
 					},
 				},
 				Read: armis.Permission{
-					All: p.User.Read.ValueBool(),
+					All: role.Permissions.User.Read.ValueBool(),
 				},
 			},
 			Vulnerability: armis.Vulnerability{
-				All: p.Vulnerability.All.ValueBool(),
+				All: role.Permissions.Vulnerability.All.ValueBool(),
 				Manage: armis.ManageVuln{
-					All: p.Vulnerability.Manage.All.ValueBool(),
+					All: role.Permissions.Vulnerability.Manage.All.ValueBool(),
 					Ignore: armis.Permission{
-						All: p.Vulnerability.Manage.Ignore.ValueBool(),
+						All: role.Permissions.Vulnerability.Manage.Ignore.ValueBool(),
 					},
 					Resolve: armis.Permission{
-						All: p.Vulnerability.Manage.Resolve.ValueBool(),
+						All: role.Permissions.Vulnerability.Manage.Resolve.ValueBool(),
 					},
 					Write: armis.Permission{
-						All: p.Vulnerability.Manage.Write.ValueBool(),
+						All: role.Permissions.Vulnerability.Manage.Write.ValueBool(),
 					},
 				},
 				Read: armis.Permission{
-					All: p.Vulnerability.Read.ValueBool(),
+					All: role.Permissions.Vulnerability.Read.ValueBool(),
 				},
 			},
 		},
@@ -353,9 +483,9 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 
 func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) RoleResourceModel {
 	result := model
-	if result.Permissions == nil {
-		result.Permissions = &PermissionsModel{}
-	}
+
+	// Ensure nested pointers exist before writing into them (prevents nil deref on import/refresh).
+	ensureRoleModelInit(&result)
 
 	result.Name = types.StringValue(role.Name)
 	result.ID = types.StringValue(strconv.Itoa(role.ID))
@@ -539,15 +669,15 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 		Name:     types.StringValue(role.Name),
 		ViprRole: types.BoolValue(role.ViprRole),
 		Permissions: &PermissionsModel{
-			AdvancedPermissions: AdvancedPermissionsModel{
+			AdvancedPermissions: &AdvancedPermissionsModel{
 				All: types.BoolValue(role.Permissions.AdvancedPermissions.All),
-				Behavioral: BehavioralModel{
+				Behavioral: &BehavioralModel{
 					All:             types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.All),
 					ApplicationName: types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All),
 					HostName:        types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.HostName.All),
 					ServiceName:     types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All),
 				},
-				Device: DeviceAdvancedModel{
+				Device: &DeviceAdvancedModel{
 					All:          types.BoolValue(role.Permissions.AdvancedPermissions.Device.All),
 					DeviceNames:  types.BoolValue(role.Permissions.AdvancedPermissions.Device.DeviceNames.All),
 					IPAddresses:  types.BoolValue(role.Permissions.AdvancedPermissions.Device.IPAddresses.All),
@@ -555,9 +685,9 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					PhoneNumbers: types.BoolValue(role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All),
 				},
 			},
-			Alert: AlertModel{
+			Alert: &AlertModel{
 				All: types.BoolValue(role.Permissions.Alert.All),
-				Manage: ManageAlertsModel{
+				Manage: &ManageAlertsModel{
 					All:              types.BoolValue(role.Permissions.Alert.Manage.All),
 					Resolve:          types.BoolValue(role.Permissions.Alert.Manage.Resolve.All),
 					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
@@ -565,64 +695,45 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 				},
 				Read: types.BoolValue(role.Permissions.Alert.Read.All),
 			},
-			Device: DeviceModel{
-				All: types.BoolValue(role.Permissions.Device.All),
-				Manage: ManageDeviceModel{
-					All:    types.BoolValue(role.Permissions.Device.Manage.All),
-					Create: types.BoolValue(role.Permissions.Device.Manage.Create.All),
-					Delete: types.BoolValue(role.Permissions.Device.Manage.Delete.All),
-					Edit:   types.BoolValue(role.Permissions.Device.Manage.Edit.All),
-					Enforce: EnforceModel{
-						All:    types.BoolValue(role.Permissions.Device.Manage.Enforce.All),
-						Create: types.BoolValue(role.Permissions.Device.Manage.Enforce.Create.All),
-						Delete: types.BoolValue(role.Permissions.Device.Manage.Enforce.Delete.All),
-					},
-					Merge:              types.BoolValue(role.Permissions.Device.Manage.Merge.All),
-					RequestDeletedData: types.BoolValue(role.Permissions.Device.Manage.RequestDeletedData.All),
-					Tags:               types.BoolValue(role.Permissions.Device.Manage.Tags.All),
-				},
-				Read: types.BoolValue(role.Permissions.Device.Read.All),
-			},
-			Policy: PolicyModel{
+			Policy: &PolicyModel{
 				All:    types.BoolValue(role.Permissions.Policy.All),
 				Manage: types.BoolValue(role.Permissions.Policy.Manage.All),
 				Read:   types.BoolValue(role.Permissions.Policy.Read.All),
 			},
-			Report: ReportModel{
+			Report: &ReportModel{
 				All:    types.BoolValue(role.Permissions.Report.All),
 				Export: types.BoolValue(role.Permissions.Report.Export.All),
-				Manage: ManageReportModel{
-					All:    types.BoolValue(role.Permissions.Report.Manage.All),
+				Manage: &ManageReportModel{
+					All:    types.BoolValue(role.Permissions.Report.All),
 					Create: types.BoolValue(role.Permissions.Report.Manage.Create.All),
 					Delete: types.BoolValue(role.Permissions.Report.Manage.Delete.All),
 					Edit:   types.BoolValue(role.Permissions.Report.Manage.Edit.All),
 				},
 				Read: types.BoolValue(role.Permissions.Report.Read.All),
 			},
-			RiskFactor: RiskFactorModel{
+			RiskFactor: &RiskFactorModel{
 				All: types.BoolValue(role.Permissions.RiskFactor.All),
-				Manage: ManageRiskModel{
+				Manage: &ManageRiskModel{
 					All: types.BoolValue(role.Permissions.RiskFactor.Manage.All),
-					Customization: CustomizationModel{
+					Customization: &CustomizationModel{
 						All:     types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.All),
 						Create:  types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Create.All),
 						Disable: types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Disable.All),
 						Edit:    types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Edit.All),
 					},
-					Status: StatusModel{
+					Status: &StatusModel{
 						All:     types.BoolValue(role.Permissions.RiskFactor.Manage.Status.All),
 						Ignore:  types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Ignore.All),
 						Resolve: types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Resolve.All),
 					},
 				},
-				Read: types.BoolValue(role.Permissions.RiskFactor.Read.All),
 			},
-			Settings: SettingsModel{
+			Settings: &SettingsModel{
 				All:      types.BoolValue(role.Permissions.Settings.All),
 				AuditLog: types.BoolValue(role.Permissions.Settings.AuditLog.All),
-				Boundary: BoundaryModel{
+				Boundary: &BoundaryModel{
 					All: types.BoolValue(role.Permissions.Settings.Boundary.All),
-					Manage: ManageBoundaryModel{
+					Manage: &ManageBoundaryModel{
 						All:    types.BoolValue(role.Permissions.Settings.Boundary.Manage.All),
 						Create: types.BoolValue(role.Permissions.Settings.Boundary.Manage.Create.All),
 						Delete: types.BoolValue(role.Permissions.Settings.Boundary.Manage.Delete.All),
@@ -630,68 +741,68 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					},
 					Read: types.BoolValue(role.Permissions.Settings.Boundary.Read.All),
 				},
-				BusinessImpact: ManageAndReadModel{
+				BusinessImpact: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.BusinessImpact.All),
 					Manage: types.BoolValue(role.Permissions.Settings.BusinessImpact.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.BusinessImpact.Read.All),
 				},
-				Collector: ManageAndReadModel{
+				Collector: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.Collector.All),
 					Manage: types.BoolValue(role.Permissions.Settings.Collector.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.Collector.Read.All),
 				},
-				CustomProperties: ManageAndReadModel{
+				CustomProperties: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.CustomProperties.All),
 					Manage: types.BoolValue(role.Permissions.Settings.CustomProperties.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.CustomProperties.Read.All),
 				},
-				Integration: ManageAndReadModel{
+				Integration: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.Integration.All),
 					Manage: types.BoolValue(role.Permissions.Settings.Integration.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.Integration.Read.All),
 				},
-				InternalIps: ManageAndReadModel{
+				InternalIps: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.InternalIps.All),
 					Manage: types.BoolValue(role.Permissions.Settings.InternalIps.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.InternalIps.Read.All),
 				},
-				Notifications: ManageAndReadModel{
+				Notifications: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.Notifications.All),
 					Manage: types.BoolValue(role.Permissions.Settings.Notifications.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.Notifications.Read.All),
 				},
-				OIDC: ManageAndReadModel{
+				OIDC: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.OIDC.All),
 					Manage: types.BoolValue(role.Permissions.Settings.OIDC.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.OIDC.Read.All),
 				},
-				SAML: ManageAndReadModel{
+				SAML: &ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.SAML.All),
 					Manage: types.BoolValue(role.Permissions.Settings.SAML.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.SAML.Read.All),
 				},
 				SecretKey:        types.BoolValue(role.Permissions.Settings.SecretKey.All),
 				SecuritySettings: types.BoolValue(role.Permissions.Settings.SecuritySettings.All),
-				SitesAndSensors: SitesAndSensorsModel{
+				SitesAndSensors: &SitesAndSensorsModel{
 					All: types.BoolValue(role.Permissions.Settings.SitesAndSensors.All),
-					Manage: ManageSitesAndSensorsModel{
+					Manage: &ManageSitesAndSensorsModel{
 						All:     types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All),
 						Sensors: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All),
 						Sites:   types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All),
 					},
 					Read: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
 				},
-				UsersAndRoles: UsersAndRolesModel{
+				UsersAndRoles: &UsersAndRolesModel{
 					All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.All),
-					Manage: ManageUsersAndRolesModel{
+					Manage: &ManageUsersAndRolesModel{
 						All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.All),
-						Roles: ManageRolesModel{
+						Roles: &ManageRolesModel{
 							All:    types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.All),
 							Create: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All),
 							Delete: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All),
 							Edit:   types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All),
 						},
-						Users: ManageUsersModel{
+						Users: &ManageUsersModel{
 							All:    types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.All),
 							Create: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All),
 							Delete: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All),
@@ -701,17 +812,17 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					Read: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Read.All),
 				},
 			},
-			User: UserModel{
+			User: &UserModel{
 				All: types.BoolValue(role.Permissions.User.All),
-				Manage: ManageUserModel{
+				Manage: &ManageUserModel{
 					All:    types.BoolValue(role.Permissions.User.Manage.All),
 					Upsert: types.BoolValue(role.Permissions.User.Manage.Upsert.All),
 				},
 				Read: types.BoolValue(role.Permissions.User.Read.All),
 			},
-			Vulnerability: VulnerabilityModel{
+			Vulnerability: &VulnerabilityModel{
 				All: types.BoolValue(role.Permissions.Vulnerability.All),
-				Manage: ManageVulnerabilityModel{
+				Manage: &ManageVulnerabilityModel{
 					All:     types.BoolValue(role.Permissions.Vulnerability.Manage.All),
 					Ignore:  types.BoolValue(role.Permissions.Vulnerability.Manage.Ignore.All),
 					Resolve: types.BoolValue(role.Permissions.Vulnerability.Manage.Resolve.All),
