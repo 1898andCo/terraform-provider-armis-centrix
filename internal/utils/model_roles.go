@@ -1,4 +1,4 @@
-// copyright (c) 1898 & co.
+// Copyright (c) 1898 & Co.
 // SPDX-License-Identifier: Apache-2.0
 
 package utils
@@ -9,37 +9,37 @@ import (
 
 // RoleResourceModel maps the RoleSettings schema data.
 type RoleResourceModel struct {
-	Name        types.String      `tfsdk:"name"`
-	Permissions *PermissionsModel `tfsdk:"permissions"`
-	ID          types.String      `tfsdk:"id"`
+	Name        types.String    `tfsdk:"name"`
+	Permissions PermissionsModel `tfsdk:"permissions"`
+	ID          types.String    `tfsdk:"id"`
 }
 
 // RoleDataSourceModel defines the structure for the role data source model.
 type RoleDataSourceModel struct {
-	Name        types.String      `tfsdk:"name"`
-	Permissions *PermissionsModel `tfsdk:"permissions"`
-	ID          types.String      `tfsdk:"role_id"`
-	ViprRole    types.Bool        `tfsdk:"vipr_role"`
+	Name        types.String    `tfsdk:"name"`
+	Permissions PermissionsModel `tfsdk:"permissions"`
+	ID          types.String    `tfsdk:"role_id"`
+	ViprRole    types.Bool      `tfsdk:"vipr_role"`
 }
 
 // PermissionsModel defines the structure for permissions.
 type PermissionsModel struct {
-	AdvancedPermissions *AdvancedPermissionsModel `tfsdk:"advanced_permissions"`
-	Alert               *AlertModel               `tfsdk:"alert"`
-	Device              *DeviceModel              `tfsdk:"device"`
-	Policy              *PolicyModel              `tfsdk:"policy"`
-	Report              *ReportModel              `tfsdk:"report"`
-	RiskFactor          *RiskFactorModel          `tfsdk:"risk_factor"`
-	Settings            *SettingsModel            `tfsdk:"settings"`
-	User                *UserModel                `tfsdk:"user"`
-	Vulnerability       *VulnerabilityModel       `tfsdk:"vulnerability"`
+	AdvancedPermissions AdvancedPermissionsModel `tfsdk:"advanced_permissions"`
+	Alert               AlertModel               `tfsdk:"alert"`
+	Device              DeviceModel              `tfsdk:"device"`
+	Policy              PolicyModel              `tfsdk:"policy"`
+	Report              ReportModel              `tfsdk:"report"`
+	RiskFactor          RiskFactorModel          `tfsdk:"risk_factor"`
+	Settings            SettingsModel            `tfsdk:"settings"`
+	User                UserModel                `tfsdk:"user"`
+	Vulnerability       VulnerabilityModel       `tfsdk:"vulnerability"`
 }
 
 // AdvancedPermissionsModel defines the structure for advanced permissions.
 type AdvancedPermissionsModel struct {
 	All        types.Bool           `tfsdk:"all"`
-	Behavioral *BehavioralModel     `tfsdk:"behavioral"`
-	Device     *DeviceAdvancedModel `tfsdk:"device"`
+	Behavioral BehavioralModel      `tfsdk:"behavioral"`
+	Device     DeviceAdvancedModel  `tfsdk:"device"`
 }
 
 // BehavioralModel defines the structure for behavioral permissions.
@@ -61,9 +61,9 @@ type DeviceAdvancedModel struct {
 
 // AlertModel defines the structure for alert permissions.
 type AlertModel struct {
-	All    types.Bool         `tfsdk:"all"`
-	Manage *ManageAlertsModel `tfsdk:"manage"`
-	Read   types.Bool         `tfsdk:"read"`
+	All    types.Bool        `tfsdk:"all"`
+	Manage ManageAlertsModel `tfsdk:"manage"`
+	Read   types.Bool        `tfsdk:"read"`
 }
 
 // ManageAlertsModel defines the structure for manage permissions.
@@ -77,20 +77,20 @@ type ManageAlertsModel struct {
 // DeviceModel defines the structure for device permissions.
 type DeviceModel struct {
 	All    types.Bool         `tfsdk:"all"`
-	Manage *ManageDeviceModel `tfsdk:"manage"`
+	Manage ManageDeviceModel  `tfsdk:"manage"`
 	Read   types.Bool         `tfsdk:"read"`
 }
 
 // ManageDeviceModel defines the structure for device management permissions.
 type ManageDeviceModel struct {
-	All                types.Bool    `tfsdk:"all"`
-	Create             types.Bool    `tfsdk:"create"`
-	Delete             types.Bool    `tfsdk:"delete"`
-	Edit               types.Bool    `tfsdk:"edit"`
-	Enforce            *EnforceModel `tfsdk:"enforce"`
-	Merge              types.Bool    `tfsdk:"merge"`
-	RequestDeletedData types.Bool    `tfsdk:"request_deleted_data"`
-	Tags               types.Bool    `tfsdk:"tags"`
+	All                types.Bool   `tfsdk:"all"`
+	Create             types.Bool   `tfsdk:"create"`
+	Delete             types.Bool   `tfsdk:"delete"`
+	Edit               types.Bool   `tfsdk:"edit"`
+	Enforce            EnforceModel `tfsdk:"enforce"`
+	Merge              types.Bool   `tfsdk:"merge"`
+	RequestDeletedData types.Bool   `tfsdk:"request_deleted_data"`
+	Tags               types.Bool   `tfsdk:"tags"`
 }
 
 // EnforceModel defines the structure for enforce permissions.
@@ -111,7 +111,7 @@ type PolicyModel struct {
 type ReportModel struct {
 	All    types.Bool         `tfsdk:"all"`
 	Export types.Bool         `tfsdk:"export"`
-	Manage *ManageReportModel `tfsdk:"manage"`
+	Manage ManageReportModel  `tfsdk:"manage"`
 	Read   types.Bool         `tfsdk:"read"`
 }
 
@@ -126,15 +126,15 @@ type ManageReportModel struct {
 // RiskFactorModel defines the structure for risk factor permissions.
 type RiskFactorModel struct {
 	All    types.Bool       `tfsdk:"all"`
-	Manage *ManageRiskModel `tfsdk:"manage"`
+	Manage ManageRiskModel  `tfsdk:"manage"`
 	Read   types.Bool       `tfsdk:"read"`
 }
 
 // ManageRiskModel defines the structure for risk management permissions.
 type ManageRiskModel struct {
-	All           types.Bool          `tfsdk:"all"`
-	Customization *CustomizationModel `tfsdk:"customization"`
-	Status        *StatusModel        `tfsdk:"status"`
+	All           types.Bool         `tfsdk:"all"`
+	Customization CustomizationModel `tfsdk:"customization"`
+	Status        StatusModel        `tfsdk:"status"`
 }
 
 // CustomizationModel defines the structure for customization permissions.
@@ -154,28 +154,28 @@ type StatusModel struct {
 
 // SettingsModel defines the structure for settings permissions.
 type SettingsModel struct {
-	All              types.Bool            `tfsdk:"all"`
-	AuditLog         types.Bool            `tfsdk:"audit_log"`
-	Boundary         *BoundaryModel        `tfsdk:"boundary"`
-	BusinessImpact   *ManageAndReadModel   `tfsdk:"business_impact"`
-	Collector        *ManageAndReadModel   `tfsdk:"collector"`
-	CustomProperties *ManageAndReadModel   `tfsdk:"custom_properties"`
-	Integration      *ManageAndReadModel   `tfsdk:"integration"`
-	InternalIps      *ManageAndReadModel   `tfsdk:"internal_ips"`
-	Notifications    *ManageAndReadModel   `tfsdk:"notifications"`
-	OIDC             *ManageAndReadModel   `tfsdk:"oidc"`
-	SAML             *ManageAndReadModel   `tfsdk:"saml"`
-	SecretKey        types.Bool            `tfsdk:"secret_key"`
-	SecuritySettings types.Bool            `tfsdk:"security_settings"`
-	SitesAndSensors  *SitesAndSensorsModel `tfsdk:"sites_and_sensors"`
-	UsersAndRoles    *UsersAndRolesModel   `tfsdk:"users_and_roles"`
+	All              types.Bool           `tfsdk:"all"`
+	AuditLog         types.Bool           `tfsdk:"audit_log"`
+	Boundary         BoundaryModel        `tfsdk:"boundary"`
+	BusinessImpact   ManageAndReadModel   `tfsdk:"business_impact"`
+	Collector        ManageAndReadModel   `tfsdk:"collector"`
+	CustomProperties ManageAndReadModel   `tfsdk:"custom_properties"`
+	Integration      ManageAndReadModel   `tfsdk:"integration"`
+	InternalIps      ManageAndReadModel   `tfsdk:"internal_ips"`
+	Notifications    ManageAndReadModel   `tfsdk:"notifications"`
+	OIDC             ManageAndReadModel   `tfsdk:"oidc"`
+	SAML             ManageAndReadModel   `tfsdk:"saml"`
+	SecretKey        types.Bool           `tfsdk:"secret_key"`
+	SecuritySettings types.Bool           `tfsdk:"security_settings"`
+	SitesAndSensors  SitesAndSensorsModel `tfsdk:"sites_and_sensors"`
+	UsersAndRoles    UsersAndRolesModel   `tfsdk:"users_and_roles"`
 }
 
 // BoundaryModel defines the structure for boundary permissions.
 type BoundaryModel struct {
-	All    types.Bool           `tfsdk:"all"`
-	Manage *ManageBoundaryModel `tfsdk:"manage"`
-	Read   types.Bool           `tfsdk:"read"`
+	All    types.Bool          `tfsdk:"all"`
+	Manage ManageBoundaryModel `tfsdk:"manage"`
+	Read   types.Bool          `tfsdk:"read"`
 }
 
 // ManageBoundaryModel defines the structure for managing boundary permissions.
@@ -195,9 +195,9 @@ type ManageAndReadModel struct {
 
 // SitesAndSensorsModel defines the structure for sites and sensors permissions.
 type SitesAndSensorsModel struct {
-	All    types.Bool                  `tfsdk:"all"`
-	Manage *ManageSitesAndSensorsModel `tfsdk:"manage"`
-	Read   types.Bool                  `tfsdk:"read"`
+	All    types.Bool                 `tfsdk:"all"`
+	Manage ManageSitesAndSensorsModel `tfsdk:"manage"`
+	Read   types.Bool                 `tfsdk:"read"`
 }
 
 // ManageSitesAndSensorsModel defines the structure for managing sites and sensors permissions.
@@ -209,16 +209,16 @@ type ManageSitesAndSensorsModel struct {
 
 // UsersAndRolesModel defines the structure for users and roles permissions.
 type UsersAndRolesModel struct {
-	All    types.Bool                `tfsdk:"all"`
-	Manage *ManageUsersAndRolesModel `tfsdk:"manage"`
-	Read   types.Bool                `tfsdk:"read"`
+	All    types.Bool               `tfsdk:"all"`
+	Manage ManageUsersAndRolesModel `tfsdk:"manage"`
+	Read   types.Bool               `tfsdk:"read"`
 }
 
 // ManageUsersAndRolesModel defines the structure for managing users and roles permissions.
 type ManageUsersAndRolesModel struct {
-	All   types.Bool        `tfsdk:"all"`
-	Roles *ManageRolesModel `tfsdk:"roles"`
-	Users *ManageUsersModel `tfsdk:"users"`
+	All   types.Bool       `tfsdk:"all"`
+	Roles ManageRolesModel `tfsdk:"roles"`
+	Users ManageUsersModel `tfsdk:"users"`
 }
 
 // ManageRolesModel defines the structure for managing roles permissions.
@@ -239,9 +239,9 @@ type ManageUsersModel struct {
 
 // UserModel defines the structure for user permissions.
 type UserModel struct {
-	All    types.Bool       `tfsdk:"all"`
-	Manage *ManageUserModel `tfsdk:"manage"`
-	Read   types.Bool       `tfsdk:"read"`
+	All    types.Bool      `tfsdk:"all"`
+	Manage ManageUserModel `tfsdk:"manage"`
+	Read   types.Bool      `tfsdk:"read"`
 }
 
 // ManageUserModel defines the structure for managing user permissions.
@@ -252,9 +252,9 @@ type ManageUserModel struct {
 
 // VulnerabilityModel defines the structure for vulnerability permissions.
 type VulnerabilityModel struct {
-	All    types.Bool                `tfsdk:"all"`
-	Manage *ManageVulnerabilityModel `tfsdk:"manage"`
-	Read   types.Bool                `tfsdk:"read"`
+	All    types.Bool                 `tfsdk:"all"`
+	Manage ManageVulnerabilityModel   `tfsdk:"manage"`
+	Read   types.Bool                 `tfsdk:"read"`
 }
 
 // ManageVulnerabilityModel defines the structure for managing vulnerabilities permissions.

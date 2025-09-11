@@ -15,160 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// ---- helpers to allocate nested pointers before writes ----
-
-func ensureAdvancedPermissionsInit(p *PermissionsModel) {
-	if p.AdvancedPermissions == nil {
-		p.AdvancedPermissions = &AdvancedPermissionsModel{}
-	}
-	if p.AdvancedPermissions.Behavioral == nil {
-		p.AdvancedPermissions.Behavioral = &BehavioralModel{}
-	}
-	if p.AdvancedPermissions.Device == nil {
-		p.AdvancedPermissions.Device = &DeviceAdvancedModel{}
-	}
-}
-
-func ensureAlertInit(p *PermissionsModel) {
-	if p.Alert == nil {
-		p.Alert = &AlertModel{}
-	}
-	if p.Alert.Manage == nil {
-		p.Alert.Manage = &ManageAlertsModel{}
-	}
-}
-
-func ensureDeviceInit(p *PermissionsModel) {
-	if p.Device == nil {
-		p.Device = &DeviceModel{}
-	}
-	if p.Device.Manage == nil {
-		p.Device.Manage = &ManageDeviceModel{}
-	}
-	if p.Device.Manage.Enforce == nil {
-		p.Device.Manage.Enforce = &EnforceModel{}
-	}
-}
-
-func ensurePolicyInit(p *PermissionsModel) {
-	if p.Policy == nil {
-		p.Policy = &PolicyModel{}
-	}
-}
-
-func ensureReportInit(p *PermissionsModel) {
-	if p.Report == nil {
-		p.Report = &ReportModel{}
-	}
-	if p.Report.Manage == nil {
-		p.Report.Manage = &ManageReportModel{}
-	}
-}
-
-func ensureRiskFactorInit(p *PermissionsModel) {
-	if p.RiskFactor == nil {
-		p.RiskFactor = &RiskFactorModel{}
-	}
-	if p.RiskFactor.Manage == nil {
-		p.RiskFactor.Manage = &ManageRiskModel{}
-	}
-	if p.RiskFactor.Manage.Customization == nil {
-		p.RiskFactor.Manage.Customization = &CustomizationModel{}
-	}
-	if p.RiskFactor.Manage.Status == nil {
-		p.RiskFactor.Manage.Status = &StatusModel{}
-	}
-}
-
-func ensureSettingsInit(p *PermissionsModel) {
-	if p.Settings == nil {
-		p.Settings = &SettingsModel{}
-	}
-	if p.Settings.Boundary == nil {
-		p.Settings.Boundary = &BoundaryModel{}
-	}
-	if p.Settings.Boundary.Manage == nil {
-		p.Settings.Boundary.Manage = &ManageBoundaryModel{}
-	}
-	if p.Settings.BusinessImpact == nil {
-		p.Settings.BusinessImpact = &ManageAndReadModel{}
-	}
-	if p.Settings.Collector == nil {
-		p.Settings.Collector = &ManageAndReadModel{}
-	}
-	if p.Settings.CustomProperties == nil {
-		p.Settings.CustomProperties = &ManageAndReadModel{}
-	}
-	if p.Settings.Integration == nil {
-		p.Settings.Integration = &ManageAndReadModel{}
-	}
-	if p.Settings.InternalIps == nil {
-		p.Settings.InternalIps = &ManageAndReadModel{}
-	}
-	if p.Settings.Notifications == nil {
-		p.Settings.Notifications = &ManageAndReadModel{}
-	}
-	if p.Settings.OIDC == nil {
-		p.Settings.OIDC = &ManageAndReadModel{}
-	}
-	if p.Settings.SAML == nil {
-		p.Settings.SAML = &ManageAndReadModel{}
-	}
-	if p.Settings.SitesAndSensors == nil {
-		p.Settings.SitesAndSensors = &SitesAndSensorsModel{}
-	}
-	if p.Settings.SitesAndSensors.Manage == nil {
-		p.Settings.SitesAndSensors.Manage = &ManageSitesAndSensorsModel{}
-	}
-	if p.Settings.UsersAndRoles == nil {
-		p.Settings.UsersAndRoles = &UsersAndRolesModel{}
-	}
-	if p.Settings.UsersAndRoles.Manage == nil {
-		p.Settings.UsersAndRoles.Manage = &ManageUsersAndRolesModel{}
-	}
-	if p.Settings.UsersAndRoles.Manage.Roles == nil {
-		p.Settings.UsersAndRoles.Manage.Roles = &ManageRolesModel{}
-	}
-	if p.Settings.UsersAndRoles.Manage.Users == nil {
-		p.Settings.UsersAndRoles.Manage.Users = &ManageUsersModel{}
-	}
-}
-
-func ensureUserInit(p *PermissionsModel) {
-	if p.User == nil {
-		p.User = &UserModel{}
-	}
-	if p.User.Manage == nil {
-		p.User.Manage = &ManageUserModel{}
-	}
-}
-
-func ensureVulnerabilityInit(p *PermissionsModel) {
-	if p.Vulnerability == nil {
-		p.Vulnerability = &VulnerabilityModel{}
-	}
-	if p.Vulnerability.Manage == nil {
-		p.Vulnerability.Manage = &ManageVulnerabilityModel{}
-	}
-}
-
-// ensureResourceModelInit allocates all pointer subtrees that the code below writes into.
-// Without this, import/refresh paths (where the prior model can be empty) can panic.
-func ensureResourceModelInit(m *RoleResourceModel) {
-	if m.Permissions == nil {
-		m.Permissions = &PermissionsModel{}
-	}
-	ensureAdvancedPermissionsInit(m.Permissions)
-	ensureAlertInit(m.Permissions)
-	ensureDeviceInit(m.Permissions)
-	ensurePolicyInit(m.Permissions)
-	ensureReportInit(m.Permissions)
-	ensureRiskFactorInit(m.Permissions)
-	ensureSettingsInit(m.Permissions)
-	ensureUserInit(m.Permissions)
-	ensureVulnerabilityInit(m.Permissions)
-}
-
 func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	return armis.RoleSettings{
 		Name: role.Name.ValueString(),
@@ -503,10 +349,6 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 
 func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) RoleResourceModel {
 	result := model
-
-	// Ensure nested pointers exist before writing into them (prevents nil deref on import/refresh).
-	ensureResourceModelInit(&result)
-
 	result.Name = types.StringValue(role.Name)
 	result.ID = types.StringValue(strconv.Itoa(role.ID))
 
@@ -688,16 +530,16 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 		ID:       types.StringValue(fmt.Sprintf("%d", role.ID)),
 		Name:     types.StringValue(role.Name),
 		ViprRole: types.BoolValue(role.ViprRole),
-		Permissions: &PermissionsModel{
-			AdvancedPermissions: &AdvancedPermissionsModel{
+		Permissions: PermissionsModel{
+			AdvancedPermissions: AdvancedPermissionsModel{
 				All: types.BoolValue(role.Permissions.AdvancedPermissions.All),
-				Behavioral: &BehavioralModel{
+				Behavioral: BehavioralModel{
 					All:             types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.All),
 					ApplicationName: types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ApplicationName.All),
 					HostName:        types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.HostName.All),
 					ServiceName:     types.BoolValue(role.Permissions.AdvancedPermissions.Behavioral.ServiceName.All),
 				},
-				Device: &DeviceAdvancedModel{
+				Device: DeviceAdvancedModel{
 					All:          types.BoolValue(role.Permissions.AdvancedPermissions.Device.All),
 					DeviceNames:  types.BoolValue(role.Permissions.AdvancedPermissions.Device.DeviceNames.All),
 					IPAddresses:  types.BoolValue(role.Permissions.AdvancedPermissions.Device.IPAddresses.All),
@@ -705,9 +547,9 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					PhoneNumbers: types.BoolValue(role.Permissions.AdvancedPermissions.Device.PhoneNumbers.All),
 				},
 			},
-			Alert: &AlertModel{
+			Alert: AlertModel{
 				All: types.BoolValue(role.Permissions.Alert.All),
-				Manage: &ManageAlertsModel{
+				Manage: ManageAlertsModel{
 					All:              types.BoolValue(role.Permissions.Alert.Manage.All),
 					Resolve:          types.BoolValue(role.Permissions.Alert.Manage.Resolve.All),
 					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
@@ -715,45 +557,64 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 				},
 				Read: types.BoolValue(role.Permissions.Alert.Read.All),
 			},
-			Policy: &PolicyModel{
+			Device: DeviceModel{
+				All: types.BoolValue(role.Permissions.Device.All),
+				Manage: ManageDeviceModel{
+					All:    types.BoolValue(role.Permissions.Device.Manage.All),
+					Create: types.BoolValue(role.Permissions.Device.Manage.Create.All),
+					Delete: types.BoolValue(role.Permissions.Device.Manage.Delete.All),
+					Edit:   types.BoolValue(role.Permissions.Device.Manage.Edit.All),
+					Enforce: EnforceModel{
+						All:    types.BoolValue(role.Permissions.Device.Manage.Enforce.All),
+						Create: types.BoolValue(role.Permissions.Device.Manage.Enforce.Create.All),
+						Delete: types.BoolValue(role.Permissions.Device.Manage.Enforce.Delete.All),
+					},
+					Merge:              types.BoolValue(role.Permissions.Device.Manage.Merge.All),
+					RequestDeletedData: types.BoolValue(role.Permissions.Device.Manage.RequestDeletedData.All),
+					Tags:               types.BoolValue(role.Permissions.Device.Manage.Tags.All),
+				},
+				Read: types.BoolValue(role.Permissions.Device.Read.All),
+			},
+			Policy: PolicyModel{
 				All:    types.BoolValue(role.Permissions.Policy.All),
 				Manage: types.BoolValue(role.Permissions.Policy.Manage.All),
 				Read:   types.BoolValue(role.Permissions.Policy.Read.All),
 			},
-			Report: &ReportModel{
+			Report: ReportModel{
 				All:    types.BoolValue(role.Permissions.Report.All),
 				Export: types.BoolValue(role.Permissions.Report.Export.All),
-				Manage: &ManageReportModel{
-					All:    types.BoolValue(role.Permissions.Report.All),
+				Manage: ManageReportModel{
+					All:    types.BoolValue(role.Permissions.Report.Manage.All),
 					Create: types.BoolValue(role.Permissions.Report.Manage.Create.All),
 					Delete: types.BoolValue(role.Permissions.Report.Manage.Delete.All),
 					Edit:   types.BoolValue(role.Permissions.Report.Manage.Edit.All),
 				},
 				Read: types.BoolValue(role.Permissions.Report.Read.All),
 			},
-			RiskFactor: &RiskFactorModel{
+			RiskFactor: RiskFactorModel{
 				All: types.BoolValue(role.Permissions.RiskFactor.All),
-				Manage: &ManageRiskModel{
+				Manage: ManageRiskModel{
 					All: types.BoolValue(role.Permissions.RiskFactor.Manage.All),
-					Customization: &CustomizationModel{
+					Customization: CustomizationModel{
 						All:     types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.All),
 						Create:  types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Create.All),
 						Disable: types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Disable.All),
 						Edit:    types.BoolValue(role.Permissions.RiskFactor.Manage.Customization.Edit.All),
 					},
-					Status: &StatusModel{
+					Status: StatusModel{
 						All:     types.BoolValue(role.Permissions.RiskFactor.Manage.Status.All),
 						Ignore:  types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Ignore.All),
 						Resolve: types.BoolValue(role.Permissions.RiskFactor.Manage.Status.Resolve.All),
 					},
 				},
+				Read: types.BoolValue(role.Permissions.RiskFactor.Read.All),
 			},
-			Settings: &SettingsModel{
+			Settings: SettingsModel{
 				All:      types.BoolValue(role.Permissions.Settings.All),
 				AuditLog: types.BoolValue(role.Permissions.Settings.AuditLog.All),
-				Boundary: &BoundaryModel{
+				Boundary: BoundaryModel{
 					All: types.BoolValue(role.Permissions.Settings.Boundary.All),
-					Manage: &ManageBoundaryModel{
+					Manage: ManageBoundaryModel{
 						All:    types.BoolValue(role.Permissions.Settings.Boundary.Manage.All),
 						Create: types.BoolValue(role.Permissions.Settings.Boundary.Manage.Create.All),
 						Delete: types.BoolValue(role.Permissions.Settings.Boundary.Manage.Delete.All),
@@ -761,68 +622,68 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					},
 					Read: types.BoolValue(role.Permissions.Settings.Boundary.Read.All),
 				},
-				BusinessImpact: &ManageAndReadModel{
+				BusinessImpact: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.BusinessImpact.All),
 					Manage: types.BoolValue(role.Permissions.Settings.BusinessImpact.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.BusinessImpact.Read.All),
 				},
-				Collector: &ManageAndReadModel{
+				Collector: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.Collector.All),
 					Manage: types.BoolValue(role.Permissions.Settings.Collector.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.Collector.Read.All),
 				},
-				CustomProperties: &ManageAndReadModel{
+				CustomProperties: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.CustomProperties.All),
 					Manage: types.BoolValue(role.Permissions.Settings.CustomProperties.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.CustomProperties.Read.All),
 				},
-				Integration: &ManageAndReadModel{
+				Integration: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.Integration.All),
 					Manage: types.BoolValue(role.Permissions.Settings.Integration.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.Integration.Read.All),
 				},
-				InternalIps: &ManageAndReadModel{
+				InternalIps: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.InternalIps.All),
 					Manage: types.BoolValue(role.Permissions.Settings.InternalIps.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.InternalIps.Read.All),
 				},
-				Notifications: &ManageAndReadModel{
+				Notifications: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.Notifications.All),
 					Manage: types.BoolValue(role.Permissions.Settings.Notifications.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.Notifications.Read.All),
 				},
-				OIDC: &ManageAndReadModel{
+				OIDC: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.OIDC.All),
 					Manage: types.BoolValue(role.Permissions.Settings.OIDC.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.OIDC.Read.All),
 				},
-				SAML: &ManageAndReadModel{
+				SAML: ManageAndReadModel{
 					All:    types.BoolValue(role.Permissions.Settings.SAML.All),
 					Manage: types.BoolValue(role.Permissions.Settings.SAML.Manage.All),
 					Read:   types.BoolValue(role.Permissions.Settings.SAML.Read.All),
 				},
 				SecretKey:        types.BoolValue(role.Permissions.Settings.SecretKey.All),
 				SecuritySettings: types.BoolValue(role.Permissions.Settings.SecuritySettings.All),
-				SitesAndSensors: &SitesAndSensorsModel{
+				SitesAndSensors: SitesAndSensorsModel{
 					All: types.BoolValue(role.Permissions.Settings.SitesAndSensors.All),
-					Manage: &ManageSitesAndSensorsModel{
+					Manage: ManageSitesAndSensorsModel{
 						All:     types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.All),
 						Sensors: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sensors.All),
 						Sites:   types.BoolValue(role.Permissions.Settings.SitesAndSensors.Manage.Sites.All),
 					},
 					Read: types.BoolValue(role.Permissions.Settings.SitesAndSensors.Read.All),
 				},
-				UsersAndRoles: &UsersAndRolesModel{
+				UsersAndRoles: UsersAndRolesModel{
 					All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.All),
-					Manage: &ManageUsersAndRolesModel{
+					Manage: ManageUsersAndRolesModel{
 						All: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.All),
-						Roles: &ManageRolesModel{
+						Roles: ManageRolesModel{
 							All:    types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.All),
 							Create: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Create.All),
 							Delete: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Delete.All),
 							Edit:   types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Roles.Edit.All),
 						},
-						Users: &ManageUsersModel{
+						Users: ManageUsersModel{
 							All:    types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.All),
 							Create: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Create.All),
 							Delete: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Manage.Users.Delete.All),
@@ -832,17 +693,17 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 					Read: types.BoolValue(role.Permissions.Settings.UsersAndRoles.Read.All),
 				},
 			},
-			User: &UserModel{
+			User: UserModel{
 				All: types.BoolValue(role.Permissions.User.All),
-				Manage: &ManageUserModel{
+				Manage: ManageUserModel{
 					All:    types.BoolValue(role.Permissions.User.Manage.All),
 					Upsert: types.BoolValue(role.Permissions.User.Manage.Upsert.All),
 				},
 				Read: types.BoolValue(role.Permissions.User.Read.All),
 			},
-			Vulnerability: &VulnerabilityModel{
+			Vulnerability: VulnerabilityModel{
 				All: types.BoolValue(role.Permissions.Vulnerability.All),
-				Manage: &ManageVulnerabilityModel{
+				Manage: ManageVulnerabilityModel{
 					All:     types.BoolValue(role.Permissions.Vulnerability.Manage.All),
 					Ignore:  types.BoolValue(role.Permissions.Vulnerability.Manage.Ignore.All),
 					Resolve: types.BoolValue(role.Permissions.Vulnerability.Manage.Resolve.All),
