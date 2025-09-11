@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
@@ -751,14 +752,6 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// if plan.Permissions.AdvancedPermissions == nil {
-	// 	resp.Diagnostics.AddError(
-	// 		"Invalid Configuration",
-	// 		"Advanced permissions are required but not provided.",
-	// 	)
-	// 	return
-	// }
-
 	role := u.BuildRoleRequest(plan)
 
 	tflog.Debug(ctx, "Creating role request", map[string]any{
@@ -808,11 +801,28 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	// Fetch the role by ID
 	tflog.Debug(ctx, "Fetching role by ID", map[string]any{"role_id": state.ID.ValueString()})
 	role, err := r.client.GetRoleByID(ctx, state.ID.ValueString())
-	if err != nil || role == nil {
+	if err != nil {
+		// Gracefully handle "not found" by removing from state
+		if strings.Contains(err.Error(), "Status Code: 404") {
+			tflog.Warn(ctx, "Role not found, removing from state", map[string]any{
+				"role_id": state.ID.ValueString(),
+			})
+			resp.State.RemoveResource(ctx)
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			"Error reading role",
 			fmt.Sprintf("Failed to fetch role with ID %q: %s", state.ID.ValueString(), err),
 		)
+		return
+	}
+
+	if role == nil {
+		tflog.Warn(ctx, "Role not found, removing from state", map[string]any{
+			"role_id": state.ID.ValueString(),
+		})
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
