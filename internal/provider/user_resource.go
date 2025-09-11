@@ -27,7 +27,7 @@ import (
 var (
 	_ resource.Resource                = &userResource{}
 	_ resource.ResourceWithConfigure   = &userResource{}
-	_ resource.ResourceWithImportState = &userResource{}
+	_ resource.ResourceWithImportState = &userResource{} // import support
 )
 
 type userResource struct {
@@ -134,14 +134,14 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 // userResourceModel maps the resource schema data.
 type userResourceModel struct {
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
-	Phone           types.String   `tfsdk:"phone"`
-	Email           types.String   `tfsdk:"email"`
-	Location        types.String   `tfsdk:"location"`
-	Title           types.String   `tfsdk:"title"`
-	Username        types.String   `tfsdk:"username"`
-	RoleAssignments roleAssignment `tfsdk:"role_assignments"`
+	ID              types.String    `tfsdk:"id"`
+	Name            types.String    `tfsdk:"name"`
+	Phone           types.String    `tfsdk:"phone"`
+	Email           types.String    `tfsdk:"email"`
+	Location        types.String    `tfsdk:"location"`
+	Title           types.String    `tfsdk:"title"`
+	Username        types.String    `tfsdk:"username"`
+	RoleAssignments *roleAssignment `tfsdk:"role_assignments"` // pointer to allow null during import
 }
 
 type roleAssignment struct {
@@ -162,10 +162,14 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Map the Terraform model to the API's user struct
-	roleAssignments := make([]armis.RoleAssignment, 1)
-	roleAssignments[0] = armis.RoleAssignment{
-		Name:  convertToStringSlice(plan.RoleAssignments.Name),
-		Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+	var roleAssignments []armis.RoleAssignment
+	if plan.RoleAssignments != nil {
+		roleAssignments = []armis.RoleAssignment{
+			{
+				Name:  convertToStringSlice(plan.RoleAssignments.Name),
+				Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+			},
+		}
 	}
 
 	user := armis.UserSettings{
@@ -266,7 +270,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Retrieve the current state to get the role ID
+	// Retrieve the current state to get the user ID
 	var state userResourceModel
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -284,10 +288,14 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map the Terraform model to the API's user struct
-	roleAssignments := make([]armis.RoleAssignment, 1)
-	roleAssignments[0] = armis.RoleAssignment{
-		Name:  convertToStringSlice(plan.RoleAssignments.Name),
-		Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+	var roleAssignments []armis.RoleAssignment
+	if plan.RoleAssignments != nil {
+		roleAssignments = []armis.RoleAssignment{
+			{
+				Name:  convertToStringSlice(plan.RoleAssignments.Name),
+				Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+			},
+		}
 	}
 
 	user := armis.UserSettings{
@@ -355,6 +363,7 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
+// ImportState allows `terraform import armis_user.example <id>` and import blocks.
 func (r *userResource) ImportState(
 	ctx context.Context,
 	req resource.ImportStateRequest,
