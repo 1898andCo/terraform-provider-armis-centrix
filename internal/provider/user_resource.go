@@ -27,7 +27,7 @@ import (
 var (
 	_ resource.Resource                = &userResource{}
 	_ resource.ResourceWithConfigure   = &userResource{}
-	_ resource.ResourceWithImportState = &userResource{} // <-- added for import support
+	_ resource.ResourceWithImportState = &userResource{}
 )
 
 type userResource struct {
@@ -355,7 +355,6 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-// ImportState allows `terraform import armis_user.example <id>` and import blocks.
 func (r *userResource) ImportState(
 	ctx context.Context,
 	req resource.ImportStateRequest,
