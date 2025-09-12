@@ -76,6 +76,5 @@ import {
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-#!/usr/bin/env bash
 terraform import armis_user.example 92012
 ```
