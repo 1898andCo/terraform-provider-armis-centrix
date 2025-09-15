@@ -78,6 +78,9 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:    true,
 				Computed:    true,
 				Description: "The phone number of the user.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"email": schema.StringAttribute{
 				Required:    true,
@@ -93,6 +96,9 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional:    true,
 				Computed:    true,
 				Description: "The physical location or address of the user.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"title": schema.StringAttribute{
 				Optional:    true,
@@ -405,10 +411,17 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	// Delete existing user
 	success, err := r.client.DeleteUser(ctx, state.ID.ValueString())
-	if err != nil || !success {
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error Deleting Armis user",
+			"Error Deleting Armis User",
 			"Could not delete user, unexpected error: "+err.Error(),
+		)
+		return
+	}
+	if !success {
+		resp.Diagnostics.AddError(
+			"Error Deleting Armis User",
+			"Could not delete user: operation returned unsuccessful status",
 		)
 		return
 	}
