@@ -142,7 +142,7 @@ type userResourceModel struct {
 	Location        types.String   `tfsdk:"location"`
 	Title           types.String   `tfsdk:"title"`
 	Username        types.String   `tfsdk:"username"`
-	RoleAssignments roleAssignment `tfsdk:"role_assignments"` // value, not pointer
+	RoleAssignments roleAssignment `tfsdk:"role_assignments"`
 }
 
 type roleAssignment struct {
@@ -172,7 +172,6 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Username: plan.Username.ValueString(),
 	}
 
-	// role assignments (one nested object in API)
 	if ra := buildAPIRoleAssignmentFromModel(plan.RoleAssignments); ra != nil {
 		user.RoleAssignment = []armis.RoleAssignment{*ra}
 	}
@@ -195,7 +194,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Location = types.StringValue(newUser.Location)
 	plan.Title = types.StringValue(newUser.Title)
 	plan.Username = types.StringValue(newUser.Username)
-	plan.RoleAssignments = mapAPIRoleAssignmentsToModel(newUser.RoleAssignment)
+
+	// Keep planned role assignments unless API returns them explicitly
+	if len(newUser.RoleAssignment) > 0 {
+		plan.RoleAssignments = mapAPIRoleAssignmentsToModel(newUser.RoleAssignment)
+	}
 
 	// Save the state
 	tflog.Info(ctx, "Setting state for user")
@@ -248,7 +251,11 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Location = types.StringValue(user.Location)
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
-	state.RoleAssignments = mapAPIRoleAssignmentsToModel(user.RoleAssignment)
+
+	// Only replace role assignments if API returns them; otherwise keep existing state
+	if len(user.RoleAssignment) > 0 {
+		state.RoleAssignments = mapAPIRoleAssignmentsToModel(user.RoleAssignment)
+	}
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -324,7 +331,11 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.Location = types.StringValue(updatedUser.Location)
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
-	plan.RoleAssignments = mapAPIRoleAssignmentsToModel(updatedUser.RoleAssignment)
+
+	// Keep planned role assignments unless API returns them explicitly
+	if len(updatedUser.RoleAssignment) > 0 {
+		plan.RoleAssignments = mapAPIRoleAssignmentsToModel(updatedUser.RoleAssignment)
+	}
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -361,7 +372,9 @@ func (r *userResource) ImportState(
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+/* ---------- helpers: model <-> API mapping for role_assignments ---------- */
 
+// maps TF model -> API single RoleAssignment (nil if both lists empty/unknown/null)
 func buildAPIRoleAssignmentFromModel(m roleAssignment) *armis.RoleAssignment {
 	names := listToStringSlice(m.Name)
 	sites := listToStringSlice(m.Sites)
@@ -376,6 +389,7 @@ func buildAPIRoleAssignmentFromModel(m roleAssignment) *armis.RoleAssignment {
 	}
 }
 
+// maps API []RoleAssignment (we use the first one) -> TF model value
 func mapAPIRoleAssignmentsToModel(api []armis.RoleAssignment) roleAssignment {
 	if len(api) == 0 {
 		return roleAssignment{
@@ -390,6 +404,7 @@ func mapAPIRoleAssignmentsToModel(api []armis.RoleAssignment) roleAssignment {
 	}
 }
 
+// Convert types.List -> []string
 func listToStringSlice(list types.List) []string {
 	if list.IsNull() || list.IsUnknown() {
 		return nil
@@ -403,6 +418,7 @@ func listToStringSlice(list types.List) []string {
 	return out
 }
 
+// Convert []string -> types.List
 func stringSliceToList(slice []string) types.List {
 	if slice == nil {
 		return types.ListNull(types.StringType)
