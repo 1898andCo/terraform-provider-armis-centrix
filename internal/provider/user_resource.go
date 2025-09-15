@@ -201,10 +201,8 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Title = types.StringValue(newUser.Title)
 	plan.Username = types.StringValue(newUser.Username)
 
-	// If API returned assignments, reflect them in state; otherwise keep the planned ones
-	if len(newUser.RoleAssignment) > 0 {
-		plan.RoleAssignments = mapAPIRoleAssignmentsToState(newUser.RoleAssignment)
-	}
+	// Merge API-provided role assignments only when non-empty; otherwise keep planned values.
+	plan.RoleAssignments = mergeRoleAssignments(newUser.RoleAssignment, plan.RoleAssignments)
 
 	// Save the state
 	tflog.Info(ctx, "Setting state for user")
@@ -258,10 +256,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
 
-	// Only replace role assignments if API returns them; else keep what's already in state
-	if len(user.RoleAssignment) > 0 {
-		state.RoleAssignments = mapAPIRoleAssignmentsToState(user.RoleAssignment)
-	}
+	// Merge API role assignments into state (only when API returns non-empty values)
+	state.RoleAssignments = mergeRoleAssignments(user.RoleAssignment, state.RoleAssignments)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -346,10 +342,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
 
-	// If API returns assignments, prefer them; otherwise keep the planned ones
-	if len(updatedUser.RoleAssignment) > 0 {
-		plan.RoleAssignments = mapAPIRoleAssignmentsToState(updatedUser.RoleAssignment)
-	}
+	// Merge API-provided role assignments only when non-empty
+	plan.RoleAssignments = mergeRoleAssignments(updatedUser.RoleAssignment, plan.RoleAssignments)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -404,13 +398,29 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
-// Helper: map API role assignments (first entry) to model value.
-func mapAPIRoleAssignmentsToState(api []armis.RoleAssignment) *roleAssignment {
-	if len(api) == 0 {
+// mergeRoleAssignments prefers API values when non-empty, otherwise keeps existing.
+func mergeRoleAssignments(api []armis.RoleAssignment, existing *roleAssignment) *roleAssignment {
+	// If neither plan/state nor API has values, keep it nil (import path may allow null).
+	if existing == nil && len(api) == 0 {
 		return nil
 	}
-	return &roleAssignment{
-		Name:  makeTypesStringSlice(api[0].Name),
-		Sites: makeTypesStringSlice(api[0].Sites),
+
+	// Start from existing (plan/state) values.
+	out := &roleAssignment{}
+	if existing != nil {
+		out.Name = existing.Name
+		out.Sites = existing.Sites
 	}
+
+	// If API returned an assignment object, selectively override when non-empty.
+	if len(api) > 0 {
+		if len(api[0].Name) > 0 {
+			out.Name = makeTypesStringSlice(api[0].Name)
+		}
+		if len(api[0].Sites) > 0 {
+			out.Sites = makeTypesStringSlice(api[0].Sites)
+		}
+	}
+
+	return out
 }
