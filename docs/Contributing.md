@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 1898 & Co.
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Contributing
 
 ## Armis Centrix Go SDK

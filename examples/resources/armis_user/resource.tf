@@ -6,9 +6,9 @@ resource "armis_user" "manager" {
   username = "lab.manager@lab.com"
   email    = "lab.manager@lab.com"
 
-  role_assignments = {
+  role_assignments = [{
     name  = ["Asset Manager", "User Manager", "Integrations Manager"]
     sites = ["Lab"]
-  }
+  }]
 }
 
