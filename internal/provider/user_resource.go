@@ -179,7 +179,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		RoleAssignment: roleAssignments,
 	}
 
-	// Create via API
+	// Create the user via the client
 	newUser, err := r.client.CreateUser(ctx, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -189,7 +189,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Map response to state (populate from API, per review guidance)
+	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(newUser.ID))
 	plan.Name = types.StringValue(newUser.Name)
 	plan.Phone = types.StringValue(newUser.Phone)
@@ -197,9 +197,11 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Location = types.StringValue(newUser.Location)
 	plan.Title = types.StringValue(newUser.Title)
 	plan.Username = types.StringValue(newUser.Username)
-	plan.RoleAssignments = mapRoleAssignmentsToState(newUser.RoleAssignment)
 
-	// Save state
+	// Merge API-provided role assignments only when non-empty; otherwise keep planned values.
+	plan.RoleAssignments = mergeRoleAssignments(newUser.RoleAssignment, plan.RoleAssignments)
+
+	// Save the state
 	tflog.Info(ctx, "Setting state for user")
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -243,14 +245,16 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Overwrite with refreshed state (populate from API)
+	// Overwrite with refreshed state
 	state.Name = types.StringValue(user.Name)
 	state.Phone = types.StringValue(user.Phone)
 	state.Email = types.StringValue(user.Email)
 	state.Location = types.StringValue(user.Location)
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
-	state.RoleAssignments = mapRoleAssignmentsToState(user.RoleAssignment)
+
+	// Merge API role assignments into state (only when API returns non-empty)
+	state.RoleAssignments = mergeRoleAssignments(user.RoleAssignment, state.RoleAssignments)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -283,7 +287,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Map plan → API struct
+	// Map the Terraform model to the API's user struct
 	roleAssignments := []armis.RoleAssignment{
 		{
 			Name:  convertToStringSlice(plan.RoleAssignments.Name),
@@ -301,7 +305,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		RoleAssignment: roleAssignments,
 	}
 
-	// Update and then fetch
+	// Update existing user and then fetch the updated user from the API.
 	_, err := r.client.UpdateUser(ctx, user, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -320,7 +324,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Map response to state (populate from API)
+	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(updatedUser.ID))
 	plan.Name = types.StringValue(updatedUser.Name)
 	plan.Phone = types.StringValue(updatedUser.Phone)
@@ -328,7 +332,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.Location = types.StringValue(updatedUser.Location)
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
-	plan.RoleAssignments = mapRoleAssignmentsToState(updatedUser.RoleAssignment)
+
+	// Merge API-provided role assignments only when non-empty
+	plan.RoleAssignments = mergeRoleAssignments(updatedUser.RoleAssignment, plan.RoleAssignments)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -380,16 +386,28 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
-// mapRoleAssignmentsToState converts API role assignments to Terraform value types.
-func mapRoleAssignmentsToState(api []armis.RoleAssignment) roleAssignment {
-	var out roleAssignment
+// mergeRoleAssignments prefers API values when non-empty; otherwise keeps existing (plan/state) values.
+// This avoids "element vanished" errors when the API omits echoing role assignments.
+func mergeRoleAssignments(api []armis.RoleAssignment, existing roleAssignment) roleAssignment {
+	out := existing // start with what Terraform planned or already has
+
 	if len(api) > 0 {
-		out.Name = makeTypesStringSlice(api[0].Name)
-		out.Sites = makeTypesStringSlice(api[0].Sites)
-	} else {
-		// Keep empty slices for required list attributes.
+		// Only overwrite fields the API actually returned
+		if len(api[0].Name) > 0 {
+			out.Name = makeTypesStringSlice(api[0].Name)
+		}
+		if len(api[0].Sites) > 0 {
+			out.Sites = makeTypesStringSlice(api[0].Sites)
+		}
+	}
+
+	// Ensure slices are non-nil (important for required list attributes)
+	if out.Name == nil {
 		out.Name = []types.String{}
+	}
+	if out.Sites == nil {
 		out.Sites = []types.String{}
 	}
+
 	return out
 }
