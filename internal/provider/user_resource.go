@@ -134,14 +134,14 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 // userResourceModel maps the resource schema data.
 type userResourceModel struct {
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
-	Phone           types.String   `tfsdk:"phone"`
-	Email           types.String   `tfsdk:"email"`
-	Location        types.String   `tfsdk:"location"`
-	Title           types.String   `tfsdk:"title"`
-	Username        types.String   `tfsdk:"username"`
-	RoleAssignments roleAssignment `tfsdk:"role_assignments"`
+	ID              types.String    `tfsdk:"id"`
+	Name            types.String    `tfsdk:"name"`
+	Phone           types.String    `tfsdk:"phone"`
+	Email           types.String    `tfsdk:"email"`
+	Location        types.String    `tfsdk:"location"`
+	Title           types.String    `tfsdk:"title"`
+	Username        types.String    `tfsdk:"username"`
+	RoleAssignments *roleAssignment `tfsdk:"role_assignments"`
 }
 
 type roleAssignment struct {
@@ -162,11 +162,14 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Map the Terraform model to the API's user struct
-	roleAssignments := []armis.RoleAssignment{
-		{
-			Name:  convertToStringSlice(plan.RoleAssignments.Name),
-			Sites: convertToStringSlice(plan.RoleAssignments.Sites),
-		},
+	var roleAssignments []armis.RoleAssignment
+	if plan.RoleAssignments != nil {
+		roleAssignments = []armis.RoleAssignment{
+			{
+				Name:  convertToStringSlice(plan.RoleAssignments.Name),
+				Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+			},
+		}
 	}
 
 	user := armis.UserSettings{
@@ -245,7 +248,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Overwrite with refreshed state
+	// Overwrite users with refreshed state
 	state.Name = types.StringValue(user.Name)
 	state.Phone = types.StringValue(user.Phone)
 	state.Email = types.StringValue(user.Email)
@@ -253,12 +256,15 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
 
-	// Merge API role assignments into state (only when API returns non-empty)
+	// Merge API role assignments into state (only when API returns non-empty values).
 	state.RoleAssignments = mergeRoleAssignments(user.RoleAssignment, state.RoleAssignments)
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -288,11 +294,14 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	// Map the Terraform model to the API's user struct
-	roleAssignments := []armis.RoleAssignment{
-		{
-			Name:  convertToStringSlice(plan.RoleAssignments.Name),
-			Sites: convertToStringSlice(plan.RoleAssignments.Sites),
-		},
+	var roleAssignments []armis.RoleAssignment
+	if plan.RoleAssignments != nil {
+		roleAssignments = []armis.RoleAssignment{
+			{
+				Name:  convertToStringSlice(plan.RoleAssignments.Name),
+				Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+			},
+		}
 	}
 
 	user := armis.UserSettings{
@@ -338,6 +347,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -365,6 +377,9 @@ func (r *userResource) ImportState(
 	req resource.ImportStateRequest,
 	resp *resource.ImportStateResponse,
 ) {
+	// Allow importing by ID only; other attributes (including role_assignments)
+	// will be populated in Read. Keeping role_assignments as a pointer allows
+	// this attribute to be null during the import handoff.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
@@ -377,8 +392,11 @@ func convertToStringSlice(input []types.String) []string {
 	return result
 }
 
-// Helper: convert []string -> []types.String.
+// Helper: convert []string -> []types.String (non-nil, empty-safe).
 func makeTypesStringSlice(in []string) []types.String {
+	if len(in) == 0 {
+		return []types.String{}
+	}
 	out := make([]types.String, 0, len(in))
 	for _, s := range in {
 		out = append(out, types.StringValue(s))
@@ -386,27 +404,34 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
-// mergeRoleAssignments prefers API values when non-empty; otherwise keeps existing (plan/state) values.
-// This avoids "element vanished" errors when the API omits echoing role assignments.
-func mergeRoleAssignments(api []armis.RoleAssignment, existing roleAssignment) roleAssignment {
-	out := existing // start with what Terraform planned or already has
+// mergeRoleAssignments prefers API values when non-empty, otherwise keeps existing.
+// It always returns a *roleAssignment with non-nil, possibly-empty slices to avoid
+// writing nulls for required list attributes.
+func mergeRoleAssignments(api []armis.RoleAssignment, existing *roleAssignment) *roleAssignment {
+	// Start with empty (non-nil) slices so state never gets null lists.
+	out := &roleAssignment{
+		Name:  []types.String{},
+		Sites: []types.String{},
+	}
 
+	// Carry over what's already present (plan/state) if available.
+	if existing != nil {
+		if existing.Name != nil {
+			out.Name = existing.Name
+		}
+		if existing.Sites != nil {
+			out.Sites = existing.Sites
+		}
+	}
+
+	// If API returned assignments, selectively override with non-empty values.
 	if len(api) > 0 {
-		// Only overwrite fields the API actually returned
 		if len(api[0].Name) > 0 {
 			out.Name = makeTypesStringSlice(api[0].Name)
 		}
 		if len(api[0].Sites) > 0 {
 			out.Sites = makeTypesStringSlice(api[0].Sites)
 		}
-	}
-
-	// Ensure slices are non-nil (important for required list attributes)
-	if out.Name == nil {
-		out.Name = []types.String{}
-	}
-	if out.Sites == nil {
-		out.Sites = []types.String{}
 	}
 
 	return out
