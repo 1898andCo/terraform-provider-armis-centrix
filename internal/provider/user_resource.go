@@ -13,7 +13,6 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -135,19 +134,19 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 // userResourceModel maps the resource schema data.
 type userResourceModel struct {
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
-	Phone           types.String   `tfsdk:"phone"`
-	Email           types.String   `tfsdk:"email"`
-	Location        types.String   `tfsdk:"location"`
-	Title           types.String   `tfsdk:"title"`
-	Username        types.String   `tfsdk:"username"`
-	RoleAssignments roleAssignment `tfsdk:"role_assignments"`
+	ID              types.String    `tfsdk:"id"`
+	Name            types.String    `tfsdk:"name"`
+	Phone           types.String    `tfsdk:"phone"`
+	Email           types.String    `tfsdk:"email"`
+	Location        types.String    `tfsdk:"location"`
+	Title           types.String    `tfsdk:"title"`
+	Username        types.String    `tfsdk:"username"`
+	RoleAssignments *roleAssignment `tfsdk:"role_assignments"`
 }
 
 type roleAssignment struct {
-	Name  types.List `tfsdk:"name"`  // list(string)
-	Sites types.List `tfsdk:"sites"` // list(string)
+	Name  []types.String `tfsdk:"name"`
+	Sites []types.String `tfsdk:"sites"`
 }
 
 // Create creates the resource and sets the initial Terraform state.
@@ -162,18 +161,25 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Build API payload
-	user := armis.UserSettings{
-		Name:     plan.Name.ValueString(),
-		Phone:    plan.Phone.ValueString(),
-		Email:    plan.Email.ValueString(),
-		Location: plan.Location.ValueString(),
-		Title:    plan.Title.ValueString(),
-		Username: plan.Username.ValueString(),
+	// Map the Terraform model to the API's user struct
+	var roleAssignments []armis.RoleAssignment
+	if plan.RoleAssignments != nil {
+		roleAssignments = []armis.RoleAssignment{
+			{
+				Name:  convertToStringSlice(plan.RoleAssignments.Name),
+				Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+			},
+		}
 	}
 
-	if ra := buildAPIRoleAssignmentFromModel(plan.RoleAssignments); ra != nil {
-		user.RoleAssignment = []armis.RoleAssignment{*ra}
+	user := armis.UserSettings{
+		Name:           plan.Name.ValueString(),
+		Phone:          plan.Phone.ValueString(),
+		Email:          plan.Email.ValueString(),
+		Location:       plan.Location.ValueString(),
+		Title:          plan.Title.ValueString(),
+		Username:       plan.Username.ValueString(),
+		RoleAssignment: roleAssignments,
 	}
 
 	// Create the user via the client
@@ -195,9 +201,9 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Title = types.StringValue(newUser.Title)
 	plan.Username = types.StringValue(newUser.Username)
 
-	// Keep planned role assignments unless API returns them explicitly
+	// If API returned assignments, reflect them in state; otherwise keep the planned ones
 	if len(newUser.RoleAssignment) > 0 {
-		plan.RoleAssignments = mapAPIRoleAssignmentsToModel(newUser.RoleAssignment)
+		plan.RoleAssignments = mapAPIRoleAssignmentsToState(newUser.RoleAssignment)
 	}
 
 	// Save the state
@@ -252,9 +258,9 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
 
-	// Only replace role assignments if API returns them; otherwise keep existing state
+	// Only replace role assignments if API returns them; else keep what's already in state
 	if len(user.RoleAssignment) > 0 {
-		state.RoleAssignments = mapAPIRoleAssignmentsToModel(user.RoleAssignment)
+		state.RoleAssignments = mapAPIRoleAssignmentsToState(user.RoleAssignment)
 	}
 
 	// Set refreshed state
@@ -291,17 +297,25 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Build API payload
-	user := armis.UserSettings{
-		Name:     plan.Name.ValueString(),
-		Phone:    plan.Phone.ValueString(),
-		Email:    plan.Email.ValueString(),
-		Location: plan.Location.ValueString(),
-		Title:    plan.Title.ValueString(),
-		Username: plan.Username.ValueString(),
+	// Map the Terraform model to the API's user struct
+	var roleAssignments []armis.RoleAssignment
+	if plan.RoleAssignments != nil {
+		roleAssignments = []armis.RoleAssignment{
+			{
+				Name:  convertToStringSlice(plan.RoleAssignments.Name),
+				Sites: convertToStringSlice(plan.RoleAssignments.Sites),
+			},
+		}
 	}
-	if ra := buildAPIRoleAssignmentFromModel(plan.RoleAssignments); ra != nil {
-		user.RoleAssignment = []armis.RoleAssignment{*ra}
+
+	user := armis.UserSettings{
+		Name:           plan.Name.ValueString(),
+		Phone:          plan.Phone.ValueString(),
+		Email:          plan.Email.ValueString(),
+		Location:       plan.Location.ValueString(),
+		Title:          plan.Title.ValueString(),
+		Username:       plan.Username.ValueString(),
+		RoleAssignment: roleAssignments,
 	}
 
 	// Update existing user and then fetch the updated user from the API.
@@ -332,9 +346,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
 
-	// Keep planned role assignments unless API returns them explicitly
+	// If API returns assignments, prefer them; otherwise keep the planned ones
 	if len(updatedUser.RoleAssignment) > 0 {
-		plan.RoleAssignments = mapAPIRoleAssignmentsToModel(updatedUser.RoleAssignment)
+		plan.RoleAssignments = mapAPIRoleAssignmentsToState(updatedUser.RoleAssignment)
 	}
 
 	diags = resp.State.Set(ctx, plan)
@@ -372,61 +386,31 @@ func (r *userResource) ImportState(
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-/* ---------- helpers: model <-> API mapping for role_assignments ---------- */
-
-// maps TF model -> API single RoleAssignment (nil if both lists empty/unknown/null)
-func buildAPIRoleAssignmentFromModel(m roleAssignment) *armis.RoleAssignment {
-	names := listToStringSlice(m.Name)
-	sites := listToStringSlice(m.Sites)
-
-	if len(names) == 0 && len(sites) == 0 {
-		return nil
+// Helper: convert []types.String -> []string.
+func convertToStringSlice(input []types.String) []string {
+	result := make([]string, len(input))
+	for i, v := range input {
+		result[i] = v.ValueString()
 	}
-
-	return &armis.RoleAssignment{
-		Name:  names,
-		Sites: sites,
-	}
+	return result
 }
 
-// maps API []RoleAssignment (we use the first one) -> TF model value
-func mapAPIRoleAssignmentsToModel(api []armis.RoleAssignment) roleAssignment {
-	if len(api) == 0 {
-		return roleAssignment{
-			Name:  types.ListNull(types.StringType),
-			Sites: types.ListNull(types.StringType),
-		}
-	}
-	first := api[0]
-	return roleAssignment{
-		Name:  stringSliceToList(first.Name),
-		Sites: stringSliceToList(first.Sites),
-	}
-}
-
-// Convert types.List -> []string
-func listToStringSlice(list types.List) []string {
-	if list.IsNull() || list.IsUnknown() {
-		return nil
-	}
-	out := make([]string, 0, len(list.Elements()))
-	for _, v := range list.Elements() {
-		if s, ok := v.(types.String); ok && !s.IsNull() && !s.IsUnknown() {
-			out = append(out, s.ValueString())
-		}
+// Helper: convert []string -> []types.String.
+func makeTypesStringSlice(in []string) []types.String {
+	out := make([]types.String, 0, len(in))
+	for _, s := range in {
+		out = append(out, types.StringValue(s))
 	}
 	return out
 }
 
-// Convert []string -> types.List
-func stringSliceToList(slice []string) types.List {
-	if slice == nil {
-		return types.ListNull(types.StringType)
+// Helper: map API role assignments (first entry) to model value.
+func mapAPIRoleAssignmentsToState(api []armis.RoleAssignment) *roleAssignment {
+	if len(api) == 0 {
+		return nil
 	}
-	vals := make([]attr.Value, len(slice))
-	for i, s := range slice {
-		vals[i] = types.StringValue(s)
+	return &roleAssignment{
+		Name:  makeTypesStringSlice(api[0].Name),
+		Sites: makeTypesStringSlice(api[0].Sites),
 	}
-	lv, _ := types.ListValue(types.StringType, vals)
-	return lv
 }
