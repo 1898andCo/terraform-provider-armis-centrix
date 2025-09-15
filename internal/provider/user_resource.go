@@ -46,7 +46,7 @@ func (r *userResource) Configure(_ context.Context, req resource.ConfigureReques
 	client, ok := req.ProviderData.(*armis.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *armis.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
@@ -150,7 +150,7 @@ type roleAssignment struct {
 
 // --- Helpers ---
 
-// convert []types.String -> []string
+// Converts a []types.String to a []string.
 func convertToStringSlice(in []types.String) []string {
 	out := make([]string, 0, len(in))
 	for _, v := range in {
@@ -159,7 +159,7 @@ func convertToStringSlice(in []types.String) []string {
 	return out
 }
 
-// convert []string -> []types.String
+// Converts a []string to a []types.String.
 func makeTypesStringSlice(in []string) []types.String {
 	out := make([]types.String, 0, len(in))
 	for _, s := range in {
@@ -168,7 +168,7 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
-// normalize nil -> empty slices
+// Normalizes the role assignment data.
 func normalizeRoleAssignment(v roleAssignment) roleAssignment {
 	if v.Name == nil {
 		v.Name = []types.String{}
@@ -179,7 +179,7 @@ func normalizeRoleAssignment(v roleAssignment) roleAssignment {
 	return v
 }
 
-// per-field fallback: only overwrite a field when API provides a non-empty value for that field
+// Maps the role assignments from the API to the Terraform model.
 func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignment) roleAssignment {
 	fb := normalizeRoleAssignment(fallback)
 	if len(api) == 0 {
@@ -200,8 +200,6 @@ func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignm
 	}
 	return out
 }
-
-// --- CRUD ---
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -416,7 +414,6 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-// Import: set id AND a non-null empty role_assignments object (values, not pointers)
 func (r *userResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	init := userResourceModel{
 		ID: types.StringValue(req.ID),

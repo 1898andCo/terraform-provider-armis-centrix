@@ -28,9 +28,9 @@ func TestAcc_UserResource(t *testing.T) {
 				),
 			},
 			{
-               ResourceName: resourceName,
-               ImportState:  true,
-            },
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
 		},
 	})
 }
