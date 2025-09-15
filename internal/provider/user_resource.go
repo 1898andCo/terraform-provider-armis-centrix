@@ -168,7 +168,6 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
-// normalize nil -> empty slices
 func normalizeRoleAssignment(v roleAssignment) roleAssignment {
 	if v.Name == nil {
 		v.Name = []types.String{}
@@ -179,7 +178,6 @@ func normalizeRoleAssignment(v roleAssignment) roleAssignment {
 	return v
 }
 
-// map API -> value model (empty lists instead of null)
 func mapRoleAssignmentsToState(api []armis.RoleAssignment) roleAssignment {
 	var ra roleAssignment
 	if len(api) > 0 {
@@ -200,7 +198,6 @@ func mapRoleAssignmentsToState(api []armis.RoleAssignment) roleAssignment {
 	return ra
 }
 
-// per-field fallback: only overwrite a field when API provides a non-empty value for that field
 func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignment) roleAssignment {
 	fb := normalizeRoleAssignment(fallback)
 	if len(api) == 0 {
