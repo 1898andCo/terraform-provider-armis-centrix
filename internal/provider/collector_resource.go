@@ -43,7 +43,7 @@ func (r *collectorResource) Configure(_ context.Context, req resource.ConfigureR
 	client, ok := req.ProviderData.(*armis.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
+			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *armis.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
