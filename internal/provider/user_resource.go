@@ -168,7 +168,18 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
-// map API -> state (empty lists instead of nulls)
+// normalize nil -> empty slices
+func normalizeRoleAssignment(v roleAssignment) roleAssignment {
+	if v.Name == nil {
+		v.Name = []types.String{}
+	}
+	if v.Sites == nil {
+		v.Sites = []types.String{}
+	}
+	return v
+}
+
+// map API -> value model (empty lists instead of null)
 func mapRoleAssignmentsToState(api []armis.RoleAssignment) roleAssignment {
 	var ra roleAssignment
 	if len(api) > 0 {
@@ -189,20 +200,26 @@ func mapRoleAssignmentsToState(api []armis.RoleAssignment) roleAssignment {
 	return ra
 }
 
-// prefer API values; fall back to provided value if API is empty
-func mapRoleAssignmentsWithFallback(api []armis.RoleAssignment, fallback roleAssignment) roleAssignment {
-	ra := mapRoleAssignmentsToState(api)
-	// API returned nothing—keep what TF had (but normalize nil -> empty).
-	if len(ra.Name) == 0 && len(ra.Sites) == 0 {
-		if fallback.Name == nil {
-			fallback.Name = []types.String{}
-		}
-		if fallback.Sites == nil {
-			fallback.Sites = []types.String{}
-		}
-		return fallback
+// per-field fallback: only overwrite a field when API provides a non-empty value for that field
+func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignment) roleAssignment {
+	fb := normalizeRoleAssignment(fallback)
+	if len(api) == 0 {
+		return fb
 	}
-	return ra
+	out := roleAssignment{}
+	// Name
+	if len(api[0].Name) > 0 {
+		out.Name = makeTypesStringSlice(api[0].Name)
+	} else {
+		out.Name = fb.Name
+	}
+	// Sites
+	if len(api[0].Sites) > 0 {
+		out.Sites = makeTypesStringSlice(api[0].Sites)
+	} else {
+		out.Sites = fb.Sites
+	}
+	return out
 }
 
 // --- CRUD ---
@@ -252,8 +269,8 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Title = types.StringValue(newUser.Title)
 	plan.Username = types.StringValue(newUser.Username)
 
-	// Store role_assignments as values (no pointers), falling back to plan if API is empty
-	plan.RoleAssignments = mapRoleAssignmentsWithFallback(newUser.RoleAssignment, plan.RoleAssignments)
+	// Keep plan lists unless API provides non-empty values per field
+	plan.RoleAssignments = mapRoleAssignmentsPerField(newUser.RoleAssignment, plan.RoleAssignments)
 
 	tflog.Info(ctx, "Setting state for user")
 	diags = resp.State.Set(ctx, plan)
@@ -296,8 +313,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
 
-	// Refresh role assignments, but keep existing if API is empty
-	state.RoleAssignments = mapRoleAssignmentsWithFallback(user.RoleAssignment, state.RoleAssignments)
+	// Per-field fallback: keep existing state elements if API omits them
+	state.RoleAssignments = mapRoleAssignmentsPerField(user.RoleAssignment, state.RoleAssignments)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -361,8 +378,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
 
-	// Store role_assignments as values (no pointers), falling back to plan if API is empty
-	plan.RoleAssignments = mapRoleAssignmentsWithFallback(updatedUser.RoleAssignment, plan.RoleAssignments)
+	// Per-field fallback: keep plan lists if API omits them
+	plan.RoleAssignments = mapRoleAssignmentsPerField(updatedUser.RoleAssignment, plan.RoleAssignments)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
