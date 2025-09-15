@@ -13,6 +13,7 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -64,10 +65,10 @@ func (r *userResource) Metadata(_ context.Context, req resource.MetadataRequest,
 func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: `
-		Provides an Armis user
+Provides an Armis user
 
-		The resource provisions a user with the ability to define location, email, roles, and role assignments.
-		`,
+The resource provisions a user with the ability to define location, email, roles, and role assignments.
+`,
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
 				Required:      true,
@@ -117,19 +118,21 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Description:   "A unique identifier for the user resource.",
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"role_assignments": schema.SingleNestedAttribute{
+			"role_assignments": schema.ListNestedAttribute{
 				Required:    true,
 				Description: "Role assignments for the user.",
-				Attributes: map[string]schema.Attribute{
-					"name": schema.ListAttribute{
-						ElementType: types.StringType,
-						Required:    true,
-						Description: "The names of the roles assigned to the user.",
-					},
-					"sites": schema.ListAttribute{
-						ElementType: types.StringType,
-						Required:    true,
-						Description: "A list of site identifiers associated with the role.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.ListAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+							Description: "The names of the roles assigned to the user.",
+						},
+						"sites": schema.ListAttribute{
+							ElementType: types.StringType,
+							Required:    true,
+							Description: "A list of site identifiers associated with the role.",
+						},
 					},
 				},
 			},
@@ -139,78 +142,24 @@ func (r *userResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 // userResourceModel maps the resource schema data.
 type userResourceModel struct {
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
-	Phone           types.String   `tfsdk:"phone"`
-	Email           types.String   `tfsdk:"email"`
-	Location        types.String   `tfsdk:"location"`
-	Title           types.String   `tfsdk:"title"`
-	Username        types.String   `tfsdk:"username"`
-	RoleAssignments roleAssignment `tfsdk:"role_assignments"`
+	ID              types.String      `tfsdk:"id"`
+	Name            types.String      `tfsdk:"name"`
+	Phone           types.String      `tfsdk:"phone"`
+	Email           types.String      `tfsdk:"email"`
+	Location        types.String      `tfsdk:"location"`
+	Title           types.String      `tfsdk:"title"`
+	Username        types.String      `tfsdk:"username"`
+	RoleAssignments []RoleAssignments `tfsdk:"role_assignments"`
 }
 
-type roleAssignment struct {
+type RoleAssignments struct {
 	Name  []types.String `tfsdk:"name"`
 	Sites []types.String `tfsdk:"sites"`
-}
-
-// --- Helpers ---
-
-// Converts a []types.String to a []string.
-func convertToStringSlice(in []types.String) []string {
-	out := make([]string, 0, len(in))
-	for _, v := range in {
-		out = append(out, v.ValueString())
-	}
-	return out
-}
-
-// Converts a []string to a []types.String.
-func makeTypesStringSlice(in []string) []types.String {
-	out := make([]types.String, 0, len(in))
-	for _, s := range in {
-		out = append(out, types.StringValue(s))
-	}
-	return out
-}
-
-// Normalizes the role assignment data.
-func normalizeRoleAssignment(v roleAssignment) roleAssignment {
-	if v.Name == nil {
-		v.Name = []types.String{}
-	}
-	if v.Sites == nil {
-		v.Sites = []types.String{}
-	}
-	return v
-}
-
-// Maps the role assignments from the API to the Terraform model.
-func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignment) roleAssignment {
-	fb := normalizeRoleAssignment(fallback)
-	if len(api) == 0 {
-		return fb
-	}
-	out := roleAssignment{}
-	// Name
-	if len(api[0].Name) > 0 {
-		out.Name = makeTypesStringSlice(api[0].Name)
-	} else {
-		out.Name = fb.Name
-	}
-	// Sites
-	if len(api[0].Sites) > 0 {
-		out.Sites = makeTypesStringSlice(api[0].Sites)
-	} else {
-		out.Sites = fb.Sites
-	}
-	return out
 }
 
 // Create creates the resource and sets the initial Terraform state.
 func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan userResourceModel
-	tflog.Info(ctx, "Creating user")
 
 	// Parse the plan from Terraform
 	diags := req.Plan.Get(ctx, &plan)
@@ -219,25 +168,9 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Map the Terraform model to the API's user struct
-	roleAssignments := []armis.RoleAssignment{
-		{
-			Name:  convertToStringSlice(plan.RoleAssignments.Name),
-			Sites: convertToStringSlice(plan.RoleAssignments.Sites),
-		},
-	}
+	user := buildArmisUser(plan)
+	tflog.Info(ctx, "Creating user in Armis", map[string]any{"user": user})
 
-	user := armis.UserSettings{
-		Name:           plan.Name.ValueString(),
-		Phone:          plan.Phone.ValueString(),
-		Email:          plan.Email.ValueString(),
-		Location:       plan.Location.ValueString(),
-		Title:          plan.Title.ValueString(),
-		Username:       plan.Username.ValueString(),
-		RoleAssignment: roleAssignments,
-	}
-
-	// Create the user via the client
 	newUser, err := r.client.CreateUser(ctx, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -247,7 +180,22 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Map the response to Terraform state
+	tflog.Info(ctx, "API returned user data after creation", map[string]any{
+		"user_id":                   newUser.ID,
+		"role_assignments_returned": fmt.Sprintf("%+v", newUser.RoleAssignment),
+		"role_assignments_count":    len(newUser.RoleAssignment),
+	})
+
+	if len(newUser.RoleAssignment) > 0 {
+		for i, ra := range newUser.RoleAssignment {
+			tflog.Info(ctx, "Role assignment details", map[string]any{
+				"index": i,
+				"names": ra.Name,
+				"sites": ra.Sites,
+			})
+		}
+	}
+
 	plan.ID = types.StringValue(strconv.Itoa(newUser.ID))
 	plan.Name = types.StringValue(newUser.Name)
 	plan.Phone = types.StringValue(newUser.Phone)
@@ -256,8 +204,9 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Title = types.StringValue(newUser.Title)
 	plan.Username = types.StringValue(newUser.Username)
 
-	// Keep plan lists unless API provides non-empty values per field
-	plan.RoleAssignments = mapRoleAssignmentsPerField(newUser.RoleAssignment, plan.RoleAssignments)
+	// Keep the planned role assignments - don't overwrite with API response as sites aren't returned
+	// The API may return them in different order or incomplete
+	// plan.RoleAssignments stays as originally planned
 
 	// Save the state
 	tflog.Info(ctx, "Setting state for user")
@@ -303,7 +252,6 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Overwrite users with refreshed state (scalars)
 	state.Name = types.StringValue(user.Name)
 	state.Phone = types.StringValue(user.Phone)
 	state.Email = types.StringValue(user.Email)
@@ -311,10 +259,10 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
 
-	// Per-field fallback: keep existing state lists if API omits them
-	state.RoleAssignments = mapRoleAssignmentsPerField(user.RoleAssignment, state.RoleAssignments)
+	// state.RoleAssignments - DON'T UPDATE, keep existing state
+	// Only update the basic fields - leave role_assignments alone
+	// The API returns them in inconsistent order, so we trust our state
 
-	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
@@ -346,23 +294,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Map the Terraform model to the API's user struct
-	roleAssignments := []armis.RoleAssignment{
-		{
-			Name:  convertToStringSlice(plan.RoleAssignments.Name),
-			Sites: convertToStringSlice(plan.RoleAssignments.Sites),
-		},
-	}
-
-	user := armis.UserSettings{
-		Name:           plan.Name.ValueString(),
-		Phone:          plan.Phone.ValueString(),
-		Email:          plan.Email.ValueString(),
-		Location:       plan.Location.ValueString(),
-		Title:          plan.Title.ValueString(),
-		Username:       plan.Username.ValueString(),
-		RoleAssignment: roleAssignments,
-	}
+	user := buildArmisUser(plan)
 
 	// Update user
 	_, err := r.client.UpdateUser(ctx, user, state.ID.ValueString())
@@ -374,6 +306,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// For update, only fetch and update the basic fields
+	// Keep the role assignments from the plan since we just sent them
 	updatedUser, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -383,7 +317,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	// Map the response to Terraform state
+	// Map only the basic fields from API response
 	plan.ID = types.StringValue(strconv.Itoa(updatedUser.ID))
 	plan.Name = types.StringValue(updatedUser.Name)
 	plan.Phone = types.StringValue(updatedUser.Phone)
@@ -392,8 +326,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.Title = types.StringValue(updatedUser.Title)
 	plan.Username = types.StringValue(updatedUser.Username)
 
-	// Per-field fallback: keep plan lists if API omits them
-	plan.RoleAssignments = mapRoleAssignmentsPerField(updatedUser.RoleAssignment, plan.RoleAssignments)
+	// Keep role assignments from plan - don't overwrite with API response as it does not return sites
+	// plan.RoleAssignments stays as planned
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -428,13 +362,36 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 }
 
 func (r *userResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	init := userResourceModel{
-		ID: types.StringValue(req.ID),
-		RoleAssignments: roleAssignment{
-			Name:  []types.String{},
-			Sites: []types.String{},
-		},
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func buildArmisUser(plan userResourceModel) armis.UserSettings {
+	var roleAssignments []armis.RoleAssignment
+	for _, roleAssignment := range plan.RoleAssignments {
+		// Simple conversion from []types.String to []string
+		var names []string
+		for _, n := range roleAssignment.Name {
+			names = append(names, n.ValueString())
+		}
+
+		var sites []string
+		for _, s := range roleAssignment.Sites {
+			sites = append(sites, s.ValueString())
+		}
+
+		roleAssignments = append(roleAssignments, armis.RoleAssignment{
+			Name:  names,
+			Sites: sites,
+		})
 	}
-	diags := resp.State.Set(ctx, &init)
-	resp.Diagnostics.Append(diags...)
+
+	return armis.UserSettings{
+		Name:           plan.Name.ValueString(),
+		Phone:          plan.Phone.ValueString(),
+		Email:          plan.Email.ValueString(),
+		Location:       plan.Location.ValueString(),
+		Title:          plan.Title.ValueString(),
+		Username:       plan.Username.ValueString(),
+		RoleAssignment: roleAssignments,
+	}
 }

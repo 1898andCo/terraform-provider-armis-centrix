@@ -23,8 +23,9 @@ func TestAcc_UserResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "location", "Houston"),
 					resource.TestCheckResourceAttr(resourceName, "username", "test.user@test.com"),
 					resource.TestCheckResourceAttr(resourceName, "email", "test.user@test.com"),
-					resource.TestCheckResourceAttr(resourceName, "role_assignments.name.0", "Read Only"),
-					resource.TestCheckResourceAttr(resourceName, "role_assignments.sites.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "role_assignments.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "role_assignments.0.name.0", "Read Only"),
+					resource.TestCheckResourceAttr(resourceName, "role_assignments.0.sites.0", "Lab"),
 				),
 			},
 			{
@@ -45,10 +46,10 @@ resource "armis_user" "test" {
   username = "test.user@test.com"
   email    = "test.user@test.com"
 
-  role_assignments = {
+  role_assignments = [{
     name  = ["Read Only"]
     sites = ["Lab"]
-  }
+  }]
 }
 `
 }

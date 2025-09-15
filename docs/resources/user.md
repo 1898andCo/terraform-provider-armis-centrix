@@ -4,15 +4,14 @@ page_title: "armis_user Resource - armis"
 subcategory: ""
 description: |-
   Provides an Armis user
-  
-  	The resource provisions a user with the ability to define location, email, roles, and role assignments.
+  The resource provisions a user with the ability to define location, email, roles, and role assignments.
 ---
 
 # armis_user (Resource)
 
 Provides an Armis user
 
-		The resource provisions a user with the ability to define location, email, roles, and role assignments.
+The resource provisions a user with the ability to define location, email, roles, and role assignments.
 
 ## Example Usage
 
@@ -25,10 +24,10 @@ resource "armis_user" "manager" {
   username = "lab.manager@lab.com"
   email    = "lab.manager@lab.com"
 
-  role_assignments = {
+  role_assignments = [{
     name  = ["Asset Manager", "User Manager", "Integrations Manager"]
     sites = ["Lab"]
-  }
+  }]
 }
 ```
 
@@ -39,7 +38,7 @@ resource "armis_user" "manager" {
 
 - `email` (String) The email address of the user.
 - `name` (String) The full name of the user.
-- `role_assignments` (Attributes) Role assignments for the user. (see [below for nested schema](#nestedatt--role_assignments))
+- `role_assignments` (Attributes List) Role assignments for the user. (see [below for nested schema](#nestedatt--role_assignments))
 - `username` (String) The unique username of the user.
 
 ### Optional
