@@ -13,6 +13,7 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -168,6 +169,7 @@ func makeTypesStringSlice(in []string) []types.String {
 	return out
 }
 
+// normalize nil -> empty slices
 func normalizeRoleAssignment(v roleAssignment) roleAssignment {
 	if v.Name == nil {
 		v.Name = []types.String{}
@@ -178,26 +180,7 @@ func normalizeRoleAssignment(v roleAssignment) roleAssignment {
 	return v
 }
 
-func mapRoleAssignmentsToState(api []armis.RoleAssignment) roleAssignment {
-	var ra roleAssignment
-	if len(api) > 0 {
-		if len(api[0].Name) > 0 {
-			ra.Name = makeTypesStringSlice(api[0].Name)
-		} else {
-			ra.Name = []types.String{}
-		}
-		if len(api[0].Sites) > 0 {
-			ra.Sites = makeTypesStringSlice(api[0].Sites)
-		} else {
-			ra.Sites = []types.String{}
-		}
-	} else {
-		ra.Name = []types.String{}
-		ra.Sites = []types.String{}
-	}
-	return ra
-}
-
+// per-field fallback: only overwrite a field when API provides a non-empty value for that field
 func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignment) roleAssignment {
 	fb := normalizeRoleAssignment(fallback)
 	if len(api) == 0 {
@@ -221,16 +204,19 @@ func mapRoleAssignmentsPerField(api []armis.RoleAssignment, fallback roleAssignm
 
 // --- CRUD ---
 
+// Create creates the resource and sets the initial Terraform state.
 func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan userResourceModel
 	tflog.Info(ctx, "Creating user")
 
+	// Parse the plan from Terraform
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Map the Terraform model to the API's user struct
 	roleAssignments := []armis.RoleAssignment{
 		{
 			Name:  convertToStringSlice(plan.RoleAssignments.Name),
@@ -248,6 +234,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		RoleAssignment: roleAssignments,
 	}
 
+	// Create the user via the client
 	newUser, err := r.client.CreateUser(ctx, user)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -257,7 +244,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	// Map API fields
+	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(newUser.ID))
 	plan.Name = types.StringValue(newUser.Name)
 	plan.Phone = types.StringValue(newUser.Phone)
@@ -269,23 +256,27 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	// Keep plan lists unless API provides non-empty values per field
 	plan.RoleAssignments = mapRoleAssignmentsPerField(newUser.RoleAssignment, plan.RoleAssignments)
 
+	// Save the state
 	tflog.Info(ctx, "Setting state for user")
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 }
 
+// Read user resource information.
 func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Get current state
 	var state userResourceModel
 	tflog.Info(ctx, "Retrieving current state")
-
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Get refreshed user value from Armis
 	user, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
+		// Handle 404 Not Found by removing resource from state
 		if strings.Contains(err.Error(), "Status Code: 404") {
 			tflog.Warn(ctx, "User not found, removing from state", map[string]any{
 				"user_id": state.ID.ValueString(),
@@ -293,16 +284,23 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("Error Reading Armis User", fmt.Sprintf("Failed to fetch user: %v", err))
-		return
-	}
-	if user == nil {
-		tflog.Warn(ctx, "User not found, removing from state", map[string]any{"user_id": state.ID.ValueString()})
-		resp.State.RemoveResource(ctx)
+
+		resp.Diagnostics.AddError(
+			"Error Reading Armis User",
+			fmt.Sprintf("Failed to fetch user: %v", err),
+		)
 		return
 	}
 
-	// Refresh scalar fields
+	if user == nil {
+		resp.State.RemoveResource(ctx)
+		tflog.Warn(ctx, "User not found, removing from state", map[string]any{
+			"user_id": state.ID.ValueString(),
+		})
+		return
+	}
+
+	// Overwrite users with refreshed state (scalars)
 	state.Name = types.StringValue(user.Name)
 	state.Phone = types.StringValue(user.Phone)
 	state.Email = types.StringValue(user.Email)
@@ -310,14 +308,17 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Title = types.StringValue(user.Title)
 	state.Username = types.StringValue(user.Username)
 
-	// Per-field fallback: keep existing state elements if API omits them
+	// Per-field fallback: keep existing state lists if API omits them
 	state.RoleAssignments = mapRoleAssignmentsPerField(user.RoleAssignment, state.RoleAssignments)
 
+	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 }
 
+// Update updates the resource.
 func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
 	var plan userResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -325,6 +326,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// Retrieve the current state to get the user ID
 	var state userResourceModel
 	diags = req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -332,11 +334,16 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// Validate that the user ID is available
 	if state.ID.IsNull() || state.ID.ValueString() == "" {
-		resp.Diagnostics.AddError("Error Updating User", "The user ID is missing from the state. This is required to update the user.")
+		resp.Diagnostics.AddError(
+			"Error Updating User",
+			"The user ID is missing from the state. This is required to update the user.",
+		)
 		return
 	}
 
+	// Map the Terraform model to the API's user struct
 	roleAssignments := []armis.RoleAssignment{
 		{
 			Name:  convertToStringSlice(plan.RoleAssignments.Name),
@@ -354,19 +361,26 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		RoleAssignment: roleAssignments,
 	}
 
+	// Update user
 	_, err := r.client.UpdateUser(ctx, user, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error Updating Armis user", "Could not update user, unexpected error: "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error Updating Armis user",
+			"Could not update user, unexpected error: "+err.Error(),
+		)
 		return
 	}
 
 	updatedUser, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error Reading Armis User", "Could not read Armis user ID "+state.ID.ValueString()+": "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error Reading Armis User",
+			"Could not read Armis user ID "+state.ID.ValueString()+": "+err.Error(),
+		)
 		return
 	}
 
-	// Map API fields
+	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(updatedUser.ID))
 	plan.Name = types.StringValue(updatedUser.Name)
 	plan.Phone = types.StringValue(updatedUser.Phone)
@@ -382,7 +396,9 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	resp.Diagnostics.Append(diags...)
 }
 
+// Delete deletes the resource.
 func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
 	var state userResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -390,9 +406,13 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
+	// Delete existing user
 	success, err := r.client.DeleteUser(ctx, state.ID.ValueString())
 	if err != nil || !success {
-		resp.Diagnostics.AddError("Error Deleting Armis user", "Could not delete user, unexpected error: "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error Deleting Armis user",
+			"Could not delete user, unexpected error: "+err.Error(),
+		)
 		return
 	}
 }
