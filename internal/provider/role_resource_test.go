@@ -5,6 +5,7 @@ package provider_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -13,8 +14,9 @@ import (
 
 func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
-	// Generate a unique, lowercase name to avoid collisions between runs.
-	rName := fmt.Sprintf("tfacc-role-%s", acctest.RandStringFromCharSet(8, "abcdefghijklmnopqrstuvwxyz"))
+
+	// Readable, unique, and guaranteed lowercase.
+	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-role"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
