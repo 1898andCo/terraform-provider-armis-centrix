@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// ---------- request builder ----------
-
 func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	return armis.RoleSettings{
 		Name: role.Name.ValueString(),
@@ -348,8 +346,6 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 		},
 	}
 }
-
-// ---------- state builders ----------
 
 func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) RoleResourceModel {
 	// Ensure all nested pointers exist to avoid nil dereferences.
