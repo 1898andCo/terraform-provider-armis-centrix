@@ -11,10 +11,12 @@ import (
 
 func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+
 			{
 				Config: testAccRoleResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -64,6 +66,12 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
