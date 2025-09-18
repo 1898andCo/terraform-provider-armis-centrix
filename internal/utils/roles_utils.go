@@ -347,8 +347,6 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	}
 }
 
-// ensureRoleModelTree allocates any nil nested pointers in the RoleResourceModel
-// so subsequent field assignments in BuildRoleResourceModel won't panic.
 func ensureRoleModelTree(m RoleResourceModel) RoleResourceModel {
 	if m.Permissions == nil {
 		m.Permissions = &PermissionsModel{}

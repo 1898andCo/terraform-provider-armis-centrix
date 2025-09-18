@@ -15,14 +15,13 @@ import (
 func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
 
-	// Readable, unique, and guaranteed lowercase.
 	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-role"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			// Step 1: create and verify attributes
+
 			{
 				Config: testAccRoleResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -73,13 +72,11 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
 			},
-			// Step 2: import the created role and verify state
+
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// If any computed-only attrs cause flakiness, ignore them here:
-				// ImportStateVerifyIgnore: []string{"created_at", "updated_at"},
 			},
 		},
 	})
