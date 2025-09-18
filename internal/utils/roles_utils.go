@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+// ---------- request builder ----------
+
 func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	return armis.RoleSettings{
 		Name: role.Name.ValueString(),
@@ -347,144 +349,13 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 	}
 }
 
-func ensureRoleModelTree(m RoleResourceModel) RoleResourceModel {
-	if m.Permissions == nil {
-		m.Permissions = &PermissionsModel{}
-	}
-
-	// Advanced Permissions
-	if m.Permissions.AdvancedPermissions == nil {
-		m.Permissions.AdvancedPermissions = &AdvancedPermissionsModel{}
-	}
-	if m.Permissions.AdvancedPermissions.Behavioral == nil {
-		m.Permissions.AdvancedPermissions.Behavioral = &BehavioralModel{}
-	}
-	if m.Permissions.AdvancedPermissions.Device == nil {
-		m.Permissions.AdvancedPermissions.Device = &DeviceAdvancedModel{}
-	}
-
-	// Alert
-	if m.Permissions.Alert == nil {
-		m.Permissions.Alert = &AlertModel{}
-	}
-	if m.Permissions.Alert.Manage == nil {
-		m.Permissions.Alert.Manage = &ManageAlertsModel{}
-	}
-
-	// Device
-	if m.Permissions.Device == nil {
-		m.Permissions.Device = &DeviceModel{}
-	}
-	if m.Permissions.Device.Manage == nil {
-		m.Permissions.Device.Manage = &ManageDeviceModel{}
-	}
-	if m.Permissions.Device.Manage.Enforce == nil {
-		m.Permissions.Device.Manage.Enforce = &EnforceModel{}
-	}
-
-	// Policy
-	if m.Permissions.Policy == nil {
-		m.Permissions.Policy = &PolicyModel{}
-	}
-
-	// Report
-	if m.Permissions.Report == nil {
-		m.Permissions.Report = &ReportModel{}
-	}
-	if m.Permissions.Report.Manage == nil {
-		m.Permissions.Report.Manage = &ManageReportModel{}
-	}
-
-	// Risk Factor
-	if m.Permissions.RiskFactor == nil {
-		m.Permissions.RiskFactor = &RiskFactorModel{}
-	}
-	if m.Permissions.RiskFactor.Manage == nil {
-		m.Permissions.RiskFactor.Manage = &ManageRiskModel{}
-	}
-	if m.Permissions.RiskFactor.Manage.Customization == nil {
-		m.Permissions.RiskFactor.Manage.Customization = &CustomizationModel{}
-	}
-	if m.Permissions.RiskFactor.Manage.Status == nil {
-		m.Permissions.RiskFactor.Manage.Status = &StatusModel{}
-	}
-
-	// Settings
-	if m.Permissions.Settings == nil {
-		m.Permissions.Settings = &SettingsModel{}
-	}
-	if m.Permissions.Settings.Boundary == nil {
-		m.Permissions.Settings.Boundary = &BoundaryModel{}
-	}
-	if m.Permissions.Settings.Boundary.Manage == nil {
-		m.Permissions.Settings.Boundary.Manage = &ManageBoundaryModel{}
-	}
-	if m.Permissions.Settings.BusinessImpact == nil {
-		m.Permissions.Settings.BusinessImpact = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.Collector == nil {
-		m.Permissions.Settings.Collector = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.CustomProperties == nil {
-		m.Permissions.Settings.CustomProperties = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.Integration == nil {
-		m.Permissions.Settings.Integration = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.InternalIps == nil {
-		m.Permissions.Settings.InternalIps = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.Notifications == nil {
-		m.Permissions.Settings.Notifications = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.OIDC == nil {
-		m.Permissions.Settings.OIDC = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.SAML == nil {
-		m.Permissions.Settings.SAML = &ManageAndReadModel{}
-	}
-	if m.Permissions.Settings.SitesAndSensors == nil {
-		m.Permissions.Settings.SitesAndSensors = &SitesAndSensorsModel{}
-	}
-	if m.Permissions.Settings.SitesAndSensors.Manage == nil {
-		m.Permissions.Settings.SitesAndSensors.Manage = &ManageSitesAndSensorsModel{}
-	}
-	if m.Permissions.Settings.UsersAndRoles == nil {
-		m.Permissions.Settings.UsersAndRoles = &UsersAndRolesModel{}
-	}
-	if m.Permissions.Settings.UsersAndRoles.Manage == nil {
-		m.Permissions.Settings.UsersAndRoles.Manage = &ManageUsersAndRolesModel{}
-	}
-	if m.Permissions.Settings.UsersAndRoles.Manage.Roles == nil {
-		m.Permissions.Settings.UsersAndRoles.Manage.Roles = &ManageRolesModel{}
-	}
-	if m.Permissions.Settings.UsersAndRoles.Manage.Users == nil {
-		m.Permissions.Settings.UsersAndRoles.Manage.Users = &ManageUsersModel{}
-	}
-
-	// User
-	if m.Permissions.User == nil {
-		m.Permissions.User = &UserModel{}
-	}
-	if m.Permissions.User.Manage == nil {
-		m.Permissions.User.Manage = &ManageUserModel{}
-	}
-
-	// Vulnerability
-	if m.Permissions.Vulnerability == nil {
-		m.Permissions.Vulnerability = &VulnerabilityModel{}
-	}
-	if m.Permissions.Vulnerability.Manage == nil {
-		m.Permissions.Vulnerability.Manage = &ManageVulnerabilityModel{}
-	}
-
-	return m
-}
+// ---------- state builders ----------
 
 func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) RoleResourceModel {
-	// Allocate missing nested structs so assignments below are safe (prevents nil-pointer panic).
-	result := ensureRoleModelTree(model)
+	// Ensure all nested pointers exist to avoid nil dereferences.
+	model = ensureRoleModelTree(model)
 
+	result := model
 	result.Name = types.StringValue(role.Name)
 	result.ID = types.StringValue(strconv.Itoa(role.ID))
 
@@ -830,4 +701,79 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 			},
 		},
 	}
+}
+
+// ---------- nil-safe model initializers (refactor to keep gocognit happy) ----------
+
+// initIfNil ensures a *T is non-nil by allocating it if needed.
+// Keeping the conditional inside a tiny helper keeps callers branch-free
+// and dramatically lowers cognitive complexity in the callers.
+func initIfNil[T any](p **T) {
+	if *p == nil {
+		*p = new(T)
+	}
+}
+
+// ensureRoleModelTree guarantees every pointer in RoleResourceModel is non-nil,
+// so that BuildRoleResourceModel can populate fields without panics.
+// NOTE: This function intentionally has no branching; it relies on initIfNil.
+func ensureRoleModelTree(m RoleResourceModel) RoleResourceModel {
+	// root
+	initIfNil(&m.Permissions)
+
+	// advanced_permissions
+	initIfNil(&m.Permissions.AdvancedPermissions)
+	initIfNil(&m.Permissions.AdvancedPermissions.Behavioral)
+	initIfNil(&m.Permissions.AdvancedPermissions.Device)
+
+	// alert
+	initIfNil(&m.Permissions.Alert)
+	initIfNil(&m.Permissions.Alert.Manage)
+
+	// device
+	initIfNil(&m.Permissions.Device)
+	initIfNil(&m.Permissions.Device.Manage)
+	initIfNil(&m.Permissions.Device.Manage.Enforce)
+
+	// policy
+	initIfNil(&m.Permissions.Policy)
+
+	// report
+	initIfNil(&m.Permissions.Report)
+	initIfNil(&m.Permissions.Report.Manage)
+
+	// risk_factor
+	initIfNil(&m.Permissions.RiskFactor)
+	initIfNil(&m.Permissions.RiskFactor.Manage)
+	initIfNil(&m.Permissions.RiskFactor.Manage.Customization)
+	initIfNil(&m.Permissions.RiskFactor.Manage.Status)
+
+	// settings (and nested)
+	initIfNil(&m.Permissions.Settings)
+	initIfNil(&m.Permissions.Settings.Boundary)
+	initIfNil(&m.Permissions.Settings.Boundary.Manage)
+	initIfNil(&m.Permissions.Settings.BusinessImpact)
+	initIfNil(&m.Permissions.Settings.Collector)
+	initIfNil(&m.Permissions.Settings.CustomProperties)
+	initIfNil(&m.Permissions.Settings.Integration)
+	initIfNil(&m.Permissions.Settings.InternalIps)
+	initIfNil(&m.Permissions.Settings.Notifications)
+	initIfNil(&m.Permissions.Settings.OIDC)
+	initIfNil(&m.Permissions.Settings.SAML)
+	initIfNil(&m.Permissions.Settings.SitesAndSensors)
+	initIfNil(&m.Permissions.Settings.SitesAndSensors.Manage)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles.Manage)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles.Manage.Roles)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles.Manage.Users)
+
+	// user
+	initIfNil(&m.Permissions.User)
+	initIfNil(&m.Permissions.User.Manage)
+
+	// vulnerability
+	initIfNil(&m.Permissions.Vulnerability)
+	initIfNil(&m.Permissions.Vulnerability.Manage)
+
+	return m
 }
