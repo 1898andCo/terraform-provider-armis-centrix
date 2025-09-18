@@ -4,23 +4,27 @@
 package provider_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
+	// Generate a unique, lowercase name to avoid collisions between runs.
+	rName := fmt.Sprintf("tfacc-role-%s", acctest.RandStringFromCharSet(8, "abcdefghijklmnopqrstuvwxyz"))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-
+			// Step 1: create and verify attributes
 			{
-				Config: testAccRoleResourceConfig(),
+				Config: testAccRoleResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.all", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.behavioral.all", "false"),
@@ -67,20 +71,22 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
 			},
-
+			// Step 2: import the created role and verify state
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// If any computed-only attrs cause flakiness, ignore them here:
+				// ImportStateVerifyIgnore: []string{"created_at", "updated_at"},
 			},
 		},
 	})
 }
 
-func testAccRoleResourceConfig() string {
-	return `
+func testAccRoleResourceConfig(name string) string {
+	return fmt.Sprintf(`
 resource "armis_role" "test" {
-  name = "test"
+  name = %q
 
   permissions = {
     advanced_permissions = {
@@ -284,5 +290,5 @@ resource "armis_role" "test" {
     }
   }
 }
-`
+`, name)
 }
