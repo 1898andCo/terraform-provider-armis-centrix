@@ -703,8 +703,6 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 	}
 }
 
-// ---------- nil-safe model initializers (refactor to keep gocognit happy) ----------
-
 // initIfNil ensures a *T is non-nil by allocating it if needed.
 // Keeping the conditional inside a tiny helper keeps callers branch-free
 // and dramatically lowers cognitive complexity in the callers.
