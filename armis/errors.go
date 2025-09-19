@@ -19,6 +19,9 @@ var (
 	ErrCollectorName = errors.New("collector name cannot be empty")
 	ErrCollectorType = errors.New("collector type cannot be empty")
 
+	// Boundary errors.
+	ErrBoundaryID = errors.New("boundary ID cannot be empty")
+
 	// Policy errors.
 	ErrPolicyID          = errors.New("policy ID cannot be empty")
 	ErrPolicyName        = errors.New("policy name cannot be empty")
