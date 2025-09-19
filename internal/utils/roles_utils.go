@@ -348,6 +348,9 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 }
 
 func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) RoleResourceModel {
+	// Ensure all nested pointers exist to avoid nil dereferences.
+	model = ensureRoleModelTree(model)
+
 	result := model
 	result.Name = types.StringValue(role.Name)
 	result.ID = types.StringValue(strconv.Itoa(role.ID))
@@ -694,4 +697,77 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 			},
 		},
 	}
+}
+
+// initIfNil ensures a *T is non-nil by allocating it if needed.
+// Keeping the conditional inside a tiny helper keeps callers branch-free
+// and dramatically lowers cognitive complexity in the callers.
+func initIfNil[T any](p **T) {
+	if *p == nil {
+		*p = new(T)
+	}
+}
+
+// ensureRoleModelTree guarantees every pointer in RoleResourceModel is non-nil,
+// so that BuildRoleResourceModel can populate fields without panics.
+// NOTE: This function intentionally has no branching; it relies on initIfNil.
+func ensureRoleModelTree(m RoleResourceModel) RoleResourceModel {
+	// root
+	initIfNil(&m.Permissions)
+
+	// advanced_permissions
+	initIfNil(&m.Permissions.AdvancedPermissions)
+	initIfNil(&m.Permissions.AdvancedPermissions.Behavioral)
+	initIfNil(&m.Permissions.AdvancedPermissions.Device)
+
+	// alert
+	initIfNil(&m.Permissions.Alert)
+	initIfNil(&m.Permissions.Alert.Manage)
+
+	// device
+	initIfNil(&m.Permissions.Device)
+	initIfNil(&m.Permissions.Device.Manage)
+	initIfNil(&m.Permissions.Device.Manage.Enforce)
+
+	// policy
+	initIfNil(&m.Permissions.Policy)
+
+	// report
+	initIfNil(&m.Permissions.Report)
+	initIfNil(&m.Permissions.Report.Manage)
+
+	// risk_factor
+	initIfNil(&m.Permissions.RiskFactor)
+	initIfNil(&m.Permissions.RiskFactor.Manage)
+	initIfNil(&m.Permissions.RiskFactor.Manage.Customization)
+	initIfNil(&m.Permissions.RiskFactor.Manage.Status)
+
+	// settings (and nested)
+	initIfNil(&m.Permissions.Settings)
+	initIfNil(&m.Permissions.Settings.Boundary)
+	initIfNil(&m.Permissions.Settings.Boundary.Manage)
+	initIfNil(&m.Permissions.Settings.BusinessImpact)
+	initIfNil(&m.Permissions.Settings.Collector)
+	initIfNil(&m.Permissions.Settings.CustomProperties)
+	initIfNil(&m.Permissions.Settings.Integration)
+	initIfNil(&m.Permissions.Settings.InternalIps)
+	initIfNil(&m.Permissions.Settings.Notifications)
+	initIfNil(&m.Permissions.Settings.OIDC)
+	initIfNil(&m.Permissions.Settings.SAML)
+	initIfNil(&m.Permissions.Settings.SitesAndSensors)
+	initIfNil(&m.Permissions.Settings.SitesAndSensors.Manage)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles.Manage)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles.Manage.Roles)
+	initIfNil(&m.Permissions.Settings.UsersAndRoles.Manage.Users)
+
+	// user
+	initIfNil(&m.Permissions.User)
+	initIfNil(&m.Permissions.User.Manage)
+
+	// vulnerability
+	initIfNil(&m.Permissions.Vulnerability)
+	initIfNil(&m.Permissions.Vulnerability.Manage)
+
+	return m
 }

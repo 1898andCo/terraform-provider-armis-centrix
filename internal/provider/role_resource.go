@@ -11,6 +11,7 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -21,8 +22,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &roleResource{}
-	_ resource.ResourceWithConfigure = &roleResource{}
+	_ resource.Resource                = &roleResource{}
+	_ resource.ResourceWithConfigure   = &roleResource{}
+	_ resource.ResourceWithImportState = &roleResource{}
 )
 
 type roleResource struct {
@@ -727,6 +729,11 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 		},
 	}
+}
+
+// ImportState supports `terraform import` and import blocks by passing the ID through to state.
+func (r *roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // Create creates the resource and sets the initial Terraform state.
