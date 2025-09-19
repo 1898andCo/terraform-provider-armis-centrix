@@ -3,10 +3,16 @@
 
 package armis
 
-// BoundaryAPIResponse struct to match the entire API response.
-type BoundaryAPIResponse struct {
-	Data    Site `json:"data"`
-	Success bool `json:"success,omitempty"`
+// GetBoundaries struct to match the entire API response.
+type GetBoundaries struct {
+	Data    Boundaries `json:"data"`
+	Success bool       `json:"success,omitempty"`
+}
+
+// GetBoundaryByID struct to match the entire API response.
+type GetBoundaryByID struct {
+	Data    BoundarySettings `json:"data"`
+	Success bool             `json:"success,omitempty"`
 }
 
 // Boundaries represents a collection of boundaries.
