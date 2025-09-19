@@ -9,31 +9,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAcc_UserDataSource(t *testing.T) {
+func TestAcc_BoundaryDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig(),
+				Config: testAccBoundaryDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.#"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.id"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.name"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.email"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.is_active"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.role_assignment.#"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.role_assignment.0.name.#"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.two_factor_authentication"),
-					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.username"),
+					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.#"),
+					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.id"),
+					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.name"),
+					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.affected_sites"),
+					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.rule_aql.and.#"),
+					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.rule_aql.or.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccUserDataSourceConfig() string {
+func testAccBoundaryDataSourceConfig() string {
 	return `
-data "armis_user" "test" {}
+data "armis_boundary" "test" {}
 `
 }
