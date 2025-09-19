@@ -9,28 +9,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAcc_BoundaryDataSource(t *testing.T) {
+func TestAcc_UserDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBoundaryDataSourceConfig(),
+				Config: testAccUserDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.#"),
-					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.id"),
-					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.name"),
-					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.affected_sites"),
-					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.rule_aql.and.#"),
-					resource.TestCheckResourceAttrSet("data.armis_boundary.test", "boundaries.0.rule_aql.or.#"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.#"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.id"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.name"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.email"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.is_active"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.role_assignment.#"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.role_assignment.0.name.#"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.two_factor_authentication"),
+					resource.TestCheckResourceAttrSet("data.armis_user.test", "users.0.username"),
 				),
 			},
 		},
 	})
 }
 
-func testAccBoundaryDataSourceConfig() string {
+func testAccUserDataSourceConfig() string {
 	return `
-data "armis_boundary" "test" {}
+data "armis_user" "test" {}
 `
 }
