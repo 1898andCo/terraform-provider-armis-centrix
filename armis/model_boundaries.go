@@ -25,7 +25,7 @@ type Boundaries struct {
 
 // BoundarySettings struct for individual boundary settings.
 type BoundarySettings struct {
-	ID            string  `json:"id,omitempty"`
+	ID            int     `json:"id,omitempty"`
 	AffectedSites string  `json:"affectedSites,omitempty"`
 	Name          string  `json:"name,omitempty"`
 	RuleAQL       RuleAQL `json:"ruleAql,omitempty"`
