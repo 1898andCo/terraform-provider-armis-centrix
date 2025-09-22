@@ -4,21 +4,28 @@
 package provider_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
+
+	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-role"))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+
 			{
-				Config: testAccRoleResourceConfig(),
+				Config: testAccRoleResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.all", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.advanced_permissions.behavioral.all", "false"),
@@ -65,14 +72,20 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.report.manage.edit", "true"),
 				),
 			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func testAccRoleResourceConfig() string {
-	return `
+func testAccRoleResourceConfig(name string) string {
+	return fmt.Sprintf(`
 resource "armis_role" "test" {
-  name = "test"
+  name = %q
 
   permissions = {
     advanced_permissions = {
@@ -276,5 +289,5 @@ resource "armis_role" "test" {
     }
   }
 }
-`
+`, name)
 }
