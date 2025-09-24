@@ -4,21 +4,26 @@
 package provider_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_PolicyResource(t *testing.T) {
 	resourceName := "armis_policy.test"
+
+	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-policy"))
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyResourceConfig(),
+				Config: testAccPolicyResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "Test Security Alert Policy"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is an example security policy with all options."),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "ACTIVITY"),
@@ -43,10 +48,10 @@ func TestAcc_PolicyResource(t *testing.T) {
 	})
 }
 
-func testAccPolicyResourceConfig() string {
-	return `
+func testAccPolicyResourceConfig(name string) string {
+	return fmt.Sprintf(`
 resource "armis_policy" "test" {
-  name                = "Test Security Alert Policy"
+  name                = %q
   description         = "This is an example security policy with all options."
   enabled             = true
   rule_type           = "ACTIVITY"
@@ -74,5 +79,5 @@ resource "armis_policy" "test" {
     ]
   }
 }
-`
+`, name)
 }

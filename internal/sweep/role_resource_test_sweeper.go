@@ -32,7 +32,7 @@ func SweepArmisRoles(name string) *resource.Sweeper {
 				return fmt.Errorf("error listing Armis roles: %w", err)
 			}
 
-			prefix := "test"
+			prefix := "tfacc"
 			for _, role := range roles {
 				if strings.HasPrefix(role.Name, prefix) {
 					log.Printf("[INFO] Deleting Armis role: %s", role.Name)
