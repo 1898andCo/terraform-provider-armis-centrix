@@ -11,6 +11,7 @@ import (
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,8 +23,9 @@ import (
 
 // Ensure the implementation satisfies the expected interfaces.
 var (
-	_ resource.Resource              = &collectorResource{}
-	_ resource.ResourceWithConfigure = &collectorResource{}
+	_ resource.Resource                = &collectorResource{}
+	_ resource.ResourceWithConfigure   = &collectorResource{}
+	_ resource.ResourceWithImportState = &collectorResource{}
 )
 
 type collectorResource struct {
@@ -279,4 +281,8 @@ func (r *collectorResource) Delete(ctx context.Context, req resource.DeleteReque
 		)
 		return
 	}
+}
+
+func (r *collectorResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -27,6 +27,11 @@ func TestAcc_CollectorResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "OVA"),
 				),
 			},
+			// Test importing a collector into state
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
 		},
 	})
 }
