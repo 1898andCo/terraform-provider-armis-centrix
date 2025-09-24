@@ -39,3 +39,22 @@ resource "armis_collector" "test_collector" {
 - `license_key` (String, Sensitive) The license key associated with the collector.
 - `password` (String, Sensitive) The password associated with the collector.
 - `user` (String) The unique username of the user.
+
+## Import
+
+Import is supported using the following syntax:
+
+In Terraform v1.5.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `id` attribute, for example:
+
+```terraform
+import {
+  to = armis_collector.example
+  id = "8"
+}
+```
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+terraform import armis_collector.example 8
+```
