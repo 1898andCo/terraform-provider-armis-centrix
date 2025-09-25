@@ -16,12 +16,10 @@ func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
 
 	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-role"))
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccRoleResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(

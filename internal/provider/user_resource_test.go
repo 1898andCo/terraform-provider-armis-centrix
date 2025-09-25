@@ -4,21 +4,26 @@
 package provider_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc_UserResource(t *testing.T) {
 	resourceName := "armis_user.test"
+
+	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-user"))
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserResourceConfig(),
+				Config: testAccUserResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "phone", "8675309"),
 					resource.TestCheckResourceAttr(resourceName, "location", "Houston"),
 					resource.TestCheckResourceAttr(resourceName, "username", "test.user@test.com"),
@@ -36,10 +41,10 @@ func TestAcc_UserResource(t *testing.T) {
 	})
 }
 
-func testAccUserResourceConfig() string {
-	return `
+func testAccUserResourceConfig(name string) string {
+	return fmt.Sprintf(`
 resource "armis_user" "test" {
-  name = "test"
+  name = %q
 
   phone    = "8675309"
   location = "Houston"
@@ -51,5 +56,5 @@ resource "armis_user" "test" {
     sites = ["Lab"]
   }]
 }
-`
+`, name)
 }

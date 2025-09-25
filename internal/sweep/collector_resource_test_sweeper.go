@@ -33,7 +33,7 @@ func SweepArmisCollectors(name string) *resource.Sweeper {
 				return fmt.Errorf("error getting Armis collectors: %w", err)
 			}
 
-			prefix := "test."
+			prefix := "tfacc"
 			for _, collector := range collectors {
 				if strings.HasPrefix(collector.Name, prefix) {
 					log.Printf("[INFO] Deleting Armis collector: %s", collector.Name)

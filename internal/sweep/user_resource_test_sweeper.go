@@ -33,7 +33,7 @@ func SweepArmisUsers(name string) *resource.Sweeper {
 				return fmt.Errorf("error getting Armis users: %w", err)
 			}
 
-			prefix := "test."
+			prefix := "tfacc"
 			for _, user := range users {
 				if strings.HasPrefix(user.Username, prefix) {
 					log.Printf("[INFO] Deleting Armis user: %s", user.Username)
