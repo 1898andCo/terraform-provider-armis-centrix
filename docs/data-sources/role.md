@@ -101,7 +101,6 @@ Read-Only:
 
 - `all` (Boolean) Indicates if all alert management permissions are enabled.
 - `resolve` (Boolean) Permission to resolve alerts.
-- `suppress` (Boolean) Permission to suppress alerts.
 - `whitelist_devices` (Boolean) Permission to whitelist devices in alerts.
 
 

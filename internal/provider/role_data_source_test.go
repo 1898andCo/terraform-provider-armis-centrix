@@ -33,7 +33,6 @@ func TestAcc_RoleDataSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.armis_role.test", "permissions.alert.all"),
 					resource.TestCheckResourceAttrSet("data.armis_role.test", "permissions.alert.manage.all"),
 					resource.TestCheckResourceAttrSet("data.armis_role.test", "permissions.alert.manage.resolve"),
-					resource.TestCheckResourceAttrSet("data.armis_role.test", "permissions.alert.manage.suppress"),
 					resource.TestCheckResourceAttrSet("data.armis_role.test", "permissions.alert.manage.whitelist_devices"),
 					resource.TestCheckResourceAttrSet("data.armis_role.test", "permissions.alert.read"),
 				),

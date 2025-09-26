@@ -56,9 +56,6 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					Resolve: armis.Permission{
 						All: role.Permissions.Alert.Manage.Resolve.ValueBool(),
 					},
-					Suppress: armis.Permission{
-						All: role.Permissions.Alert.Manage.Suppress.ValueBool(),
-					},
 					WhitelistDevices: armis.Permission{
 						All: role.Permissions.Alert.Manage.WhitelistDevices.ValueBool(),
 					},
@@ -378,7 +375,6 @@ func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) R
 	// Alert Manage Permissions
 	result.Permissions.Alert.Manage.All = types.BoolValue(role.Permissions.Alert.Manage.All)
 	result.Permissions.Alert.Manage.Resolve = types.BoolValue(role.Permissions.Alert.Manage.Resolve.All)
-	result.Permissions.Alert.Manage.Suppress = types.BoolValue(role.Permissions.Alert.Manage.Suppress.All)
 	result.Permissions.Alert.Manage.WhitelistDevices = types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All)
 
 	// Device Permissions
@@ -555,7 +551,6 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 				Manage: &ManageAlertsModel{
 					All:              types.BoolValue(role.Permissions.Alert.Manage.All),
 					Resolve:          types.BoolValue(role.Permissions.Alert.Manage.Resolve.All),
-					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
 					WhitelistDevices: types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All),
 				},
 				Read: types.BoolValue(role.Permissions.Alert.Read.All),

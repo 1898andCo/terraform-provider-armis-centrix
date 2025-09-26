@@ -37,7 +37,6 @@ func TestCreatingRole(t *testing.T) {
 				Manage: Manage{
 					All:              true,
 					Resolve:          Permission{All: true},
-					Suppress:         Permission{All: true},
 					WhitelistDevices: Permission{All: true},
 				},
 				Read: Permission{All: true},

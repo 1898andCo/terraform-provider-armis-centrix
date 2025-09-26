@@ -70,7 +70,6 @@ type AlertModel struct {
 type ManageAlertsModel struct {
 	All              types.Bool `tfsdk:"all"`
 	Resolve          types.Bool `tfsdk:"resolve"`
-	Suppress         types.Bool `tfsdk:"suppress"`
 	WhitelistDevices types.Bool `tfsdk:"whitelist_devices"`
 }
 

@@ -73,7 +73,6 @@ type Alert struct {
 type Manage struct {
 	All              bool       `json:"all,omitempty"`
 	Resolve          Permission `json:"resolve,omitempty"`
-	Suppress         Permission `json:"suppress,omitempty"`
 	WhitelistDevices Permission `json:"whitelistDevices,omitempty"`
 }
 
