@@ -155,10 +155,6 @@ func (r *roleResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 										Description: "Permission to resolve alerts.",
 										Optional:    true,
 									},
-									"suppress": schema.BoolAttribute{
-										Description: "Permission to suppress alerts.",
-										Optional:    true,
-									},
 									"whitelist_devices": schema.BoolAttribute{
 										Description: "Permission to whitelist devices in alerts.",
 										Optional:    true,
