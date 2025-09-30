@@ -152,10 +152,6 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 										Description: "Permission to resolve alerts.",
 										Computed:    true,
 									},
-									"suppress": schema.BoolAttribute{
-										Description: "Permission to suppress alerts.",
-										Computed:    true,
-									},
 									"whitelist_devices": schema.BoolAttribute{
 										Description: "Permission to whitelist devices in alerts.",
 										Computed:    true,

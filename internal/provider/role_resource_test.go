@@ -41,7 +41,6 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.read", "true"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.all", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.resolve", "true"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.suppress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.whitelist_devices", "true"),
 
 					resource.TestCheckResourceAttr(resourceName, "permissions.device.all", "false"),
@@ -109,7 +108,6 @@ resource "armis_role" "test" {
       manage = {
         all               = false
         resolve           = true
-        suppress          = false
         whitelist_devices = true
       }
     }
