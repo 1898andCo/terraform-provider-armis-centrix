@@ -255,6 +255,15 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// Update state with the retrieved policy data
 	result := u.ResponseToPolicyFromGet(ctx, getResp)
 
+	if state.Rules != nil && result.Rules != nil {
+		if getResp.Rules.And == nil && !state.Rules.And.IsNull() && !state.Rules.And.IsUnknown() {
+			result.Rules.And = state.Rules.And
+		}
+		if getResp.Rules.Or == nil && !state.Rules.Or.IsNull() && !state.Rules.Or.IsUnknown() {
+			result.Rules.Or = state.Rules.Or
+		}
+	}
+
 	// Preserve the ID and MITRE labels from state
 	result.ID = state.ID
 	result.MitreAttackLabels = state.MitreAttackLabels
@@ -289,6 +298,15 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if plan.Rules != nil && result.Rules != nil {
+		if updateResp.Rules.And == nil && !plan.Rules.And.IsNull() && !plan.Rules.And.IsUnknown() {
+			result.Rules.And = plan.Rules.And
+		}
+		if updateResp.Rules.Or == nil && !plan.Rules.Or.IsNull() && !plan.Rules.Or.IsUnknown() {
+			result.Rules.Or = plan.Rules.Or
+		}
 	}
 
 	// Preserve the ID and MITRE labels
