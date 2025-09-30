@@ -35,11 +35,11 @@ func SweepArmisUsers(name string) *resource.Sweeper {
 
 			prefix := "tfacc"
 			for _, user := range users {
-				if strings.HasPrefix(user.Username, prefix) {
-					log.Printf("[INFO] Deleting Armis user: %s", user.Username)
+				if strings.HasPrefix(user.Name, prefix) {
+					log.Printf("[INFO] Deleting Armis user: %s", user.Name)
 					_, err := client.DeleteUser(ctx, strconv.Itoa(user.ID))
 					if err != nil {
-						log.Printf("[ERROR] Failed to delete Armis user %s: %s", user.Username, err)
+						log.Printf("[ERROR] Failed to delete Armis user %s: %s", user.Name, err)
 					}
 				}
 			}
