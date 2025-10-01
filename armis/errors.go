@@ -38,4 +38,7 @@ var (
 	ErrRoleID       = errors.New("role ID cannot be empty")
 	ErrRoleName     = errors.New("role name cannot be empty")
 	ErrRoleNotFound = errors.New("role not found")
+
+	// Search errors.
+	ErrSearchAQL = errors.New("search AQL cannot be empty")
 )
