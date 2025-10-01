@@ -102,49 +102,148 @@ func ConvertListToActions(list types.List) ([]armis.Action, diag.Diagnostics) {
 		return nil, diags
 	}
 
-	var actionModels []ActionModel
-	diags.Append(list.ElementsAs(context.Background(), &actionModels, false)...)
+	actionModels, extractDiags := extractActionModels(list)
+	diags.Append(extractDiags...)
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	actions := make([]armis.Action, 0, len(actionModels))
-	for _, am := range actionModels {
-		action := armis.Action{
-			Type: am.Type.ValueString(),
-		}
-
-		// Convert params if present
-		if !am.Params.IsNull() && !am.Params.IsUnknown() {
-			var paramsModel ParamsModel
-			diags.Append(am.Params.As(context.Background(), &paramsModel, basetypes.ObjectAsOptions{})...)
-
-			params := armis.Params{
-				Severity: paramsModel.Severity.ValueString(),
-				Title:    paramsModel.Title.ValueString(),
-				Type:     paramsModel.Type.ValueString(),
-				Endpoint: paramsModel.Endpoint.ValueString(),
-				Tags:     ConvertListToStringSlice(paramsModel.Tags),
-			}
-
-			// Convert consolidation if present
-			if !paramsModel.Consolidation.IsNull() && !paramsModel.Consolidation.IsUnknown() {
-				var consolidationModel ConsolidationModel
-				diags.Append(paramsModel.Consolidation.As(context.Background(), &consolidationModel, basetypes.ObjectAsOptions{})...)
-
-				params.Consolidation = armis.Consolidation{
-					Amount: int(consolidationModel.Amount.ValueInt64()),
-					Unit:   consolidationModel.Unit.ValueString(),
-				}
-			}
-
-			action.Params = params
+	for _, model := range actionModels {
+		action, actionDiags := convertActionModel(model)
+		diags.Append(actionDiags...)
+		if diags.HasError() {
+			return nil, diags
 		}
 
 		actions = append(actions, action)
 	}
 
 	return actions, diags
+}
+
+func extractActionModels(list types.List) ([]ActionModel, diag.Diagnostics) {
+	var (
+		models []ActionModel
+		diags  diag.Diagnostics
+	)
+
+	diags.Append(list.ElementsAs(context.Background(), &models, false)...) //nolint:contextcheck
+	return models, diags
+}
+
+func convertActionModel(model ActionModel) (armis.Action, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	action := armis.Action{}
+	if value, ok := stringValue(model.Type); ok {
+		action.Type = value
+	}
+
+	params, hasParams, paramsDiags := paramsFromObject(model.Params)
+	diags.Append(paramsDiags...)
+	if diags.HasError() {
+		return armis.Action{}, diags
+	}
+
+	if hasParams {
+		action.Params = params
+	}
+
+	return action, diags
+}
+
+func paramsFromObject(obj types.Object) (armis.Params, bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if obj.IsNull() || obj.IsUnknown() {
+		return armis.Params{}, false, diags
+	}
+
+	var model ParamsModel
+	diags.Append(obj.As(context.Background(), &model, basetypes.ObjectAsOptions{})...) //nolint:contextcheck
+	if diags.HasError() {
+		return armis.Params{}, false, diags
+	}
+
+	params := armis.Params{}
+	hasParams := false
+
+	if value, ok := stringValue(model.Severity); ok {
+		params.Severity = value
+		hasParams = true
+	}
+	if value, ok := stringValue(model.Title); ok {
+		params.Title = value
+		hasParams = true
+	}
+	if value, ok := stringValue(model.Type); ok {
+		params.Type = value
+		hasParams = true
+	}
+	if value, ok := stringValue(model.Endpoint); ok {
+		params.Endpoint = value
+		hasParams = true
+	}
+	if !model.Tags.IsNull() && !model.Tags.IsUnknown() {
+		params.Tags = ConvertListToStringSlice(model.Tags)
+		if len(params.Tags) > 0 {
+			hasParams = true
+		}
+	}
+
+	consolidation, hasConsolidation, consolidationDiags := consolidationFromObject(model.Consolidation)
+	diags.Append(consolidationDiags...)
+	if hasConsolidation {
+		params.Consolidation = consolidation
+		hasParams = true
+	}
+
+	return params, hasParams, diags
+}
+
+func consolidationFromObject(obj types.Object) (armis.Consolidation, bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if obj.IsNull() || obj.IsUnknown() {
+		return armis.Consolidation{}, false, diags
+	}
+
+	var model ConsolidationModel
+	diags.Append(obj.As(context.Background(), &model, basetypes.ObjectAsOptions{})...) //nolint:contextcheck
+	if diags.HasError() {
+		return armis.Consolidation{}, false, diags
+	}
+
+	consolidation := armis.Consolidation{}
+	hasValue := false
+
+	if value, ok := intValue(model.Amount); ok {
+		consolidation.Amount = value
+		hasValue = true
+	}
+	if value, ok := stringValue(model.Unit); ok {
+		consolidation.Unit = value
+		hasValue = true
+	}
+
+	return consolidation, hasValue, diags
+}
+
+func stringValue(value types.String) (string, bool) {
+	if value.IsNull() || value.IsUnknown() {
+		return "", false
+	}
+
+	return value.ValueString(), true
+}
+
+func intValue(value types.Int64) (int, bool) {
+	if value.IsNull() || value.IsUnknown() {
+		return 0, false
+	}
+
+	return int(value.ValueInt64()), true
 }
 
 // ConvertActionsToList converts []armis.Action to types.List.
@@ -178,41 +277,54 @@ func ConvertActionsToList(actions []armis.Action) types.List {
 		// Convert params
 		var paramsObj types.Object
 
-		// Check if Params has any non-zero values
-		hasParams := action.Params.Severity != "" || action.Params.Title != "" ||
-			action.Params.Type != "" || len(action.Params.Tags) > 0 ||
-			action.Params.Consolidation.Amount != 0 ||
-			action.Params.Consolidation.Unit != ""
+		severityVal := types.StringNull()
+		if action.Params.Severity != "" {
+			severityVal = types.StringValue(action.Params.Severity)
+		}
 
-		// Always include endpoint in hasParams check to preserve its value
-		// even if it's an empty string
-		hasParams = hasParams || action.Params.Endpoint != ""
+		titleVal := types.StringNull()
+		if action.Params.Title != "" {
+			titleVal = types.StringValue(action.Params.Title)
+		}
+
+		typeVal := types.StringNull()
+		if action.Params.Type != "" {
+			typeVal = types.StringValue(action.Params.Type)
+		}
+
+		endpointVal := types.StringNull()
+		if action.Params.Endpoint != "" {
+			endpointVal = types.StringValue(action.Params.Endpoint)
+		}
+
+		tagsVal := ConvertStringSliceToList(action.Params.Tags)
+
+		// Convert consolidation
+		consolidationObj := types.ObjectNull(map[string]attr.Type{
+			"amount": types.Int64Type,
+			"unit":   types.StringType,
+		})
+		if action.Params.Consolidation.Amount != 0 || action.Params.Consolidation.Unit != "" {
+			consolidationAttrs := map[string]attr.Value{
+				"amount": types.Int64Value(int64(action.Params.Consolidation.Amount)),
+				"unit":   types.StringValue(action.Params.Consolidation.Unit),
+			}
+			consolidationObj, _ = types.ObjectValue(map[string]attr.Type{
+				"amount": types.Int64Type,
+				"unit":   types.StringType,
+			}, consolidationAttrs)
+		}
+
+		hasParams := !severityVal.IsNull() || !titleVal.IsNull() || !typeVal.IsNull() ||
+			!endpointVal.IsNull() || !tagsVal.IsNull() || !consolidationObj.IsNull()
 
 		if hasParams {
-			// Convert consolidation
-			var consolidationObj types.Object
-			if action.Params.Consolidation.Amount != 0 || action.Params.Consolidation.Unit != "" {
-				consolidationAttrs := map[string]attr.Value{
-					"amount": types.Int64Value(int64(action.Params.Consolidation.Amount)),
-					"unit":   types.StringValue(action.Params.Consolidation.Unit),
-				}
-				consolidationObj, _ = types.ObjectValue(map[string]attr.Type{
-					"amount": types.Int64Type,
-					"unit":   types.StringType,
-				}, consolidationAttrs)
-			} else {
-				consolidationObj = types.ObjectNull(map[string]attr.Type{
-					"amount": types.Int64Type,
-					"unit":   types.StringType,
-				})
-			}
-
 			paramsAttrs := map[string]attr.Value{
-				"severity":      types.StringValue(action.Params.Severity),
-				"title":         types.StringValue(action.Params.Title),
-				"type":          types.StringValue(action.Params.Type),
-				"endpoint":      types.StringValue(action.Params.Endpoint),
-				"tags":          ConvertStringSliceToList(action.Params.Tags),
+				"severity":      severityVal,
+				"title":         titleVal,
+				"type":          typeVal,
+				"endpoint":      endpointVal,
+				"tags":          tagsVal,
 				"consolidation": consolidationObj,
 			}
 
@@ -245,8 +357,13 @@ func ConvertActionsToList(actions []armis.Action) types.List {
 			})
 		}
 
+		actionTypeVal := types.StringNull()
+		if action.Type != "" {
+			actionTypeVal = types.StringValue(action.Type)
+		}
+
 		actionAttrs := map[string]attr.Value{
-			"type":   types.StringValue(action.Type),
+			"type":   actionTypeVal,
 			"params": paramsObj,
 		}
 
