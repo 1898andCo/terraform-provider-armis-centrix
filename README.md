@@ -9,7 +9,7 @@
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.12 or [OpenTofu](https://opentofu.org/) >= 1.5
-- [Go](https://golang.org/doc/install) >= 1.22 (to build the provider plugin)
+- [Go](https://golang.org/doc/install) >= 1.25 (to build the provider plugin)
 
 ## Authenticating to Armis Centrix
 
