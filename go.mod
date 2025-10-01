@@ -1,8 +1,6 @@
 module github.com/1898andCo/terraform-provider-armis-centrix
 
-go 1.23.0
-
-toolchain go1.24.0
+go 1.25
 
 require (
 	github.com/charmbracelet/log v0.4.0
