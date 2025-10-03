@@ -5,127 +5,219 @@ package armis
 
 import (
 	"context"
-	"strconv"
+	"encoding/json"
+	"errors"
+	"net/http"
 	"testing"
 )
 
-func TestCreatingRole(t *testing.T) {
+func TestGetRoles(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	role := RoleSettings{
-		Name: "Test Role",
-		Permissions: Permissions{
-			AdvancedPermissions: AdvancedPermissions{
-				All: true,
-				Behavioral: Behavioral{
-					All:             true,
-					ApplicationName: Permission{All: true},
-					HostName:        Permission{All: true},
-					ServiceName:     Permission{All: true},
-				},
-				Device: DeviceAdvanced{
-					All:          true,
-					DeviceNames:  Permission{All: true},
-					IPAddresses:  Permission{All: true},
-					MACAddresses: Permission{All: true},
-					PhoneNumbers: Permission{All: true},
-				},
-			},
-			Alert: Alert{
-				All: true,
-				Manage: Manage{
-					All:              true,
-					Resolve:          Permission{All: true},
-					WhitelistDevices: Permission{All: true},
-				},
-				Read: Permission{All: true},
-			},
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/roles/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodGet {
+				t.Fatalf("expected GET, got %s", r.Method)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": []map[string]any{{
+					"roleId": 1,
+					"name":   "Example",
+				}},
+			})
 		},
-	}
+	})
+	defer cleanup()
 
-	res, err := client.CreateRole(context.Background(), role)
-	if err != nil {
-		t.Fatalf("create role: %v", err)
-	}
-	prettyPrint(res)
-}
-
-func TestUpdatingRole(t *testing.T) {
-	t.Parallel()
-	client := integrationClient(t)
-
-	// Lookup the role ID by name first.
-	roleMeta, err := client.GetRoleByName(context.Background(), "Test Role")
-	if err != nil {
-		t.Fatalf("lookup role: %v", err)
-	}
-	id := strconv.Itoa(roleMeta.ID)
-
-	updated := RoleSettings{
-		Name: "Test Role Updated",
-		Permissions: Permissions{
-			AdvancedPermissions: AdvancedPermissions{All: false},
-			Alert:               Alert{All: true},
-		},
-	}
-
-	res, err := client.UpdateRole(context.Background(), updated, id)
-	if err != nil {
-		t.Fatalf("update role: %v", err)
-	}
-	prettyPrint(res)
-}
-
-func TestGettingRoles(t *testing.T) {
-	t.Parallel()
-	client := integrationClient(t)
-
-	res, err := client.GetRoles(context.Background())
+	roles, err := client.GetRoles(context.Background())
 	if err != nil {
 		t.Fatalf("get roles: %v", err)
 	}
-	prettyPrint(res)
+	if len(roles) != 1 || roles[0].Name != "Example" {
+		t.Fatalf("unexpected roles: %+v", roles)
+	}
 }
 
-func TestGettingRoleByName(t *testing.T) {
+func TestGetRoleByName(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	res, err := client.GetRoleByName(context.Background(), "Test Role")
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/roles/": func(w http.ResponseWriter, r *http.Request) {
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": []map[string]any{{
+					"roleId": 2,
+					"name":   "Target",
+				}},
+			})
+		},
+	})
+	defer cleanup()
+
+	role, err := client.GetRoleByName(context.Background(), "Target")
 	if err != nil {
 		t.Fatalf("get role by name: %v", err)
 	}
-	prettyPrint(res)
+	if role.Name != "Target" {
+		t.Fatalf("unexpected role: %+v", role)
+	}
 }
 
-func TestGettingRoleByID(t *testing.T) {
+func TestGetRoleByNameRequiresName(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	const id = "10" // adjust as needed
-	res, err := client.GetRoleByID(context.Background(), id)
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.GetRoleByName(context.Background(), ""); !errors.Is(err, ErrRoleName) {
+		t.Fatalf("expected ErrRoleName, got %v", err)
+	}
+}
+
+func TestGetRoleByID(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/roles/": func(w http.ResponseWriter, r *http.Request) {
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": []map[string]any{{
+					"roleId": 3,
+					"name":   "Example",
+				}},
+			})
+		},
+	})
+	defer cleanup()
+
+	role, err := client.GetRoleByID(context.Background(), "3")
 	if err != nil {
 		t.Fatalf("get role by id: %v", err)
 	}
-	prettyPrint(res)
+	if role.ID != 3 {
+		t.Fatalf("unexpected role: %+v", role)
+	}
 }
 
-func TestDeletingRole(t *testing.T) {
+func TestGetRoleByIDRequiresID(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	roleMeta, err := client.GetRoleByName(context.Background(), "Test Role")
-	if err != nil {
-		t.Fatalf("lookup role: %v", err)
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.GetRoleByID(context.Background(), ""); !errors.Is(err, ErrRoleID) {
+		t.Fatalf("expected ErrRoleID, got %v", err)
 	}
-	id := strconv.Itoa(roleMeta.ID)
+}
 
-	ok, err := client.DeleteRole(context.Background(), id)
+func TestCreateRole(t *testing.T) {
+	t.Parallel()
+
+	role := RoleSettings{Name: "Example"}
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/roles/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodPost {
+				t.Fatalf("expected POST, got %s", r.Method)
+			}
+			var got RoleSettings
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+				t.Fatalf("decode body: %v", err)
+			}
+			if got.Name != role.Name {
+				t.Fatalf("unexpected role name: %q", got.Name)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{"success": true})
+		},
+	})
+	defer cleanup()
+
+	ok, err := client.CreateRole(context.Background(), role)
+	if err != nil {
+		t.Fatalf("create role: %v", err)
+	}
+	if !ok {
+		t.Fatalf("expected create success")
+	}
+}
+
+func TestUpdateRole(t *testing.T) {
+	t.Parallel()
+
+	role := RoleSettings{Name: "Updated"}
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/roles/1/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodPatch {
+				t.Fatalf("expected PATCH, got %s", r.Method)
+			}
+			var got RoleSettings
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+				t.Fatalf("decode body: %v", err)
+			}
+			if got.Name != "Updated" {
+				t.Fatalf("unexpected body: %+v", got)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"name":   "Updated",
+				"roleId": 1,
+			})
+		},
+	})
+	defer cleanup()
+
+	res, err := client.UpdateRole(context.Background(), role, "1")
+	if err != nil {
+		t.Fatalf("update role: %v", err)
+	}
+	if res.Name != "Updated" {
+		t.Fatalf("unexpected response: %+v", res)
+	}
+}
+
+func TestUpdateRoleRequiresID(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.UpdateRole(context.Background(), RoleSettings{}, ""); !errors.Is(err, ErrRoleID) {
+		t.Fatalf("expected ErrRoleID, got %v", err)
+	}
+}
+
+func TestDeleteRole(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/roles/1/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodDelete {
+				t.Fatalf("expected DELETE, got %s", r.Method)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{"success": true})
+		},
+	})
+	defer cleanup()
+
+	ok, err := client.DeleteRole(context.Background(), "1")
 	if err != nil {
 		t.Fatalf("delete role: %v", err)
 	}
 	if !ok {
-		t.Fatalf("role %s not deleted", id)
+		t.Fatalf("expected delete success")
+	}
+}
+
+func TestDeleteRoleRequiresID(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.DeleteRole(context.Background(), ""); !errors.Is(err, ErrRoleID) {
+		t.Fatalf("expected ErrRoleID, got %v", err)
 	}
 }
