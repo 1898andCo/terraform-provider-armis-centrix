@@ -769,20 +769,28 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	// Call API to create the role
 	success, err := r.client.CreateRole(ctx, role)
-	if err != nil || !success {
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error creating role %q", plan.Name.ValueString()), err)
+		return
+	}
+	if !success {
 		resp.Diagnostics.AddError(
 			"Error creating role",
-			fmt.Sprintf("Failed to create role %q: %s", plan.Name.ValueString(), err),
+			fmt.Sprintf("Failed to create role %q: operation returned unsuccessful status", plan.Name.ValueString()),
 		)
 		return
 	}
 
 	// Fetch the created role to get its ID and other attributes
 	createdRole, err := r.client.GetRoleByName(ctx, plan.Name.ValueString())
-	if err != nil || createdRole == nil {
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error fetching role %q after creation", plan.Name.ValueString()), err)
+		return
+	}
+	if createdRole == nil {
 		resp.Diagnostics.AddError(
 			"Error fetching created role",
-			fmt.Sprintf("Role %q was created but could not fetch details: %s", plan.Name.ValueString(), err),
+			fmt.Sprintf("Role %q was created but the API returned no details", plan.Name.ValueString()),
 		)
 		return
 	}
@@ -809,10 +817,14 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	// Fetch the role by ID
 	tflog.Debug(ctx, "Fetching role by ID", map[string]any{"role_id": state.ID.ValueString()})
 	role, err := r.client.GetRoleByID(ctx, state.ID.ValueString())
-	if err != nil || role == nil {
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading role %s", state.ID.ValueString()), err)
+		return
+	}
+	if role == nil {
 		resp.Diagnostics.AddError(
 			"Error reading role",
-			fmt.Sprintf("Failed to fetch role with ID %q: %s", state.ID.ValueString(), err),
+			fmt.Sprintf("Failed to fetch role with ID %q: API returned no data", state.ID.ValueString()),
 		)
 		return
 	}
@@ -865,19 +877,20 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	tflog.Debug(ctx, "Sending update request to Armis API", map[string]any{"role_id": state.ID.ValueString()})
 	_, err := r.client.UpdateRole(ctx, role, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Role",
-			fmt.Sprintf("Failed to update role with ID %q: %s", state.ID.ValueString(), err),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error updating role %s", state.ID.ValueString()), err)
 		return
 	}
 
 	// Fetch the updated role details
 	updatedRole, err := r.client.GetRoleByID(ctx, state.ID.ValueString())
-	if err != nil || updatedRole == nil {
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading role %s after update", state.ID.ValueString()), err)
+		return
+	}
+	if updatedRole == nil {
 		resp.Diagnostics.AddError(
 			"Error Fetching Updated Role",
-			fmt.Sprintf("The role with ID %q was updated, but its details could not be fetched: %s", state.ID.ValueString(), err),
+			fmt.Sprintf("The role with ID %q was updated, but its details could not be fetched", state.ID.ValueString()),
 		)
 		return
 	}
@@ -905,10 +918,14 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	// Delete the role in the API
 	tflog.Debug(ctx, "Deleting role in Armis", map[string]any{"role_id": state.ID.ValueString()})
 	success, err := r.client.DeleteRole(ctx, state.ID.ValueString())
-	if err != nil || !success {
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error deleting role %s", state.ID.ValueString()), err)
+		return
+	}
+	if !success {
 		resp.Diagnostics.AddError(
 			"Error deleting role",
-			fmt.Sprintf("Failed to delete role %q: %s", state.ID.ValueString(), err),
+			fmt.Sprintf("Failed to delete role %q: operation returned unsuccessful status", state.ID.ValueString()),
 		)
 		return
 	}

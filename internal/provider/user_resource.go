@@ -173,10 +173,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	newUser, err := r.client.CreateUser(ctx, user)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating user",
-			"Could not create user, unexpected error: "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error creating user %q", plan.Username.ValueString()), err)
 		return
 	}
 
@@ -237,10 +234,7 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			"Error Reading Armis User",
-			fmt.Sprintf("Failed to fetch user: %v", err),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading user %s", state.ID.ValueString()), err)
 		return
 	}
 
@@ -299,10 +293,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Update user
 	_, err := r.client.UpdateUser(ctx, user, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Armis user",
-			"Could not update user, unexpected error: "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error updating user %s", state.ID.ValueString()), err)
 		return
 	}
 
@@ -310,10 +301,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Keep the role assignments from the plan since we just sent them
 	updatedUser, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Armis User",
-			"Could not read Armis user ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading user %s", state.ID.ValueString()), err)
 		return
 	}
 
@@ -346,10 +334,7 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	// Delete existing user
 	success, err := r.client.DeleteUser(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Deleting Armis User",
-			"Could not delete user, unexpected error: "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error deleting user %s", state.ID.ValueString()), err)
 		return
 	}
 	if !success {
