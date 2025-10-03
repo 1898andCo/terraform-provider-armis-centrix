@@ -5,167 +5,247 @@ package armis
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
 	"testing"
 )
 
-func TestCreatingPolicy(t *testing.T) {
+func TestPolicyValidateSuccess(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	payload := PolicySettings{
-		Name:        "Test Policy",
-		Description: "This is a test policy",
-		IsEnabled:   false,
-		Labels:      []string{"Security"},
-		MitreAttackLabels: []string{
-			"Enterprise.TA0009.T1056.001",
-			"Enterprise.TA0009.T1056.004",
-		},
-		RuleType: "ACTIVITY",
-		Actions: []Action{
-			{
-				Type: "alert",
-				Params: Params{
-					Severity: "high",
-					Title:    "Test Security Alert",
-					Type:     "Security - Threat",
-					Consolidation: Consolidation{
-						Amount: 1,
-						Unit:   "Days",
-					},
-				},
-			},
-		},
-		Rules: Rules{
-			And: []any{
-				"protocol:BMS",
-				Rules{Or: []any{"content:(iPhone)", "content:(Android)"}},
-			},
-		},
+	policy := validPolicy()
+	if err := policy.Validate(); err != nil {
+		t.Fatalf("expected validation success, got %v", err)
 	}
+}
 
-	res, err := client.CreatePolicy(context.Background(), payload)
+func TestPolicyValidateErrors(t *testing.T) {
+	t.Parallel()
+
+	policy := PolicySettings{}
+	if err := policy.Validate(); err == nil {
+		t.Fatalf("expected validation error")
+	}
+}
+
+func TestCreatePolicy(t *testing.T) {
+	t.Parallel()
+
+	policy := validPolicy()
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/policies/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodPost {
+				t.Fatalf("expected POST, got %s", r.Method)
+			}
+			var got PolicySettings
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+				t.Fatalf("decode body: %v", err)
+			}
+			if got.Name != policy.Name {
+				t.Fatalf("unexpected policy name: %q", got.Name)
+			}
+			respondJSON(t, w, http.StatusCreated, map[string]any{
+				"success": true,
+				"data":    map[string]any{"id": 123},
+			})
+		},
+	})
+	defer cleanup()
+
+	id, err := client.CreatePolicy(context.Background(), policy)
 	if err != nil {
 		t.Fatalf("create policy: %v", err)
 	}
-	prettyPrint(res)
+	if id.ID != 123 {
+		t.Fatalf("unexpected policy id: %+v", id)
+	}
 }
 
-func TestCreatingTagPolicy(t *testing.T) {
+func TestCreatePolicyValidationFailure(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	payload := PolicySettings{
-		Name:        "Test Tag Policy",
-		Description: "This is a test tag policy",
-		IsEnabled:   false,
-		Labels:      []string{"Security"},
-		MitreAttackLabels: []string{
-			"Enterprise.TA0009.T1056.001",
-			"Enterprise.TA0009.T1056.004",
-		},
-		RuleType: "ACTIVITY",
-		Actions: []Action{
-			{
-				Type: "tag",
-				Params: Params{
-					Endpoint: "ALL",
-					Tags:     []string{"Agent and Scanner Gaps"},
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.CreatePolicy(context.Background(), PolicySettings{}); err == nil {
+		t.Fatalf("expected validation error")
+	}
+}
+
+func TestGetPolicy(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/policies/1/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodGet {
+				t.Fatalf("expected GET, got %s", r.Method)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": map[string]any{
+					"name":     "Example",
+					"ruleType": "ACTIVITY",
+					"rules": map[string]any{
+						"and": []any{"foo"},
+					},
 				},
-			},
+			})
 		},
-		Rules: Rules{
-			And: []any{
-				"protocol:BMS",
-				Rules{Or: []any{"content:(iPhone)", "content:(Android)"}},
-			},
-		},
-	}
+	})
+	defer cleanup()
 
-	res, err := client.CreatePolicy(context.Background(), payload)
-	if err != nil {
-		t.Fatalf("create tag policy: %v", err)
-	}
-	prettyPrint(res)
-}
-
-func TestGettingAllPolicies(t *testing.T) {
-	t.Parallel()
-	client := integrationClient(t)
-
-	res, err := client.GetAllPolicies(context.Background())
-	if err != nil {
-		t.Fatalf("get policies: %v", err)
-	}
-	prettyPrint(res)
-}
-
-func TestGettingPolicy(t *testing.T) {
-	t.Parallel()
-	client := integrationClient(t)
-
-	const id = "76884"
-	res, err := client.GetPolicy(context.Background(), id)
+	policy, err := client.GetPolicy(context.Background(), "1")
 	if err != nil {
 		t.Fatalf("get policy: %v", err)
 	}
-	prettyPrint(res)
+	if policy.Name != "Example" {
+		t.Fatalf("unexpected policy: %+v", policy)
+	}
 }
 
-func TestUpdatingPolicy(t *testing.T) {
+func TestGetPolicyRequiresID(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	payload := PolicySettings{
-		Name:        "Test Policy Updated",
-		Description: "This is an updated test policy",
-		IsEnabled:   true,
-		Labels:      []string{"Security"},
-		MitreAttackLabels: []string{
-			"Enterprise.TA0009.T1056.001",
-			"Enterprise.TA0009.T1056.004",
-		},
-		RuleType: "ACTIVITY",
-		Actions: []Action{
-			{
-				Type: "alert",
-				Params: Params{
-					Severity: "high",
-					Title:    "Test Security Alert",
-					Type:     "Security - Threat",
-					Consolidation: Consolidation{
-						Amount: 1,
-						Unit:   "Days",
-					},
-				},
-			},
-		},
-		Rules: Rules{
-			And: []any{
-				"protocol:BMS",
-				Rules{Or: []any{"content:(iPhone)", "content:(Android)"}},
-			},
-		},
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.GetPolicy(context.Background(), ""); !errors.Is(err, ErrPolicyID) {
+		t.Fatalf("expected ErrPolicyID, got %v", err)
 	}
+}
 
-	const id = "76700"
-	res, err := client.UpdatePolicy(context.Background(), payload, id)
+func TestGetAllPolicies(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/policies/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodGet {
+				t.Fatalf("expected GET, got %s", r.Method)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": map[string]any{
+					"count": 1,
+					"next":  nil,
+					"prev":  0,
+					"total": 1,
+					"policies": []map[string]any{{
+						"id":       "1",
+						"name":     "Example",
+						"ruleType": "ACTIVITY",
+						"rules": map[string]any{
+							"and": []any{"foo"},
+						},
+					}},
+				},
+			})
+		},
+	})
+	defer cleanup()
+
+	policies, err := client.GetAllPolicies(context.Background())
+	if err != nil {
+		t.Fatalf("get all policies: %v", err)
+	}
+	if len(policies) != 1 || policies[0].Name != "Example" {
+		t.Fatalf("unexpected policies: %+v", policies)
+	}
+}
+
+func TestUpdatePolicy(t *testing.T) {
+	t.Parallel()
+
+	policy := validPolicy()
+	policy.Name = "Updated"
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/policies/1/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodPatch {
+				t.Fatalf("expected PATCH, got %s", r.Method)
+			}
+			var got PolicySettings
+			if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+				t.Fatalf("decode body: %v", err)
+			}
+			if got.Name != "Updated" {
+				t.Fatalf("unexpected policy name: %q", got.Name)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data":    map[string]any{"name": "Updated"},
+			})
+		},
+	})
+	defer cleanup()
+
+	res, err := client.UpdatePolicy(context.Background(), policy, "1")
 	if err != nil {
 		t.Fatalf("update policy: %v", err)
 	}
-	prettyPrint(res)
+	if res.Name != "Updated" {
+		t.Fatalf("unexpected response: %+v", res)
+	}
 }
 
-func TestDeletingPolicy(t *testing.T) {
+func TestUpdatePolicyRequiresID(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	const id = "76700"
-	ok, err := client.DeletePolicy(context.Background(), id)
+	policy := validPolicy()
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.UpdatePolicy(context.Background(), policy, ""); !errors.Is(err, ErrPolicyID) {
+		t.Fatalf("expected ErrPolicyID, got %v", err)
+	}
+}
+
+func TestDeletePolicy(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/policies/1/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodDelete {
+				t.Fatalf("expected DELETE, got %s", r.Method)
+			}
+			respondJSON(t, w, http.StatusOK, map[string]any{"success": true})
+		},
+	})
+	defer cleanup()
+
+	ok, err := client.DeletePolicy(context.Background(), "1")
 	if err != nil {
 		t.Fatalf("delete policy: %v", err)
 	}
 	if !ok {
-		t.Fatalf("policy %s not deleted", id)
+		t.Fatalf("expected delete success")
+	}
+}
+
+func TestDeletePolicyRequiresID(t *testing.T) {
+	t.Parallel()
+
+	client, cleanup := newTestClient(t, nil)
+	defer cleanup()
+
+	if _, err := client.DeletePolicy(context.Background(), ""); !errors.Is(err, ErrPolicyID) {
+		t.Fatalf("expected ErrPolicyID, got %v", err)
+	}
+}
+
+func validPolicy() PolicySettings {
+	return PolicySettings{
+		Name:        "Example Policy",
+		Description: "short description",
+		RuleType:    "ACTIVITY",
+		Rules: Rules{
+			And: []any{"protocol:HTTP"},
+		},
 	}
 }

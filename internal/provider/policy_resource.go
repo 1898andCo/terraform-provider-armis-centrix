@@ -222,7 +222,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	createResp, err := r.client.CreatePolicy(ctx, policy)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating policy", fmt.Sprintf("API error: %v", err))
+		appendAPIError(&resp.Diagnostics, "Error creating policy", err)
 		return
 	}
 
@@ -248,7 +248,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			return
 		}
 
-		resp.Diagnostics.AddError("Error reading policy", err.Error())
+		appendAPIError(&resp.Diagnostics, "Error reading policy", err)
 		return
 	}
 
@@ -289,7 +289,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	updateResp, err := r.client.UpdatePolicy(ctx, policy, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error updating policy", fmt.Sprintf("API error: %v", err))
+		appendAPIError(&resp.Diagnostics, "Error updating policy", err)
 		return
 	}
 
@@ -325,7 +325,7 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	deleteResp, err := r.client.DeletePolicy(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error deleting policy", err.Error())
+		appendAPIError(&resp.Diagnostics, "Error deleting policy", err)
 		return
 	}
 

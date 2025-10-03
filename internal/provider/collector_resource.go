@@ -133,10 +133,7 @@ func (r *collectorResource) Create(ctx context.Context, req resource.CreateReque
 	// Create the collector via the client
 	newCollector, err := r.client.CreateCollector(ctx, collector)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating collector",
-			"Could not create collector, unexpected error: "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error creating collector %q", plan.Name.ValueString()), err)
 		return
 	}
 
@@ -166,10 +163,7 @@ func (r *collectorResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Get refreshed collector value from Armis
 	collector, err := r.client.GetCollectorByID(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Armis Collector",
-			"Could not read Armis collector ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading collector %s", state.ID.ValueString()), err)
 		return
 	}
 
@@ -229,10 +223,7 @@ func (r *collectorResource) Update(ctx context.Context, req resource.UpdateReque
 	// and then fetch the updated collector from the API.
 	_, err := r.client.UpdateCollector(ctx, state.ID.ValueString(), collector)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Updating Armis collector",
-			"Could not update collector, unexpected error: "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error updating collector %s", state.ID.ValueString()), err)
 		return
 	}
 
@@ -240,10 +231,7 @@ func (r *collectorResource) Update(ctx context.Context, req resource.UpdateReque
 	// populated.
 	updatedCollector, err := r.client.GetCollectorByID(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Armis Collector",
-			"Could not read Armis collector ID "+state.ID.ValueString()+": "+err.Error(),
-		)
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading collector %s", state.ID.ValueString()), err)
 		return
 	}
 
@@ -274,10 +262,14 @@ func (r *collectorResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	// Delete existing order
 	success, err := r.client.DeleteCollector(ctx, state.ID.ValueString())
-	if err != nil || !success {
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error deleting collector %s", state.ID.ValueString()), err)
+		return
+	}
+	if !success {
 		resp.Diagnostics.AddError(
 			"Error Deleting Armis collector",
-			"Could not delete collector, unexpected error: "+err.Error(),
+			"Could not delete collector: operation returned unsuccessful status",
 		)
 		return
 	}

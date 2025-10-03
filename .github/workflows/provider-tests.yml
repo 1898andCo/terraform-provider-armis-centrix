@@ -1,5 +1,4 @@
-# Terraform Provider testing workflow.
-name: Tests
+name: Terraform Provider Acceptance Tests
 
 # This GitHub action runs your tests for each pull request and push.
 # Optionally, you can turn it on using a schedule for regular testing.
@@ -10,7 +9,7 @@ on:
       - "internal/**.go"
       - "go.mod"
       - "go.sum"
-      - ".github/workflows/test.yml"
+      - ".github/workflows/provider-tests.yml"
   push:
     branches:
       - main
@@ -60,7 +59,7 @@ jobs:
           test -z "$BADDOCS" || (echo -e "documentation needs regenerating using task docs: $BADDOCS"; exit 1)
 
   # Run acceptance tests in a matrix with Terraform CLI versions
-  test:
+  provider-tests:
     name: Terraform Provider Acceptance Tests
     needs: build
     runs-on: ubuntu-latest
