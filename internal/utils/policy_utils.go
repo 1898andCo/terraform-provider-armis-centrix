@@ -5,6 +5,7 @@ package utils
 
 import (
 	"context"
+	"strings"
 
 	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -62,6 +63,42 @@ func ConvertListToStringSlice(list types.List) []string {
 	return result
 }
 
+// ShouldIncludePolicy returns true if the policy name matches the given prefix (when provided).
+func ShouldIncludePolicy(model PolicyDataSourcePolicyModel, prefix types.String) bool {
+	if prefix.IsNull() || prefix.IsUnknown() {
+		return true
+	}
+
+	value := prefix.ValueString()
+	if value == "" {
+		return true
+	}
+
+	if model.Name.IsNull() || model.Name.IsUnknown() {
+		return false
+	}
+
+	return strings.HasPrefix(model.Name.ValueString(), value)
+}
+
+// ShouldExcludePolicy returns true if the policy name matches the given prefix (when provided).
+func ShouldExcludePolicy(model PolicyDataSourcePolicyModel, prefix types.String) bool {
+	if prefix.IsNull() || prefix.IsUnknown() {
+		return false
+	}
+
+	value := prefix.ValueString()
+	if value == "" {
+		return false
+	}
+
+	if model.Name.IsNull() || model.Name.IsUnknown() {
+		return false
+	}
+
+	return strings.HasPrefix(model.Name.ValueString(), value)
+}
+
 // ConvertStringSliceToList converts []string to types.List.
 func ConvertStringSliceToList(slice []string) types.List {
 	if slice == nil {
@@ -75,6 +112,141 @@ func ConvertStringSliceToList(slice []string) types.List {
 
 	listValue, _ := types.ListValue(types.StringType, elements)
 	return listValue
+}
+
+// BuildPolicyDataSourceModelFromGet converts armis.GetPolicySettings to PolicyDataSourcePolicyModel.
+func BuildPolicyDataSourceModelFromGet(policy armis.GetPolicySettings, id string) PolicyDataSourcePolicyModel {
+	labels := convertStringsToTypeStrings(policy.Labels)
+	mitreLabels := convertMitreLabelsToDataSource(policy.MitreAttackLabels)
+	actions := convertActionsToDataSource(policy.Actions)
+	rules := PolicyDataSourceRulesModel{
+		And: convertInterfacesToTypeStrings(policy.Rules.And),
+		Or:  convertInterfacesToTypeStrings(policy.Rules.Or),
+	}
+
+	policyID := types.StringNull()
+	if id != "" {
+		policyID = types.StringValue(id)
+	}
+
+	return PolicyDataSourcePolicyModel{
+		ID:                policyID,
+		Name:              types.StringValue(policy.Name),
+		Description:       types.StringValue(policy.Description),
+		IsEnabled:         types.BoolValue(policy.IsEnabled),
+		RuleType:          types.StringValue(policy.RuleType),
+		Labels:            labels,
+		MitreAttackLabels: mitreLabels,
+		Actions:           actions,
+		Rules:             rules,
+	}
+}
+
+// BuildPolicyDataSourceModelFromSingle converts armis.SinglePolicy to PolicyDataSourcePolicyModel.
+func BuildPolicyDataSourceModelFromSingle(policy armis.SinglePolicy) PolicyDataSourcePolicyModel {
+	labels := convertStringsToTypeStrings(policy.Labels)
+	mitreLabels := convertMitreLabelsToDataSource(policy.MitreAttackLabels)
+	actions := convertActionsToDataSource(policy.Actions)
+
+	if len(actions) == 0 && (policy.Action.Type != "" || policy.Action.Params.Type != "") {
+		actions = append(actions, convertActionToDataSource(policy.Action))
+	}
+
+	rules := PolicyDataSourceRulesModel{
+		And: convertInterfacesToTypeStrings(policy.Rules.And),
+		Or:  convertInterfacesToTypeStrings(policy.Rules.Or),
+	}
+
+	return PolicyDataSourcePolicyModel{
+		ID:                types.StringValue(policy.ID),
+		Name:              types.StringValue(policy.Name),
+		Description:       types.StringValue(policy.Description),
+		IsEnabled:         types.BoolValue(policy.IsEnabled),
+		RuleType:          types.StringValue(policy.RuleType),
+		Labels:            labels,
+		MitreAttackLabels: mitreLabels,
+		Actions:           actions,
+		Rules:             rules,
+	}
+}
+
+func convertActionsToDataSource(actions []armis.Action) []PolicyDataSourceActionModel {
+	result := make([]PolicyDataSourceActionModel, 0, len(actions))
+	for _, action := range actions {
+		result = append(result, convertActionToDataSource(action))
+	}
+
+	return result
+}
+
+func convertActionToDataSource(action armis.Action) PolicyDataSourceActionModel {
+	tags := convertStringsToTypeStrings(action.Params.Tags)
+	amount := types.Int64Null()
+	if action.Params.Consolidation.Amount != 0 {
+		amount = types.Int64Value(int64(action.Params.Consolidation.Amount))
+	}
+
+	unit := types.StringNull()
+	if action.Params.Consolidation.Unit != "" {
+		unit = types.StringValue(action.Params.Consolidation.Unit)
+	}
+
+	return PolicyDataSourceActionModel{
+		Type: types.StringValue(action.Type),
+		Params: PolicyDataSourceParamsModel{
+			Severity: types.StringValue(action.Params.Severity),
+			Title:    types.StringValue(action.Params.Title),
+			Type:     types.StringValue(action.Params.Type),
+			Endpoint: types.StringValue(action.Params.Endpoint),
+			Tags:     tags,
+			Consolidation: PolicyDataSourceConsolidationModel{
+				Amount: amount,
+				Unit:   unit,
+			},
+		},
+	}
+}
+
+func convertMitreLabelsToDataSource(labels []armis.MitreAttackLabel) []PolicyDataSourceMitreLabelModel {
+	result := make([]PolicyDataSourceMitreLabelModel, 0, len(labels))
+	for _, label := range labels {
+		result = append(result, PolicyDataSourceMitreLabelModel{
+			Matrix:       types.StringValue(label.Matrix),
+			SubTechnique: types.StringValue(label.SubTechnique),
+			Tactic:       types.StringValue(label.Tactic),
+			Technique:    types.StringValue(label.Technique),
+		})
+	}
+
+	return result
+}
+
+func convertStringsToTypeStrings(values []string) []types.String {
+	if values == nil {
+		return nil
+	}
+
+	result := make([]types.String, 0, len(values))
+	for _, value := range values {
+		result = append(result, types.StringValue(value))
+	}
+
+	return result
+}
+
+func convertInterfacesToTypeStrings(values []any) []types.String {
+	if values == nil {
+		return nil
+	}
+
+	result := make([]types.String, 0, len(values))
+	for _, value := range values {
+		if str, ok := value.(string); ok {
+			result = append(result, types.StringValue(str))
+		}
+	}
+
+	return result
 }
 
 // ConvertSliceToList converts []any to types.List.
