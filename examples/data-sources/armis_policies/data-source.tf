@@ -10,6 +10,6 @@ output "armis_lab_policy_ids" {
 }
 
 output "armis_lab_policy_names" {
-  description = "Names for Armis policies matching the 1898 prefix"
+  description = "Names for Armis policies matching the lab prefix"
   value       = [for policy in data.armis_policies.lab.policies : policy.name]
 }
