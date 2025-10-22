@@ -51,7 +51,7 @@ func (d *policiesDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *policiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Retrieves Armis policies. Filter by policy_id or match_prefix to limit the results.",
+		Description: "Retrieves Armis policies. Filter by policy_id, match_prefix, or exclude_prefix to limit the results.",
 		Attributes: map[string]schema.Attribute{
 			"policy_id": schema.StringAttribute{
 				Optional:    true,
@@ -216,7 +216,7 @@ func (d *policiesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		}
 
 		model := u.BuildPolicyDataSourceModelFromGet(policy, config.PolicyID.ValueString())
-		if u.ShouldIncludePolicy(model, config.MatchPrefix) {
+		if u.ShouldIncludePolicy(model, config.MatchPrefix) && !u.ShouldExcludePolicy(model, config.ExcludePrefix) {
 			policies = append(policies, model)
 		}
 	} else {
@@ -231,7 +231,7 @@ func (d *policiesDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 		for _, policy := range allPolicies {
 			model := u.BuildPolicyDataSourceModelFromSingle(policy)
-			if u.ShouldIncludePolicy(model, config.MatchPrefix) {
+			if u.ShouldIncludePolicy(model, config.MatchPrefix) && !u.ShouldExcludePolicy(model, config.ExcludePrefix) {
 				policies = append(policies, model)
 			}
 		}
