@@ -61,6 +61,10 @@ func (d *policiesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 				Optional:    true,
 				Description: "Optional prefix to match policy names. When provided, only policies with names starting with this prefix are returned.",
 			},
+			"exclude_prefix": schema.StringAttribute{
+				Optional:    true,
+				Description: "Optional prefix to exclude policy names. When provided, policies with names starting with this prefix are not returned.",
+			},
 			"policies": schema.ListNestedAttribute{
 				Computed:    true,
 				Description: "A computed list of Armis policies.",

@@ -81,6 +81,24 @@ func ShouldIncludePolicy(model PolicyDataSourcePolicyModel, prefix types.String)
 	return strings.HasPrefix(model.Name.ValueString(), value)
 }
 
+// ShouldExcludePolicy returns true if the policy name matches the given prefix (when provided).
+func ShouldExcludePolicy(model PolicyDataSourcePolicyModel, prefix types.String) bool {
+	if prefix.IsNull() || prefix.IsUnknown() {
+		return false
+	}
+
+	value := prefix.ValueString()
+	if value == "" {
+		return false
+	}
+
+	if model.Name.IsNull() || model.Name.IsUnknown() {
+		return false
+	}
+
+	return strings.HasPrefix(model.Name.ValueString(), value)
+}
+
 // ConvertStringSliceToList converts []string to types.List.
 func ConvertStringSliceToList(slice []string) types.List {
 	if slice == nil {

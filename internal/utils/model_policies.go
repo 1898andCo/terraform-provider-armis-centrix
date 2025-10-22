@@ -47,9 +47,10 @@ type RulesModel struct {
 }
 
 type PoliciesDataSourceModel struct {
-	PolicyID    types.String                  `tfsdk:"policy_id"`
-	MatchPrefix types.String                  `tfsdk:"match_prefix"`
-	Policies    []PolicyDataSourcePolicyModel `tfsdk:"policies"`
+	PolicyID      types.String                  `tfsdk:"policy_id"`
+	MatchPrefix   types.String                  `tfsdk:"match_prefix"`
+	ExcludePrefix types.String                  `tfsdk:"exclude_prefix"`
+	Policies      []PolicyDataSourcePolicyModel `tfsdk:"policies"`
 }
 
 type PolicyDataSourcePolicyModel struct {

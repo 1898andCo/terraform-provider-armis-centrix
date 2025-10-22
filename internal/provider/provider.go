@@ -170,6 +170,7 @@ func (p *ArmisProvider) Resources(ctx context.Context) []func() resource.Resourc
 func (p *ArmisProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		RoleDataSource,
+		PoliciesDataSource,
 		SiteDataSource,
 		UserDataSource,
 		CollectorDataSource,
