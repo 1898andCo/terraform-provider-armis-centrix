@@ -45,3 +45,52 @@ type RulesModel struct {
 	And types.List `tfsdk:"and"`
 	Or  types.List `tfsdk:"or"`
 }
+
+type PoliciesDataSourceModel struct {
+	PolicyID    types.String                  `tfsdk:"policy_id"`
+	MatchPrefix types.String                  `tfsdk:"match_prefix"`
+	Policies    []PolicyDataSourcePolicyModel `tfsdk:"policies"`
+}
+
+type PolicyDataSourcePolicyModel struct {
+	ID                types.String                      `tfsdk:"id"`
+	Name              types.String                      `tfsdk:"name"`
+	Description       types.String                      `tfsdk:"description"`
+	IsEnabled         types.Bool                        `tfsdk:"enabled"`
+	RuleType          types.String                      `tfsdk:"rule_type"`
+	Labels            []types.String                    `tfsdk:"labels"`
+	MitreAttackLabels []PolicyDataSourceMitreLabelModel `tfsdk:"mitre_attack_labels"`
+	Actions           []PolicyDataSourceActionModel     `tfsdk:"actions"`
+	Rules             PolicyDataSourceRulesModel        `tfsdk:"rules"`
+}
+
+type PolicyDataSourceMitreLabelModel struct {
+	Matrix       types.String `tfsdk:"matrix"`
+	SubTechnique types.String `tfsdk:"sub_technique"`
+	Tactic       types.String `tfsdk:"tactic"`
+	Technique    types.String `tfsdk:"technique"`
+}
+
+type PolicyDataSourceActionModel struct {
+	Type   types.String                `tfsdk:"type"`
+	Params PolicyDataSourceParamsModel `tfsdk:"params"`
+}
+
+type PolicyDataSourceParamsModel struct {
+	Severity      types.String                       `tfsdk:"severity"`
+	Title         types.String                       `tfsdk:"title"`
+	Type          types.String                       `tfsdk:"type"`
+	Endpoint      types.String                       `tfsdk:"endpoint"`
+	Tags          []types.String                     `tfsdk:"tags"`
+	Consolidation PolicyDataSourceConsolidationModel `tfsdk:"consolidation"`
+}
+
+type PolicyDataSourceConsolidationModel struct {
+	Amount types.Int64  `tfsdk:"amount"`
+	Unit   types.String `tfsdk:"unit"`
+}
+
+type PolicyDataSourceRulesModel struct {
+	And []types.String `tfsdk:"and"`
+	Or  []types.String `tfsdk:"or"`
+}
