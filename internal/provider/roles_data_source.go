@@ -50,7 +50,7 @@ func RoleDataSource() datasource.DataSource {
 
 // Metadata returns the data source type name.
 func (d *rolesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_role"
+	resp.TypeName = req.ProviderTypeName + "_roles"
 }
 
 // Schema defines the schema for the roles data source.
@@ -59,12 +59,40 @@ func (d *rolesDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 		Description: "Provides an Armis role",
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "The name of the role.",
+				Optional:    true,
+				Description: "The name of the role. When omitted, roles can be filtered using prefix options.",
 			},
 			"role_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "Unique identifier for the role.",
+			},
+			"match_prefix": schema.StringAttribute{
+				Optional:    true,
+				Description: "Optional prefix to match role names. When provided, only roles with names starting with this prefix are returned.",
+			},
+			"exclude_prefix": schema.StringAttribute{
+				Optional:    true,
+				Description: "Optional prefix to exclude role names. When provided, roles with names starting with this prefix are not returned.",
+			},
+			"roles": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "A computed list of Armis roles matching the supplied filters.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"role_id": schema.StringAttribute{
+							Computed:    true,
+							Description: "Unique identifier for the role.",
+						},
+						"name": schema.StringAttribute{
+							Computed:    true,
+							Description: "The name of the role.",
+						},
+						"vipr_role": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Indicates if the role is a VIPR-specific role.",
+						},
+					},
+				},
 			},
 			"vipr_role": schema.BoolAttribute{
 				Computed:    true,
@@ -733,27 +761,48 @@ func (d *rolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	if config.Name.IsNull() || config.Name.ValueString() == "" {
-		resp.Diagnostics.AddError(
-			"Missing Role Name",
-			"The 'name' attribute is required to fetch a specific role.",
-		)
-		return
+	var roles []u.RoleDataSourceSummaryModel
+
+	if !config.Name.IsNull() && config.Name.ValueString() != "" {
+		matchPrefix := config.MatchPrefix
+		excludePrefix := config.ExcludePrefix
+		role, err := d.client.GetRoleByName(ctx, config.Name.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Read Armis Role",
+				err.Error(),
+			)
+			return
+		}
+
+		summary := u.BuildRoleDataSourceSummaryModel(role)
+		if u.ShouldIncludeRole(summary, matchPrefix) && !u.ShouldExcludeRole(summary, excludePrefix) {
+			roles = append(roles, summary)
+			config = u.BuildRoleDataSourceModel(role)
+			config.MatchPrefix = matchPrefix
+			config.ExcludePrefix = excludePrefix
+		}
+	} else {
+		allRoles, err := d.client.GetRoles(ctx)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Read Armis Roles",
+				err.Error(),
+			)
+			return
+		}
+
+		for idx := range allRoles {
+			summary := u.BuildRoleDataSourceSummaryModel(&allRoles[idx])
+			if u.ShouldIncludeRole(summary, config.MatchPrefix) && !u.ShouldExcludeRole(summary, config.ExcludePrefix) {
+				roles = append(roles, summary)
+			}
+		}
 	}
 
-	role, err := d.client.GetRoleByName(ctx, config.Name.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Read Armis Role",
-			fmt.Sprintf("Error fetching role: %s", err.Error()),
-		)
-		return
-	}
+	config.Roles = roles
 
-	roleState := u.BuildRoleDataSourceModel(role)
-
-	// Set the state with the fetched role
-	resp.Diagnostics.Append(resp.State.Set(ctx, &roleState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -16,10 +16,20 @@ type RoleResourceModel struct {
 
 // RoleDataSourceModel defines the structure for the role data source model.
 type RoleDataSourceModel struct {
-	Name        types.String      `tfsdk:"name"`
-	Permissions *PermissionsModel `tfsdk:"permissions"`
-	ID          types.String      `tfsdk:"role_id"`
-	ViprRole    types.Bool        `tfsdk:"vipr_role"`
+	Name          types.String                 `tfsdk:"name"`
+	MatchPrefix   types.String                 `tfsdk:"match_prefix"`
+	ExcludePrefix types.String                 `tfsdk:"exclude_prefix"`
+	Permissions   *PermissionsModel            `tfsdk:"permissions"`
+	ID            types.String                 `tfsdk:"role_id"`
+	ViprRole      types.Bool                   `tfsdk:"vipr_role"`
+	Roles         []RoleDataSourceSummaryModel `tfsdk:"roles"`
+}
+
+// RoleDataSourceSummaryModel defines the structure for summary entries in the roles collection.
+type RoleDataSourceSummaryModel struct {
+	ID       types.String `tfsdk:"role_id"`
+	Name     types.String `tfsdk:"name"`
+	ViprRole types.Bool   `tfsdk:"vipr_role"`
 }
 
 // PermissionsModel defines the structure for permissions.
