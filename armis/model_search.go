@@ -3,6 +3,8 @@
 
 package armis
 
+import "encoding/json"
+
 // SearchAPIResponse represents the response returned by the search endpoint.
 type SearchAPIResponse struct {
 	Data    SearchData `json:"data"`
@@ -42,15 +44,42 @@ type SearchResult struct {
 	Type                 string           `json:"type,omitempty"`
 }
 
+type SearchEndpointID string
+
+func (id *SearchEndpointID) UnmarshalJSON(b []byte) error {
+	// trim any leading spaces
+	i := 0
+	for ; i < len(b) && (b[i] == ' ' || b[i] == '\n' || b[i] == '\r' || b[i] == '\t'); i++ {
+	}
+
+	if i < len(b) && b[i] == '"' {
+		// value is a quoted string
+		var s string
+		if err := json.Unmarshal(b, &s); err != nil {
+			return err
+		}
+		*id = SearchEndpointID(s)
+		return nil
+	}
+
+	// otherwise treat it as a number
+	var n json.Number
+	if err := json.Unmarshal(b, &n); err != nil {
+		return err
+	}
+	*id = SearchEndpointID(n.String())
+	return nil
+}
+
 // SearchEndpoint represents an endpoint referenced in a search result.
 type SearchEndpoint struct {
-	ID             int      `json:"id,omitempty"`
-	IP             []string `json:"ip,omitempty"`
-	Name           string   `json:"name,omitempty"`
-	Risk           int      `json:"risk,omitempty"`
-	Type           string   `json:"type,omitempty"`
-	MacAddress     []string `json:"macAddress,omitempty"`
-	DataSources    []string `json:"dataSources,omitempty"`
-	BusinessImpact string   `json:"businessImpact,omitempty"`
-	RiskLevel      int      `json:"riskLevel,omitempty"`
+	ID             SearchEndpointID `json:"id,omitempty"`
+	IP             []string         `json:"ip,omitempty"`
+	Name           string           `json:"name,omitempty"`
+	Risk           int              `json:"risk,omitempty"`
+	Type           string           `json:"type,omitempty"`
+	MacAddress     []string         `json:"macAddress,omitempty"`
+	DataSources    []string         `json:"dataSources,omitempty"`
+	BusinessImpact string           `json:"businessImpact,omitempty"`
+	RiskLevel      int              `json:"riskLevel,omitempty"`
 }
