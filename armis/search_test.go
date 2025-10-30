@@ -141,6 +141,36 @@ func TestSearchEndpointIDUnmarshal(t *testing.T) {
 	}
 }
 
+func TestSearchEndpointIPsUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	t.Run("slice input", func(t *testing.T) {
+		payload := []byte(`{"ip":["10.0.0.1","fe80::1"]}`)
+		var res struct {
+			Source SearchEndpoint `json:"ip"`
+		}
+		if err := json.Unmarshal(payload, &res); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := []string(res.Source.IP); len(got) != 2 || got[0] != "10.0.0.1" || got[1] != "fe80::1" {
+			t.Fatalf("unexpected ips: %#v", got)
+		}
+	})
+
+	t.Run("string input", func(t *testing.T) {
+		payload := []byte(`{"ip":"10.0.0.1"}`)
+		var res struct {
+			Source SearchEndpoint `json:"ip"`
+		}
+		if err := json.Unmarshal(payload, &res); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := []string(res.Source.IP); len(got) != 1 || got[0] != "10.0.0.1" {
+			t.Fatalf("unexpected ips: %#v", got)
+		}
+	})
+}
+
 func TestGetSearchRequiresAQL(t *testing.T) {
 	t.Parallel()
 
