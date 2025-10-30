@@ -5,6 +5,7 @@ package armis
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"testing"
@@ -121,6 +122,22 @@ func TestGetActivitySearch(t *testing.T) {
 	}
 	if res.Total != 1 || len(res.Results) != 1 || res.Results[0].Title != "Example Activity" {
 		t.Fatalf("unexpected response: %+v", res)
+	}
+}
+
+func TestSearchEndpointIDUnmarshal(t *testing.T) {
+	payload := []byte(`{"sourceEndpoints":[{"id":123},{"id":"456"}]}`)
+	var res struct {
+		Source []SearchEndpoint `json:"sourceEndpoints"`
+	}
+	if err := json.Unmarshal(payload, &res); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := res.Source[0].ID; got != SearchEndpointID("123") {
+		t.Fatalf("expected 123, got %q", got)
+	}
+	if got := res.Source[1].ID; got != SearchEndpointID("456") {
+		t.Fatalf("expected 456, got %q", got)
 	}
 }
 
