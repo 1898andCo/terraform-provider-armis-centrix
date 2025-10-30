@@ -44,7 +44,13 @@ type SearchResult struct {
 
 // SearchEndpoint represents an endpoint referenced in a search result.
 type SearchEndpoint struct {
-	ID   string `json:"id,omitempty"`
-	IP   string `json:"ip,omitempty"`
-	Name string `json:"name,omitempty"`
+	ID             int      `json:"id,omitempty"`
+	IP             []string `json:"ip,omitempty"`
+	Name           string   `json:"name,omitempty"`
+	Risk           int      `json:"risk,omitempty"`
+	Type           string   `json:"type,omitempty"`
+	MacAddress     []string `json:"macAddress,omitempty"`
+	DataSources    []string `json:"dataSources,omitempty"`
+	BusinessImpact string   `json:"businessImpact,omitempty"`
+	RiskLevel      int      `json:"riskLevel,omitempty"`
 }
