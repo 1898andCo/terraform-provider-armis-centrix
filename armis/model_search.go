@@ -50,6 +50,7 @@ type SearchResult struct {
 type SearchEndpointID string
 
 func (id *SearchEndpointID) UnmarshalJSON(b []byte) error {
+	// Trim leading whitespace to detect quoted vs numeric IDs.
 	i := 0
 	for ; i < len(b) && (b[i] == ' ' || b[i] == '\n' || b[i] == '\r' || b[i] == '\t'); i++ {
 	}
@@ -63,7 +64,7 @@ func (id *SearchEndpointID) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 
-	// otherwise treat it as a number
+	// Otherwise, treat it as a number.
 	var n json.Number
 	if err := json.Unmarshal(b, &n); err != nil {
 		return err
