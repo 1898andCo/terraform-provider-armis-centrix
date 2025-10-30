@@ -145,6 +145,7 @@ func TestSearchEndpointIPsUnmarshal(t *testing.T) {
 	t.Parallel()
 
 	t.Run("slice input", func(t *testing.T) {
+		t.Parallel()
 		payload := []byte(`{"sourceEndpoints":[{"ip":["10.0.0.1","fe80::1"]}]}`)
 		var res struct {
 			Source []SearchEndpoint `json:"sourceEndpoints"`
@@ -159,6 +160,7 @@ func TestSearchEndpointIPsUnmarshal(t *testing.T) {
 	})
 
 	t.Run("string input", func(t *testing.T) {
+		t.Parallel()
 		payload := []byte(`{"sourceEndpoints":[{"ip":"10.0.0.1"}]}`)
 		var res struct {
 			Source []SearchEndpoint `json:"sourceEndpoints"`
