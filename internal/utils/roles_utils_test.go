@@ -563,7 +563,7 @@ func TestBuildRoleDataSourceModel(t *testing.T) {
 					AdvancedPermissions: armis.AdvancedPermissions{
 						All: true,
 						Behavioral: armis.Behavioral{
-							All: false,
+							All:             false,
 							ApplicationName: armis.Permission{All: true},
 							HostName:        armis.Permission{All: false},
 							ServiceName:     armis.Permission{All: true},

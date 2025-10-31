@@ -970,12 +970,12 @@ func TestConsolidationFromObject(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name         string
-		input        types.Object
-		validate     func(t *testing.T, result armis.Consolidation, hasValue bool, diags diag.Diagnostics)
+		name     string
+		input    types.Object
+		validate func(t *testing.T, result armis.Consolidation, hasValue bool, diags diag.Diagnostics)
 	}{
 		{
-			name:  "null object returns false",
+			name: "null object returns false",
 			input: types.ObjectNull(map[string]attr.Type{
 				"amount": types.Int64Type,
 				"unit":   types.StringType,
@@ -990,7 +990,7 @@ func TestConsolidationFromObject(t *testing.T) {
 			},
 		},
 		{
-			name:  "unknown object returns false",
+			name: "unknown object returns false",
 			input: types.ObjectUnknown(map[string]attr.Type{
 				"amount": types.Int64Type,
 				"unit":   types.StringType,
@@ -1363,7 +1363,7 @@ func TestConvertListToActions(t *testing.T) {
 			},
 		},
 		{
-			name:  "empty list returns empty slice",
+			name: "empty list returns empty slice",
 			input: types.ListValueMust(types.ObjectType{
 				AttrTypes: map[string]attr.Type{
 					"type": types.StringType,
