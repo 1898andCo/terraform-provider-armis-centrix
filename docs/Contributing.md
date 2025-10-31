@@ -76,11 +76,6 @@ go test ./armis -v
 go test ./internal/utils -v -run TestBuildRoleRequest
 ```
 
-**Current Coverage:**
-- `internal/utils` package: 86.1% coverage (126 tests)
-- `armis` SDK package: 73.3% coverage (51 tests)
-- Overall project: 42.7% coverage
-
 ### Acceptance Tests
 
 Acceptance tests validate the provider's integration with the Armis API and require valid API credentials. These tests create, read, update, and delete real resources in the configured Armis instance.
