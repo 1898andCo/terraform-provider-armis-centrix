@@ -16,11 +16,43 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 
 ## Repository Layout
 
-- **`armis/`**: Armis API client that configures the HTTP client and exposes the structs plus CRUD helpers used by Terraform resources and data sources.
+- **`armis/`**: Armis API client with auth (`client.go`, `auth.go`), CRUD operations (`{resource}.go`), and models (`model_{resource}.go`); uses functional options and token caching.
 - **`internal/provider/`**: Terraform resource and data source implementations plus acceptance tests.
 - **`docs/`**: Generated provider docs (`task docs` refreshes from code descriptions).
 - **`examples/`**: Usage samples consumed in documentation.
 - **`tools/`**: Doc generation helpers executed by `task docs`.
+
+## Architecture Patterns
+
+### Dual Model System
+- **API models** (`armis/model_*.go`): Match Armis API JSON structure exactly; use `json` tags.
+- **Terraform models** (resource files, `internal/utils/model_*.go`): Map to Terraform state; use `tfsdk` tags.
+- **Conversion**: Helper functions bridge models (e.g., `buildArmisUser()` converts Terraform → API).
+
+### API Client Design
+- **Functional options**: Configure client via `armis.WithAPIURL()`, `armis.WithHTTPClient()`, etc.
+- **Token caching**: Bearer token auto-refreshes 5 minutes before expiry; `sync.RWMutex` ensures thread safety.
+- **CRUD signature**: `Get(ctx, id) (*Model, error)`, `Create(ctx, model) (*Model, error)`, `Update(ctx, model, id)`, `Delete(ctx, id) (bool, error)`.
+
+### Resource Implementation Pattern
+Each resource follows this structure:
+1. **armis/model_{resource}.go**: Define API response structs (GetResponse, CreateResponse, etc.).
+2. **armis/{resource}.go**: Implement CRUD methods; add sentinel errors to `armis/errors.go`.
+3. **internal/provider/{resource}_resource.go**:
+   - Implement `resource.Resource` + `resource.ResourceWithConfigure` + `resource.ResourceWithImportState`.
+   - Define schema with validators (use `stringvalidator`, `int64validator` from framework).
+   - `Create/Read/Update/Delete` methods: extract plan/state → call armis client → update state.
+   - Handle 404 in Read: `resp.State.RemoveResource(ctx)` for drift detection.
+4. **internal/provider/{resource}_resource_test.go**: Write acceptance tests with test fixtures.
+5. **internal/sweep/{resource}_resource_test_sweeper.go**: Register sweeper for test cleanup.
+6. **provider.go**: Add factory to `Resources()` slice.
+7. Run `task docs` to regenerate documentation from schema descriptions.
+
+### Error Handling Strategy
+Three-level approach:
+- **Validation errors**: Sentinel errors in `armis/errors.go` (e.g., `ErrCollectorInvalidType`).
+- **API errors**: `armis.APIError` with StatusCode and Body; use `appendAPIError()` for diagnostics.
+- **Context wrapping**: `fmt.Errorf("%w", err)` preserves error chain for debugging.
 
 ## Taskfile Reference
 
@@ -39,6 +71,7 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 - **Error handling**: Wrap errors with context using `fmt.Errorf("%w", err)`; leverage sentinel errors in `internal/provider` when available.
 - **Comments**: Follow Go doc comment conventions; keep exported symbol docs in sync with generated docs (`task docs`).
 - **APIs**: Use helper functions in `armis/` for REST interactions; avoid duplicating HTTP logic.
+- **Models**: Maintain separate API models (`armis/`) and Terraform models (`internal/provider`, `internal/utils`); use helper functions for conversion.
 
 ## Testing Guidance
 
@@ -46,6 +79,14 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 - **Unit tests**: Add table-driven tests alongside implementations in `*_test.go` files; rely on mockable interfaces where possible.
 - **Cleanup**: Extend `task sweep` when resources need explicit teardown to prevent drift in shared environments.
 - **Pre-submit**: Run `go test ./...` before opening a PR; ensure acceptance tests pass locally when touching provider logic.
+
+## Running Individual Tests
+
+- **Single unit test**: `go test ./internal/utils -v -run TestBuildRoleRequest`
+- **Single acceptance test**: `TF_ACC=true go test ./internal/provider -v -run TestAccCollectorResource_basic -timeout=30m`
+- **Package-specific tests**: `go test ./armis -v` or `go test ./internal/utils -v`
+- **With coverage**: `go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out`
+- **Parallel execution**: Tests use `t.Parallel()` for speed; ensure parallel-safe when adding new tests.
 
 ## Documentation Workflow
 
