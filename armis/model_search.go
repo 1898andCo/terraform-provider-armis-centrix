@@ -25,26 +25,33 @@ type SearchData struct {
 
 // SearchResult represents a single search hit returned by Armis.
 type SearchResult struct {
-	ActivityUUIDs        []string         `json:"activityUUIDs,omitempty"`
-	AffectedDevicesCount int              `json:"affectedDevicesCount,omitempty"`
-	AlertID              int              `json:"alertId,omitempty"`
-	Classification       string           `json:"classification,omitempty"`
-	ConnectionIDs        []string         `json:"connectionIds,omitempty"`
-	Description          string           `json:"description,omitempty"`
-	DestinationEndpoints []SearchEndpoint `json:"destinationEndpoints,omitempty"`
-	DeviceIDs            []int            `json:"deviceIds,omitempty"`
-	LastAlertUpdateTime  string           `json:"lastAlertUpdateTime,omitempty"`
-	MitreAttackLabels    []string         `json:"mitreAttackLabels,omitempty"`
-	PolicyID             string           `json:"policyId,omitempty"`
-	PolicyLabels         []string         `json:"policyLabels,omitempty"`
-	PolicyTitle          string           `json:"policyTitle,omitempty"`
-	Severity             string           `json:"severity,omitempty"`
-	SourceEndpoints      []SearchEndpoint `json:"sourceEndpoints,omitempty"`
-	Status               string           `json:"status,omitempty"`
-	StatusChangeTime     string           `json:"statusChangeTime,omitempty"`
-	Time                 string           `json:"time,omitempty"`
-	Title                string           `json:"title,omitempty"`
-	Type                 string           `json:"type,omitempty"`
+	ActivityUUIDs        []string             `json:"activityUUIDs,omitempty"`
+	AffectedDevicesCount int                  `json:"affectedDevicesCount,omitempty"`
+	AlertID              int                  `json:"alertId,omitempty"`
+	Classification       string               `json:"classification,omitempty"`
+	ConnectionIDs        []string             `json:"connectionIds,omitempty"`
+	Description          string               `json:"description,omitempty"`
+	DestinationEndpoints []SearchEndpoint     `json:"destinationEndpoints,omitempty"`
+	DeviceIDs            []int                `json:"deviceIds,omitempty"`
+	LastAlertUpdateTime  string               `json:"lastAlertUpdateTime,omitempty"`
+	MitreAttackLabels    []string             `json:"mitreAttackLabels,omitempty"`
+	PolicyID             string               `json:"policyId,omitempty"`
+	PolicyLabels         []string             `json:"policyLabels,omitempty"`
+	PolicyTitle          string               `json:"policyTitle,omitempty"`
+	Severity             string               `json:"severity,omitempty"`
+	SourceEndpoints      []SearchEndpoint     `json:"sourceEndpoints,omitempty"`
+	Status               string               `json:"status,omitempty"`
+	StatusChangeTime     string               `json:"statusChangeTime,omitempty"`
+	Time                 string               `json:"time,omitempty"`
+	Title                string               `json:"title,omitempty"`
+	Type                 string               `json:"type,omitempty"`
+	Action               string               `json:"action,omitempty"`
+	AdditionalInfo       *AuditAdditionalInfo `json:"additionalInfo,omitempty"`
+	ID                   int                  `json:"id,omitempty"`
+	TimeUtc              string               `json:"timeUtc,omitempty"`
+	Trigger              string               `json:"trigger,omitempty"`
+	User                 string               `json:"user,omitempty"`
+	UserIP               string               `json:"userIp,omitempty"`
 }
 
 type SearchEndpointID string
@@ -110,4 +117,10 @@ type SearchEndpoint struct {
 	DataSources    []string          `json:"dataSources,omitempty"`
 	BusinessImpact string            `json:"businessImpact,omitempty"`
 	RiskLevel      int               `json:"riskLevel,omitempty"`
+}
+
+// AuditAdditionalInfo represents additional information in audit log entries.
+type AuditAdditionalInfo struct {
+	Data string `json:"data,omitempty"`
+	Type string `json:"type,omitempty"`
 }
