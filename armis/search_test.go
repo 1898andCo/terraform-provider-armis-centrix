@@ -175,6 +175,99 @@ func TestSearchEndpointIPsUnmarshal(t *testing.T) {
 	})
 }
 
+func TestGetAuditLogSearch(t *testing.T) {
+	t.Parallel()
+
+	const (
+		aql           = "in:auditLogs"
+		includeSample = false
+		includeTotal  = false
+	)
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/search/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodGet {
+				t.Fatalf("expected GET, got %s", r.Method)
+			}
+
+			values := r.URL.Query()
+			if got := values.Get("aql"); got != aql {
+				t.Fatalf("unexpected aql: %q", got)
+			}
+			if got := values.Get("includeSample"); got != "false" {
+				t.Fatalf("unexpected includeSample: %q", got)
+			}
+			if got := values.Get("includeTotal"); got != "false" {
+				t.Fatalf("unexpected includeTotal: %q", got)
+			}
+
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": map[string]any{
+					"count": 1,
+					"next":  10,
+					"prev":  nil,
+					"results": []map[string]any{{
+						"action": "API Call",
+						"additionalInfo": map[string]any{
+							"data": "Endpoint: search/, Status: 200",
+							"type": "TEXT",
+						},
+						"id":      3505970941,
+						"time":    "2025-11-06T17:24:01.314669+00:00",
+						"timeUtc": "2025-11-06T17:24:01.314669+00:00",
+						"trigger": "User Action",
+						"user":    "Michael Rosenfeld (michael.rosenfeld@1898andco.io)",
+						"userIp":  "None",
+					}},
+				},
+			})
+		},
+	})
+	defer cleanup()
+
+	res, err := client.GetSearch(context.Background(), aql, includeSample, includeTotal)
+	if err != nil {
+		t.Fatalf("get search: %v", err)
+	}
+	if len(res.Results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(res.Results))
+	}
+
+	auditLog := res.Results[0]
+	if auditLog.Action != "API Call" {
+		t.Errorf("expected action 'API Call', got %q", auditLog.Action)
+	}
+	if auditLog.ID != 3505970941 {
+		t.Errorf("expected id 3505970941, got %d", auditLog.ID)
+	}
+	if auditLog.Trigger != "User Action" {
+		t.Errorf("expected trigger 'User Action', got %q", auditLog.Trigger)
+	}
+	if auditLog.User != "Michael Rosenfeld (michael.rosenfeld@1898andco.io)" {
+		t.Errorf("expected user 'Michael Rosenfeld (michael.rosenfeld@1898andco.io)', got %q", auditLog.User)
+	}
+	if auditLog.UserIP != "None" {
+		t.Errorf("expected userIp 'None', got %q", auditLog.UserIP)
+	}
+	if auditLog.Time != "2025-11-06T17:24:01.314669+00:00" {
+		t.Errorf("expected time '2025-11-06T17:24:01.314669+00:00', got %q", auditLog.Time)
+	}
+	if auditLog.TimeUtc != "2025-11-06T17:24:01.314669+00:00" {
+		t.Errorf("expected timeUtc '2025-11-06T17:24:01.314669+00:00', got %q", auditLog.TimeUtc)
+	}
+	if auditLog.AdditionalInfo == nil {
+		t.Fatal("expected additionalInfo to be non-nil")
+	}
+	if auditLog.AdditionalInfo.Data != "Endpoint: search/, Status: 200" {
+		t.Errorf("expected additionalInfo.data 'Endpoint: search/, Status: 200', got %q", auditLog.AdditionalInfo.Data)
+	}
+	if auditLog.AdditionalInfo.Type != "TEXT" {
+		t.Errorf("expected additionalInfo.type 'TEXT', got %q", auditLog.AdditionalInfo.Type)
+	}
+}
+
 func TestGetSearchRequiresAQL(t *testing.T) {
 	t.Parallel()
 
