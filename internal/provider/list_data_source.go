@@ -123,13 +123,13 @@ type listsDataSourceModel struct {
 
 // listModel maps the list schema data.
 type listModel struct {
-	ID            types.String `tfsdk:"id"`
-	Name          types.String `tfsdk:"name"`
-	Description   types.String `tfsdk:"description"`
-	LastUpdatedBy types.String `tfsdk:"last_updated_by"`
-	CreatedBy     types.String `tfsdk:"created_by"`
-	ListType      types.String `tfsdk:"list_type"`
-	CreationTime  types.String `tfsdk:"creation_time"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	LastUpdatedBy  types.String `tfsdk:"last_updated_by"`
+	CreatedBy      types.String `tfsdk:"created_by"`
+	ListType       types.String `tfsdk:"list_type"`
+	CreationTime   types.String `tfsdk:"creation_time"`
 	LastUpdateTime types.String `tfsdk:"last_update_time"`
 }
 
@@ -180,13 +180,13 @@ func (d *listsDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	var lists []listModel
 	for _, l := range filtered {
 		lists = append(lists, listModel{
-			ID:            types.StringValue(strconv.Itoa(l.ListID)),
-			Name:          types.StringValue(l.ListName),
-			Description:   types.StringValue(l.Description),
-			LastUpdatedBy: types.StringValue(l.LastUpdatedBy),
-			CreatedBy:     types.StringValue(l.CreatedBy),
-			ListType:      types.StringValue(l.ListType),
-			CreationTime:  types.StringValue(l.CreationTime),
+			ID:             types.StringValue(strconv.Itoa(l.ListID)),
+			Name:           types.StringValue(l.ListName),
+			Description:    types.StringValue(l.Description),
+			LastUpdatedBy:  types.StringValue(l.LastUpdatedBy),
+			CreatedBy:      types.StringValue(l.CreatedBy),
+			ListType:       types.StringValue(l.ListType),
+			CreationTime:   types.StringValue(l.CreationTime),
 			LastUpdateTime: types.StringValue(l.LastUpdateTime),
 		})
 	}

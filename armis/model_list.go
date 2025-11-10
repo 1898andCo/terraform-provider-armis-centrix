@@ -16,8 +16,8 @@ type ListSettings struct {
 
 // ListsAPIResponse matches the Armis lists endpoint, where data contains a nested lists array.
 type ListsAPIResponse struct {
-    Data struct {
-        Lists []ListSettings `json:"lists"`
-    } `json:"data"`
-    Success bool `json:"success,omitempty"`
+	Data struct {
+		Lists []ListSettings `json:"lists"`
+	} `json:"data"`
+	Success bool `json:"success,omitempty"`
 }

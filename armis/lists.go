@@ -22,11 +22,11 @@ func (c *Client) GetLists(ctx context.Context) ([]ListSettings, error) {
 		return nil, fmt.Errorf("failed to fetch Lists: %w", err)
 	}
 
-    // Parse the response
-    var response ListsAPIResponse
-    if err := json.Unmarshal(res, &response); err != nil {
-        return nil, fmt.Errorf("failed to parse Lists response: %w", err)
-    }
+	// Parse the response
+	var response ListsAPIResponse
+	if err := json.Unmarshal(res, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse Lists response: %w", err)
+	}
 
-    return response.Data.Lists, nil
+	return response.Data.Lists, nil
 }
