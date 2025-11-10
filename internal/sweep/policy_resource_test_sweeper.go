@@ -32,7 +32,7 @@ func SweepArmisPolicies(name string) *resource.Sweeper {
 				return fmt.Errorf("error getting Armis policies: %w", err)
 			}
 
-			prefix := "test"
+			prefix := "tfacc"
 			for _, policy := range policies {
 				if strings.HasPrefix(policy.Name, prefix) {
 					log.Printf("[INFO] Deleting Armis policy: %s", policy.Name)

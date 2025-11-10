@@ -41,7 +41,6 @@ resource "armis_role" "auditor" {
       manage = {
         all               = false
         resolve           = false
-        suppress          = false
         whitelist_devices = false
       }
     }
@@ -297,7 +296,6 @@ Optional:
 
 - `all` (Boolean) Indicates if all alert management permissions are enabled.
 - `resolve` (Boolean) Permission to resolve alerts.
-- `suppress` (Boolean) Permission to suppress alerts.
 - `whitelist_devices` (Boolean) Permission to whitelist devices in alerts.
 
 

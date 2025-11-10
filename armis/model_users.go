@@ -3,18 +3,18 @@
 
 package armis
 
-// Struct to match the entire API response.
+// UserAPIResponse to match the entire API response.
 type UserAPIResponse struct {
 	Data    Users `json:"data"`
 	Success bool  `json:"success,omitempty"`
 }
 
-// Struct for the "data" key.
+// Users for the "data" key.
 type Users struct {
 	Users []UserSettings `json:"users,omitempty"`
 }
 
-// Struct for individual user settings.
+// UserSettings for individual user settings.
 type UserSettings struct {
 	Email                   string           `json:"email,omitempty"`
 	ID                      int              `json:"id,omitempty"`
@@ -38,25 +38,25 @@ type RoleAssignment struct {
 	Sites []string `json:"sites,omitempty"`
 }
 
-// Structs for getting a singular user.
+// GetUserAPIResponse for getting a singular user.
 type GetUserAPIResponse struct {
 	Data    UserSettings `json:"data"`
 	Success bool         `json:"success"`
 }
 
-// Structs for creating users.
+// CreateUserAPIResponse for creating users.
 type CreateUserAPIResponse struct {
 	Data    UserSettings `json:"data"` // Directly map to a single user object
 	Success bool         `json:"success"`
 }
 
-// Structs for updating users.
+// UpdateUserAPIResponse for updating users.
 type UpdateUserAPIResponse struct {
 	Data    UserSettings `json:"data"` // Directly map to a single user object
 	Success bool         `json:"success"`
 }
 
-// Structs for deleting users.
+// DeleteUserAPIResponse for deleting users.
 type DeleteUserAPIResponse struct {
 	Success bool `json:"success"`
 }

@@ -5,29 +5,40 @@ package armis
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 )
 
 func TestNewClient(t *testing.T) {
 	t.Parallel()
-	client := integrationClient(t)
 
-	// Basic sanity checks.
-	if client.apiURL == "" {
-		t.Fatalf("client apiURL should not be empty")
-	}
-	if client.apiKey == "" {
-		t.Fatalf("client apiKey should not be empty")
-	}
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/ping": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			respondJSON(t, w, http.StatusOK, map[string]string{"message": "pong"})
+		},
+	})
+	defer cleanup()
 
-	// Verify that the helper sets an auth token by attempting to build a request.
 	req, err := client.newRequest(context.Background(), http.MethodGet, "/ping", nil)
 	if err != nil {
 		t.Fatalf("newRequest failed: %v", err)
 	}
 
-	if got := req.Header.Get("Authorization"); got == "" {
-		t.Fatalf("expected Authorization header to be set, got empty string")
+	if got := req.Header.Get("Authorization"); got != testToken {
+		t.Fatalf("expected Authorization header %q, got %q", testToken, got)
+	}
+}
+
+func TestNewClientRequiresAPIKey(t *testing.T) {
+	t.Parallel()
+
+	c, err := NewClient("")
+	if !errors.Is(err, ErrNoAPIKey) {
+		t.Fatalf("expected ErrNoAPIKey, got %v", err)
+	}
+	if c != nil {
+		t.Fatalf("expected nil client when no API key provided")
 	}
 }

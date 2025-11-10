@@ -10,6 +10,7 @@ package utils
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -55,9 +56,6 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					All: role.Permissions.Alert.Manage.All.ValueBool(),
 					Resolve: armis.Permission{
 						All: role.Permissions.Alert.Manage.Resolve.ValueBool(),
-					},
-					Suppress: armis.Permission{
-						All: role.Permissions.Alert.Manage.Suppress.ValueBool(),
 					},
 					WhitelistDevices: armis.Permission{
 						All: role.Permissions.Alert.Manage.WhitelistDevices.ValueBool(),
@@ -378,7 +376,6 @@ func BuildRoleResourceModel(role *armis.RoleSettings, model RoleResourceModel) R
 	// Alert Manage Permissions
 	result.Permissions.Alert.Manage.All = types.BoolValue(role.Permissions.Alert.Manage.All)
 	result.Permissions.Alert.Manage.Resolve = types.BoolValue(role.Permissions.Alert.Manage.Resolve.All)
-	result.Permissions.Alert.Manage.Suppress = types.BoolValue(role.Permissions.Alert.Manage.Suppress.All)
 	result.Permissions.Alert.Manage.WhitelistDevices = types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All)
 
 	// Device Permissions
@@ -555,7 +552,6 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 				Manage: &ManageAlertsModel{
 					All:              types.BoolValue(role.Permissions.Alert.Manage.All),
 					Resolve:          types.BoolValue(role.Permissions.Alert.Manage.Resolve.All),
-					Suppress:         types.BoolValue(role.Permissions.Alert.Manage.Suppress.All),
 					WhitelistDevices: types.BoolValue(role.Permissions.Alert.Manage.WhitelistDevices.All),
 				},
 				Read: types.BoolValue(role.Permissions.Alert.Read.All),
@@ -699,9 +695,48 @@ func BuildRoleDataSourceModel(role *armis.RoleSettings) RoleDataSourceModel {
 	}
 }
 
-// initIfNil ensures a *T is non-nil by allocating it if needed.
-// Keeping the conditional inside a tiny helper keeps callers branch-free
-// and dramatically lowers cognitive complexity in the callers.
+func BuildRoleDataSourceSummaryModel(role *armis.RoleSettings) RoleDataSourceSummaryModel {
+	return RoleDataSourceSummaryModel{
+		ID:       types.StringValue(fmt.Sprintf("%d", role.ID)),
+		Name:     types.StringValue(role.Name),
+		ViprRole: types.BoolValue(role.ViprRole),
+	}
+}
+
+func ShouldIncludeRole(model RoleDataSourceSummaryModel, prefix types.String) bool {
+	if prefix.IsNull() || prefix.IsUnknown() {
+		return true
+	}
+
+	value := prefix.ValueString()
+	if value == "" {
+		return true
+	}
+
+	if model.Name.IsNull() || model.Name.IsUnknown() {
+		return false
+	}
+
+	return strings.HasPrefix(model.Name.ValueString(), value)
+}
+
+func ShouldExcludeRole(model RoleDataSourceSummaryModel, prefix types.String) bool {
+	if prefix.IsNull() || prefix.IsUnknown() {
+		return false
+	}
+
+	value := prefix.ValueString()
+	if value == "" {
+		return false
+	}
+
+	if model.Name.IsNull() || model.Name.IsUnknown() {
+		return false
+	}
+
+	return strings.HasPrefix(model.Name.ValueString(), value)
+}
+
 func initIfNil[T any](p **T) {
 	if *p == nil {
 		*p = new(T)

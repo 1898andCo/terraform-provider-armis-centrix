@@ -26,7 +26,6 @@ resource "armis_role" "auditor" {
       manage = {
         all               = false
         resolve           = false
-        suppress          = false
         whitelist_devices = false
       }
     }

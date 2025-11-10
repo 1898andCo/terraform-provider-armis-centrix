@@ -16,12 +16,10 @@ func TestAcc_RoleResource(t *testing.T) {
 	resourceName := "armis_role.test"
 
 	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-role"))
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-
 			{
 				Config: testAccRoleResourceConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -43,7 +41,6 @@ func TestAcc_RoleResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.read", "true"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.all", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.resolve", "true"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.suppress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.alert.manage.whitelist_devices", "true"),
 
 					resource.TestCheckResourceAttr(resourceName, "permissions.device.all", "false"),
@@ -111,7 +108,6 @@ resource "armis_role" "test" {
       manage = {
         all               = false
         resolve           = true
-        suppress          = false
         whitelist_devices = true
       }
     }

@@ -222,7 +222,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	createResp, err := r.client.CreatePolicy(ctx, policy)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating policy", fmt.Sprintf("API error: %v", err))
+		appendAPIError(&resp.Diagnostics, "Error creating policy", err)
 		return
 	}
 
@@ -248,12 +248,21 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			return
 		}
 
-		resp.Diagnostics.AddError("Error reading policy", err.Error())
+		appendAPIError(&resp.Diagnostics, "Error reading policy", err)
 		return
 	}
 
 	// Update state with the retrieved policy data
 	result := u.ResponseToPolicyFromGet(ctx, getResp)
+
+	if state.Rules != nil && result.Rules != nil {
+		if getResp.Rules.And == nil && !state.Rules.And.IsNull() && !state.Rules.And.IsUnknown() {
+			result.Rules.And = state.Rules.And
+		}
+		if getResp.Rules.Or == nil && !state.Rules.Or.IsNull() && !state.Rules.Or.IsUnknown() {
+			result.Rules.Or = state.Rules.Or
+		}
+	}
 
 	// Preserve the ID and MITRE labels from state
 	result.ID = state.ID
@@ -280,7 +289,7 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	updateResp, err := r.client.UpdatePolicy(ctx, policy, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error updating policy", fmt.Sprintf("API error: %v", err))
+		appendAPIError(&resp.Diagnostics, "Error updating policy", err)
 		return
 	}
 
@@ -289,6 +298,15 @@ func (r *policyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if plan.Rules != nil && result.Rules != nil {
+		if updateResp.Rules.And == nil && !plan.Rules.And.IsNull() && !plan.Rules.And.IsUnknown() {
+			result.Rules.And = plan.Rules.And
+		}
+		if updateResp.Rules.Or == nil && !plan.Rules.Or.IsNull() && !plan.Rules.Or.IsUnknown() {
+			result.Rules.Or = plan.Rules.Or
+		}
 	}
 
 	// Preserve the ID and MITRE labels
@@ -307,7 +325,7 @@ func (r *policyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	deleteResp, err := r.client.DeletePolicy(ctx, state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Error deleting policy", err.Error())
+		appendAPIError(&resp.Diagnostics, "Error deleting policy", err)
 		return
 	}
 

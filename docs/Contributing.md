@@ -54,13 +54,98 @@ can then be implemented in your platform of choice.
 >
 > For more information on the Armis Centrix™ platform, refer to the Armis user guide.
 
+The provider includes two types of tests:
+
+### Unit Tests
+
+Unit tests validate the internal logic, data transformations, and utility functions without requiring API access. These tests are fast, run in parallel, and don't need authentication credentials.
+
+```sh
+# Run all unit tests
+go test ./...
+
+# Run unit tests with coverage
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
+
+# Run specific package tests
+go test ./internal/utils -v
+go test ./armis -v
+
+# Run specific test function
+go test ./internal/utils -v -run TestBuildRoleRequest
+```
+
+### Acceptance Tests
+
+Acceptance tests validate the provider's integration with the Armis API and require valid API credentials. These tests create, read, update, and delete real resources in the configured Armis instance.
+
 You'll need to set the API key environment variable:
 
 ```sh
 export ARMIS_API_KEY=<API_KEY>
 export ARMIS_API_URL=<API_URL>
 
-# Runs provider tests
+# Runs acceptance tests (requires API credentials)
 task test
+```
+
+**Note:** The `task test` command runs acceptance tests with `TF_ACC=true` and includes a cleanup sweep at the end.
+
+### Test Structure
+
+```
+.
+├── armis/                      # SDK tests
+│   ├── auth_test.go           # Authentication tests
+│   ├── collectors_test.go     # Collector CRUD tests
+│   └── ...
+├── internal/
+│   ├── provider/              # Acceptance tests
+│   │   ├── collector_resource_test.go
+│   │   ├── policy_resource_test.go
+│   │   └── ...
+│   └── utils/                 # Unit tests
+│       ├── roles_utils_test.go      # Role transformation tests
+│       └── policy_utils_test.go     # Policy transformation tests
+```
+
+### Writing Tests
+
+All tests follow Go best practices:
+
+- **Table-driven tests** for comprehensive coverage
+- **Parallel execution** with `t.Parallel()` for performance
+- **Clear test names** describing what is being tested
+- **Validation functions** for complex assertions
+
+Example:
+
+```go
+func TestMyFunction(t *testing.T) {
+    t.Parallel()
+
+    tests := []struct {
+        name     string
+        input    MyInput
+        expected MyOutput
+    }{
+        {
+            name: "valid input",
+            input: MyInput{Field: "value"},
+            expected: MyOutput{Result: "expected"},
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            t.Parallel()
+            result := MyFunction(tt.input)
+            if result != tt.expected {
+                t.Errorf("got %v, want %v", result, tt.expected)
+            }
+        })
+    }
+}
 ```
 
