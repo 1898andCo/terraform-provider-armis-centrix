@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
@@ -53,27 +54,22 @@ type listsDataSource struct {
 
 // Metadata returns the data source type name.
 func (d *listsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_list"
+	resp.TypeName = req.ProviderTypeName + "_lists"
 }
-
-/*
-type ListSettings struct {
-	CreatedBy      string `json:"created_by"`
-	CreationTime   string `json:"creation_time"`
-	Description    string `json:"description"`
-	LastUpdateTime string `json:"last_update_time"`
-	LastUpdatedBy  string `json:"last_updated_by"`
-	ListID         int    `json:"list_id"`
-	ListName       string `json:"list_name"`
-	ListType       string `json:"list_type"`
-}
-*/
 
 // Schema defines the schema for the lists data source.
 func (d *listsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Retrieves Armis list information.",
 		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
+				Description: "Optional filter by list name.",
+				Optional:    true,
+			},
+			"type": schema.StringAttribute{
+				Description: "Optional filter by list type.",
+				Optional:    true,
+			},
 			"lists": schema.ListNestedAttribute{
 				Description: "A computed list of lists. Each object in the list contains detailed information about a list.",
 				Computed:    true,
@@ -99,6 +95,18 @@ func (d *listsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 							Description: "The user who last updated the list.",
 							Computed:    true,
 						},
+						"list_type": schema.StringAttribute{
+							Description: "The type of the list.",
+							Computed:    true,
+						},
+						"creation_time": schema.StringAttribute{
+							Description: "Creation time of the list.",
+							Computed:    true,
+						},
+						"last_update_time": schema.StringAttribute{
+							Description: "Last update time of the list.",
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -108,7 +116,9 @@ func (d *listsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 
 // listsDataSourceModel maps the data source schema data.
 type listsDataSourceModel struct {
-	lists []listModel `tfsdk:"lists"`
+	Name  types.String `tfsdk:"name"`
+	Type  types.String `tfsdk:"type"`
+	Lists []listModel  `tfsdk:"lists"`
 }
 
 // listModel maps the list schema data.
@@ -118,95 +128,70 @@ type listModel struct {
 	Description   types.String `tfsdk:"description"`
 	LastUpdatedBy types.String `tfsdk:"last_updated_by"`
 	CreatedBy     types.String `tfsdk:"created_by"`
+	ListType      types.String `tfsdk:"list_type"`
+	CreationTime  types.String `tfsdk:"creation_time"`
+	LastUpdateTime types.String `tfsdk:"last_update_time"`
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (d *listsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config listsDataSourceModel
+	var state listsDataSourceModel
 
 	// Read Terraform configuration data into the model
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var lists []boundaryModel
+	// Fetch all lists
+	apiLists, err := d.client.GetLists(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Armis Lists",
+			err.Error(),
+		)
+		return
+	}
 
-	if !config.BoundaryID.IsNull() {
-		// Fetch a specific boundary by ID
-		boundary, err := d.client.GetBoundaryByID(ctx, config.BoundaryID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to Read Armis Boundary",
-				err.Error(),
-			)
-			return
-		}
-
-		// Map response body to model
-		boundaryState := boundaryModel{
-			ID:            types.StringValue(fmt.Sprintf("%d", boundary.ID)),
-			AffectedSites: types.StringValue(boundary.AffectedSites),
-			Name:          types.StringValue(boundary.Name),
-		}
-
-		// Map rule AQL
-		var andConditions []types.String
-		for _, condition := range boundary.RuleAQL.And {
-			andConditions = append(andConditions, types.StringValue(condition))
-		}
-
-		var orConditions []types.String
-		for _, condition := range boundary.RuleAQL.Or {
-			orConditions = append(orConditions, types.StringValue(condition))
-		}
-
-		boundaryState.RuleAQL = ruleAQLModel{
-			And: andConditions,
-			Or:  orConditions,
-		}
-
-		lists = append(lists, boundaryState)
-	} else {
-		// Fetch all lists
-		alllists, err := d.client.Getlists(ctx)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to Read Armis lists",
-				err.Error(),
-			)
-			return
-		}
-
-		// Map response body to model
-		for _, boundary := range alllists {
-			boundaryState := boundaryModel{
-				ID:            types.StringValue(fmt.Sprintf("%d", boundary.ID)),
-				AffectedSites: types.StringValue(boundary.AffectedSites),
-				Name:          types.StringValue(boundary.Name),
+	// Apply optional filters
+	filtered := apiLists
+	if !state.Name.IsNull() {
+		name := state.Name.ValueString()
+		var tmp []armis.ListSettings
+		for _, l := range filtered {
+			if l.ListName == name {
+				tmp = append(tmp, l)
 			}
-
-			// Map rule AQL
-			var andConditions []types.String
-			for _, condition := range boundary.RuleAQL.And {
-				andConditions = append(andConditions, types.StringValue(condition))
-			}
-
-			var orConditions []types.String
-			for _, condition := range boundary.RuleAQL.Or {
-				orConditions = append(orConditions, types.StringValue(condition))
-			}
-
-			boundaryState.RuleAQL = ruleAQLModel{
-				And: andConditions,
-				Or:  orConditions,
-			}
-
-			lists = append(lists, boundaryState)
 		}
+		filtered = tmp
+	}
+	if !state.Type.IsNull() {
+		t := state.Type.ValueString()
+		var tmp []armis.ListSettings
+		for _, l := range filtered {
+			if l.ListType == t {
+				tmp = append(tmp, l)
+			}
+		}
+		filtered = tmp
+	}
+
+	// Map response body to model
+	var lists []listModel
+	for _, l := range filtered {
+		lists = append(lists, listModel{
+			ID:            types.StringValue(strconv.Itoa(l.ListID)),
+			Name:          types.StringValue(l.ListName),
+			Description:   types.StringValue(l.Description),
+			LastUpdatedBy: types.StringValue(l.LastUpdatedBy),
+			CreatedBy:     types.StringValue(l.CreatedBy),
+			ListType:      types.StringValue(l.ListType),
+			CreationTime:  types.StringValue(l.CreationTime),
+			LastUpdateTime: types.StringValue(l.LastUpdateTime),
+		})
 	}
 
 	// Save data into Terraform state
-	config.lists = lists
-	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+	state.Lists = lists
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
