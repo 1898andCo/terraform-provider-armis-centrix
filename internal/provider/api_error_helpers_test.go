@@ -258,7 +258,7 @@ func TestAppendAPIError_GenericError(t *testing.T) {
 		{
 			name:            "simple error from errors.New",
 			title:           "Operation Failed",
-			err:             errors.New("connection timeout"),
+			err:             errors.New("connection timeout"), //nolint:err113 // test fixture
 			expectedSummary: "Operation Failed",
 			validateDetail: func(t *testing.T, detail string) {
 				if !strings.Contains(detail, "API error: connection timeout") {
@@ -270,7 +270,7 @@ func TestAppendAPIError_GenericError(t *testing.T) {
 		{
 			name:            "formatted error from fmt.Errorf",
 			title:           "Configuration Error",
-			err:             fmt.Errorf("invalid configuration: %s", "missing required field"),
+			err:             fmt.Errorf("invalid configuration: %s", "missing required field"), //nolint:err113 // test fixture
 			expectedSummary: "Configuration Error",
 			validateDetail: func(t *testing.T, detail string) {
 				if !strings.Contains(detail, "API error: invalid configuration: missing required field") {
@@ -282,7 +282,7 @@ func TestAppendAPIError_GenericError(t *testing.T) {
 		{
 			name:            "wrapped error",
 			title:           "Database Error",
-			err:             fmt.Errorf("failed to connect: %w", errors.New("host unreachable")),
+			err:             fmt.Errorf("failed to connect: %w", errors.New("host unreachable")), //nolint:err113 // test fixture
 			expectedSummary: "Database Error",
 			validateDetail: func(t *testing.T, detail string) {
 				expected := "API error: failed to connect: host unreachable"
@@ -295,7 +295,7 @@ func TestAppendAPIError_GenericError(t *testing.T) {
 		{
 			name:            "error with special characters",
 			title:           "Parse Error",
-			err:             errors.New("invalid JSON: unexpected character '}'"),
+			err:             errors.New("invalid JSON: unexpected character '}'"), //nolint:err113 // test fixture
 			expectedSummary: "Parse Error",
 			validateDetail: func(t *testing.T, detail string) {
 				if !strings.Contains(detail, "invalid JSON: unexpected character '}'") {
@@ -340,7 +340,7 @@ func TestAppendAPIError_EdgeCases(t *testing.T) {
 		{
 			name:  "empty title string",
 			title: "",
-			err:   errors.New("some error"),
+			err:   errors.New("some error"), //nolint:err113 // test fixture
 			validateDiag: func(t *testing.T, diags diag.Diagnostics) {
 				if len(diags) != 1 {
 					t.Errorf("Expected 1 diagnostic, got %d", len(diags))
@@ -355,7 +355,7 @@ func TestAppendAPIError_EdgeCases(t *testing.T) {
 		{
 			name:  "very long error message",
 			title: "Long Error",
-			err:   errors.New(strings.Repeat("x", 1000)),
+			err:   errors.New(strings.Repeat("x", 1000)), //nolint:err113 // test fixture
 			validateDiag: func(t *testing.T, diags diag.Diagnostics) {
 				if len(diags) != 1 {
 					t.Errorf("Expected 1 diagnostic, got %d", len(diags))
@@ -445,7 +445,7 @@ func TestAppendAPIError_EdgeCases(t *testing.T) {
 		{
 			name:  "error with newlines",
 			title: "Multi-line Error",
-			err:   errors.New("line 1\nline 2\nline 3"),
+			err:   errors.New("line 1\nline 2\nline 3"), //nolint:err113 // test fixture
 			validateDiag: func(t *testing.T, diags diag.Diagnostics) {
 				if len(diags) != 1 {
 					t.Errorf("Expected 1 diagnostic, got %d", len(diags))
