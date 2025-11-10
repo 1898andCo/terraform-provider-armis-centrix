@@ -14,8 +14,10 @@ type ListSettings struct {
 	ListType       string `json:"list_type"`
 }
 
-// GetLists represents API response which comes back as data and success.
-type GetLists struct {
-	Data    []ListSettings `json:"data"`
-	Success bool           `json:"success,omitempty"`
+// ListsAPIResponse matches the Armis lists endpoint, where data contains a nested lists array.
+type ListsAPIResponse struct {
+    Data struct {
+        Lists []ListSettings `json:"lists"`
+    } `json:"data"`
+    Success bool `json:"success,omitempty"`
 }
