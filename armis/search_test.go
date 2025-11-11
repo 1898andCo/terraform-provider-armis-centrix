@@ -268,6 +268,197 @@ func TestGetAuditLogSearch(t *testing.T) {
 	}
 }
 
+func TestGetRiskFactorSearch(t *testing.T) {
+	t.Parallel()
+
+	const (
+		aql           = "in:riskFactors"
+		includeSample = false
+		includeTotal  = false
+	)
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/search/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodGet {
+				t.Fatalf("expected GET, got %s", r.Method)
+			}
+
+			values := r.URL.Query()
+			if got := values.Get("aql"); got != aql {
+				t.Fatalf("unexpected aql: %q", got)
+			}
+			if got := values.Get("includeSample"); got != "false" {
+				t.Fatalf("unexpected includeSample: %q", got)
+			}
+			if got := values.Get("includeTotal"); got != "false" {
+				t.Fatalf("unexpected includeTotal: %q", got)
+			}
+
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": map[string]any{
+					"count": 2,
+					"next":  nil,
+					"prev":  nil,
+					"total": 2,
+					"results": []map[string]any{
+						{
+							"category":    "Profile",
+							"description": "Windows 10, build 19045, will reach end-of-support on October 14, 2025",
+							"devices":     1,
+							"evidence": map[string]any{
+								"AQL":          "",
+								"whatHappened": "This device has been observed running an operating system that will reach its end-of-support date on October 14, 2025.",
+							},
+							"firstSeen": "2025-06-19T19:11:24.291901+00:00",
+							"group":     "Deprecated SW/HW (Impending)",
+							"lastSeen":  "2025-08-21T15:42:31.220047+00:00",
+							"policy":    nil,
+							"remediation": map[string]any{
+								"category":    "System and Software Management",
+								"description": "Upgrade devices running an end-of-life operating system to a current, supported version.",
+								"recommendedActions": []map[string]any{
+									{
+										"description": "Ensure that the latest security patches and updates are applied to the operating systems.",
+										"id":          1,
+										"title":       "Apply Security Patches",
+										"type":        "Remediation",
+									},
+									{
+										"description": "If immediate OS upgrade is not possible, isolate the devices running end-of-life operating systems from the main network.",
+										"id":          2,
+										"title":       "Isolate Legacy OSes",
+										"type":        "Mitigation",
+									},
+								},
+								"type": "Upgrade Operating System",
+							},
+							"score":  "Low",
+							"source": "Armis",
+							"status": "Open",
+							"type":   "Impending End-of-Support Operating System",
+						},
+						{
+							"category":    "Behavioural",
+							"description": "Policy Violation",
+							"devices":     107,
+							"evidence": map[string]any{
+								"AQL":          "in:alerts classification:Security",
+								"whatHappened": "These devices have been observed violating one or more existing policies.",
+							},
+							"firstSeen": "2025-02-19T16:27:44+00:00",
+							"group":     "Policies",
+							"lastSeen":  "2025-11-11T00:25:36+00:00",
+							"policy":    nil,
+							"remediation": map[string]any{
+								"category":    "Compliance",
+								"description": "Ensure all devices adhere to existing policies by updating configurations and conducting regular audits.",
+								"type":        "Enforce Policy Compliance",
+							},
+							"score":  "Low",
+							"source": "Armis",
+							"status": "Open",
+							"type":   "Policy Violations",
+						},
+					},
+				},
+			})
+		},
+	})
+	defer cleanup()
+
+	res, err := client.GetSearch(context.Background(), aql, includeSample, includeTotal)
+	if err != nil {
+		t.Fatalf("get search: %v", err)
+	}
+	if res.Total != 2 || len(res.Results) != 2 {
+		t.Fatalf("expected 2 results, got %d (total: %d)", len(res.Results), res.Total)
+	}
+
+	// Test first risk factor (Profile category)
+	rf1 := res.Results[0]
+	if rf1.Category != "Profile" {
+		t.Errorf("expected category 'Profile', got %q", rf1.Category)
+	}
+	if rf1.Description != "Windows 10, build 19045, will reach end-of-support on October 14, 2025" {
+		t.Errorf("unexpected description: %q", rf1.Description)
+	}
+	if rf1.Devices != 1 {
+		t.Errorf("expected devices 1, got %d", rf1.Devices)
+	}
+	if rf1.FirstSeen != "2025-06-19T19:11:24.291901+00:00" {
+		t.Errorf("expected firstSeen '2025-06-19T19:11:24.291901+00:00', got %q", rf1.FirstSeen)
+	}
+	if rf1.LastSeen != "2025-08-21T15:42:31.220047+00:00" {
+		t.Errorf("expected lastSeen '2025-08-21T15:42:31.220047+00:00', got %q", rf1.LastSeen)
+	}
+	if rf1.Group != "Deprecated SW/HW (Impending)" {
+		t.Errorf("expected group 'Deprecated SW/HW (Impending)', got %q", rf1.Group)
+	}
+	if rf1.Score != "Low" {
+		t.Errorf("expected score 'Low', got %q", rf1.Score)
+	}
+	if rf1.Source != "Armis" {
+		t.Errorf("expected source 'Armis', got %q", rf1.Source)
+	}
+	if rf1.Status != "Open" {
+		t.Errorf("expected status 'Open', got %q", rf1.Status)
+	}
+	if rf1.Type != "Impending End-of-Support Operating System" {
+		t.Errorf("expected type 'Impending End-of-Support Operating System', got %q", rf1.Type)
+	}
+
+	// Test evidence
+	if rf1.Evidence == nil {
+		t.Fatal("expected evidence to be non-nil")
+	}
+	if rf1.Evidence.AQL != "" {
+		t.Errorf("expected evidence.AQL to be empty, got %q", rf1.Evidence.AQL)
+	}
+	if rf1.Evidence.WhatHappened != "This device has been observed running an operating system that will reach its end-of-support date on October 14, 2025." {
+		t.Errorf("unexpected evidence.whatHappened: %q", rf1.Evidence.WhatHappened)
+	}
+
+	// Test remediation
+	if rf1.Remediation == nil {
+		t.Fatal("expected remediation to be non-nil")
+	}
+	if rf1.Remediation.Category != "System and Software Management" {
+		t.Errorf("expected remediation.category 'System and Software Management', got %q", rf1.Remediation.Category)
+	}
+	if rf1.Remediation.Type != "Upgrade Operating System" {
+		t.Errorf("expected remediation.type 'Upgrade Operating System', got %q", rf1.Remediation.Type)
+	}
+	if len(rf1.Remediation.RecommendedActions) != 2 {
+		t.Fatalf("expected 2 recommended actions, got %d", len(rf1.Remediation.RecommendedActions))
+	}
+	if rf1.Remediation.RecommendedActions[0].ID != 1 {
+		t.Errorf("expected first action id 1, got %d", rf1.Remediation.RecommendedActions[0].ID)
+	}
+	if rf1.Remediation.RecommendedActions[0].Title != "Apply Security Patches" {
+		t.Errorf("expected first action title 'Apply Security Patches', got %q", rf1.Remediation.RecommendedActions[0].Title)
+	}
+	if rf1.Remediation.RecommendedActions[0].Type != "Remediation" {
+		t.Errorf("expected first action type 'Remediation', got %q", rf1.Remediation.RecommendedActions[0].Type)
+	}
+
+	// Test second risk factor (Behavioural category)
+	rf2 := res.Results[1]
+	if rf2.Category != "Behavioural" {
+		t.Errorf("expected category 'Behavioural', got %q", rf2.Category)
+	}
+	if rf2.Devices != 107 {
+		t.Errorf("expected devices 107, got %d", rf2.Devices)
+	}
+	if rf2.Evidence == nil {
+		t.Fatal("expected evidence to be non-nil")
+	}
+	if rf2.Evidence.AQL != "in:alerts classification:Security" {
+		t.Errorf("expected evidence.AQL 'in:alerts classification:Security', got %q", rf2.Evidence.AQL)
+	}
+}
+
 func TestGetSearchRequiresAQL(t *testing.T) {
 	t.Parallel()
 
