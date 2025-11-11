@@ -25,35 +25,44 @@ type SearchData struct {
 
 // SearchResult represents a single search hit returned by Armis.
 type SearchResult struct {
-	ActivityUUIDs        []string             `json:"activityUUIDs,omitempty"`
-	AffectedDevicesCount int                  `json:"affectedDevicesCount,omitempty"`
-	AlertID              int                  `json:"alertId,omitempty"`
-	Classification       string               `json:"classification,omitempty"`
-	ConnectionIDs        []string             `json:"connectionIds,omitempty"`
-	Description          string               `json:"description,omitempty"`
-	DestinationEndpoints []SearchEndpoint     `json:"destinationEndpoints,omitempty"`
-	DeviceIDs            []int                `json:"deviceIds,omitempty"`
-	LastAlertUpdateTime  string               `json:"lastAlertUpdateTime,omitempty"`
-	MitreAttackLabels    []string             `json:"mitreAttackLabels,omitempty"`
-	PolicyID             string               `json:"policyId,omitempty"`
-	PolicyLabels         []string             `json:"policyLabels,omitempty"`
-	PolicyTitle          string               `json:"policyTitle,omitempty"`
-	Severity             string               `json:"severity,omitempty"`
-	SourceEndpoints      []SearchEndpoint     `json:"sourceEndpoints,omitempty"`
-	Status               string               `json:"status,omitempty"`
-	StatusChangeTime     string               `json:"statusChangeTime,omitempty"`
-	Time                 string               `json:"time,omitempty"`
-	Title                string               `json:"title,omitempty"`
-	Type                 string               `json:"type,omitempty"`
-	Action               string               `json:"action,omitempty"`
-	AdditionalInfo       *AuditAdditionalInfo `json:"additionalInfo,omitempty"`
-	ID                   int                  `json:"id,omitempty"`
-	TimeUtc              string               `json:"timeUtc,omitempty"`
-	Trigger              string               `json:"trigger,omitempty"`
-	User                 string               `json:"user,omitempty"`
-	UserIP               string               `json:"userIp,omitempty"`
+	ActivityUUIDs        []string               `json:"activityUUIDs,omitempty"`
+	AffectedDevicesCount int                    `json:"affectedDevicesCount,omitempty"`
+	AlertID              int                    `json:"alertId,omitempty"`
+	Category             string                 `json:"category,omitempty"`
+	Classification       string                 `json:"classification,omitempty"`
+	ConnectionIDs        []string               `json:"connectionIds,omitempty"`
+	Description          string                 `json:"description,omitempty"`
+	DestinationEndpoints []SearchEndpoint       `json:"destinationEndpoints,omitempty"`
+	Devices              int                    `json:"devices,omitempty"`
+	DeviceIDs            []int                  `json:"deviceIds,omitempty"`
+	Evidence             *RiskFactorEvidence    `json:"evidence,omitempty"`
+	FirstSeen            string                 `json:"firstSeen,omitempty"`
+	Group                string                 `json:"group,omitempty"`
+	LastSeen             string                 `json:"lastSeen,omitempty"`
+	LastAlertUpdateTime  string                 `json:"lastAlertUpdateTime,omitempty"`
+	MitreAttackLabels    []string               `json:"mitreAttackLabels,omitempty"`
+	Policy               any                    `json:"policy,omitempty"`
+	PolicyID             string                 `json:"policyId,omitempty"`
+	PolicyLabels         []string               `json:"policyLabels,omitempty"`
+	PolicyTitle          string                 `json:"policyTitle,omitempty"`
+	Remediation          *RiskFactorRemediation `json:"remediation,omitempty"`
+	Score                string                 `json:"score,omitempty"`
+	Severity             string                 `json:"severity,omitempty"`
+	Source               string                 `json:"source,omitempty"`
+	SourceEndpoints      []SearchEndpoint       `json:"sourceEndpoints,omitempty"`
+	Status               string                 `json:"status,omitempty"`
+	StatusChangeTime     string                 `json:"statusChangeTime,omitempty"`
+	Time                 string                 `json:"time,omitempty"`
+	Title                string                 `json:"title,omitempty"`
+	Type                 string                 `json:"type,omitempty"`
+	Action               string                 `json:"action,omitempty"`
+	AdditionalInfo       *AuditAdditionalInfo   `json:"additionalInfo,omitempty"`
+	ID                   int                    `json:"id,omitempty"`
+	TimeUtc              string                 `json:"timeUtc,omitempty"`
+	Trigger              string                 `json:"trigger,omitempty"`
+	User                 string                 `json:"user,omitempty"`
+	UserIP               string                 `json:"userIp,omitempty"`
 }
-
 type SearchEndpointID string
 
 func (id *SearchEndpointID) UnmarshalJSON(b []byte) error {
@@ -123,4 +132,26 @@ type SearchEndpoint struct {
 type AuditAdditionalInfo struct {
 	Data string `json:"data,omitempty"`
 	Type string `json:"type,omitempty"`
+}
+
+// RiskFactorEvidence represents evidence details for a risk factor.
+type RiskFactorEvidence struct {
+	AQL          string `json:"AQL,omitempty"`
+	WhatHappened string `json:"whatHappened,omitempty"`
+}
+
+// RecommendedAction represents a single recommended action in remediation.
+type RecommendedAction struct {
+	Description string `json:"description,omitempty"`
+	ID          int    `json:"id,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Type        string `json:"type,omitempty"`
+}
+
+// RiskFactorRemediation represents remediation details for a risk factor.
+type RiskFactorRemediation struct {
+	Category           string              `json:"category,omitempty"`
+	Description        string              `json:"description,omitempty"`
+	RecommendedActions []RecommendedAction `json:"recommendedActions,omitempty"`
+	Type               string              `json:"type,omitempty"`
 }
