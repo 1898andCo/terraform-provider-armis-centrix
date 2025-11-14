@@ -72,6 +72,7 @@ Three-level approach:
 - **Comments**: Follow Go doc comment conventions; keep exported symbol docs in sync with generated docs (`task docs`).
 - **APIs**: Use helper functions in `armis/` for REST interactions; avoid duplicating HTTP logic.
 - **Models**: Maintain separate API models (`armis/`) and Terraform models (`internal/provider`, `internal/utils`); use helper functions for conversion.
+- **Struct tags**: When defining nested structs in API models, apply `omitempty` tags to individual fields within the nested struct (e.g., `Name string \`json:"name,omitempty"\``), not to the parent struct field itself; this avoids linter warnings about redundant tags while achieving proper JSON marshaling behavior.
 
 ## Testing Guidance
 
