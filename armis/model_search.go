@@ -62,7 +62,27 @@ type SearchResult struct {
 	Trigger              string                 `json:"trigger,omitempty"`
 	User                 string                 `json:"user,omitempty"`
 	UserIP               string                 `json:"userIp,omitempty"`
+	Band                 string                 `json:"band,omitempty"`
+	BSSID                string                 `json:"bssid,omitempty"`
+	Channel              string                 `json:"channel,omitempty"`
+	Duration             int                    `json:"duration,omitempty"`
+	EndTimestamp         string                 `json:"endTimestamp,omitempty"`
+	InboundTraffic       int                    `json:"inboundTraffic,omitempty"`
+	OutboundTraffic      int                    `json:"outboundTraffic,omitempty"`
+	Protocol             string                 `json:"protocol,omitempty"`
+	Risk                 string                 `json:"risk,omitempty"`
+	RSSI                 string                 `json:"rssi,omitempty"`
+	SNR                  string                 `json:"snr,omitempty"`
+	SourceID             int                    `json:"sourceId,omitempty"`
+	SSID                 string                 `json:"ssid,omitempty"`
+	StartTimestamp       string                 `json:"startTimestamp,omitempty"`
+	TargetID             int                    `json:"targetId,omitempty"`
+	Traffic              int                    `json:"traffic,omitempty"`
+	Sensor               Sensor                 `json:"sensor"`
+	Site                 SingleSite             `json:"site"`
+	Sites                []SingleSite           `json:"sites"`
 }
+
 type SearchEndpointID string
 
 func (id *SearchEndpointID) UnmarshalJSON(b []byte) error {
@@ -154,4 +174,16 @@ type RiskFactorRemediation struct {
 	Description        string              `json:"description,omitempty"`
 	RecommendedActions []RecommendedAction `json:"recommendedActions,omitempty"`
 	Type               string              `json:"type,omitempty"`
+}
+
+// Sensor represents the name and type of a sensor in a connections search.
+type Sensor struct {
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
+}
+
+// SingleSite represents a single site in a connections search.
+type SingleSite struct {
+	Name     string `json:"name,omitempty"`
+	Location string `json:"location,omitempty"`
 }

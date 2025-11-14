@@ -459,6 +459,151 @@ func TestGetRiskFactorSearch(t *testing.T) {
 	}
 }
 
+func TestGetConnectionsSearch(t *testing.T) {
+	t.Parallel()
+
+	const (
+		aql           = "in:connections protocol:BMS"
+		includeSample = false
+		includeTotal  = true
+	)
+
+	client, cleanup := newTestClient(t, map[string]http.HandlerFunc{
+		"/api/v1/search/": func(w http.ResponseWriter, r *http.Request) {
+			assertAuthHeader(t, r)
+			if r.Method != http.MethodGet {
+				t.Fatalf("expected GET, got %s", r.Method)
+			}
+
+			values := r.URL.Query()
+			if got := values.Get("aql"); got != aql {
+				t.Fatalf("unexpected aql: %q", got)
+			}
+			if got := values.Get("includeSample"); got != "false" {
+				t.Fatalf("unexpected includeSample: %q", got)
+			}
+			if got := values.Get("includeTotal"); got != "true" {
+				t.Fatalf("unexpected includeTotal: %q", got)
+			}
+
+			respondJSON(t, w, http.StatusOK, map[string]any{
+				"success": true,
+				"data": map[string]any{
+					"count": 1,
+					"next":  nil,
+					"prev":  nil,
+					"total": 1,
+					"results": []map[string]any{{
+						"band":            nil,
+						"bssid":           nil,
+						"channel":         nil,
+						"duration":        135745097,
+						"endTimestamp":    "2030-01-01T00:00:00+00:00",
+						"id":              27,
+						"inboundTraffic":  0,
+						"outboundTraffic": 0,
+						"protocol":        "BMS",
+						"risk":            "Medium",
+						"rssi":            nil,
+						"sensor": map[string]any{
+							"name": "SPAN 8153 ens20 (PLC)",
+							"type": "SPAN",
+						},
+						"site": map[string]any{
+							"location": "Houston",
+							"name":     "Lab",
+						},
+						"sites": []map[string]any{
+							{
+								"location": "Houston",
+								"name":     "Lab",
+							},
+						},
+						"snr":            nil,
+						"sourceId":       7,
+						"ssid":           nil,
+						"startTimestamp": "2025-09-12T21:01:42.738562+00:00",
+						"targetId":       319,
+						"title":          "Connection between modbus device - unit id: 1 and Workstation",
+						"traffic":        0,
+					}},
+				},
+			})
+		},
+	})
+	defer cleanup()
+
+	res, err := client.GetSearch(context.Background(), aql, includeSample, includeTotal)
+	if err != nil {
+		t.Fatalf("get search: %v", err)
+	}
+	if res.Total != 1 || len(res.Results) != 1 {
+		t.Fatalf("expected 1 result, got %d (total: %d)", len(res.Results), res.Total)
+	}
+
+	conn := res.Results[0]
+	if conn.ID != 27 {
+		t.Errorf("expected id 27, got %d", conn.ID)
+	}
+	if conn.Protocol != "BMS" {
+		t.Errorf("expected protocol 'BMS', got %q", conn.Protocol)
+	}
+	if conn.Risk != "Medium" {
+		t.Errorf("expected risk 'Medium', got %q", conn.Risk)
+	}
+	if conn.Duration != 135745097 {
+		t.Errorf("expected duration 135745097, got %d", conn.Duration)
+	}
+	if conn.InboundTraffic != 0 {
+		t.Errorf("expected inboundTraffic 0, got %d", conn.InboundTraffic)
+	}
+	if conn.OutboundTraffic != 0 {
+		t.Errorf("expected outboundTraffic 0, got %d", conn.OutboundTraffic)
+	}
+	if conn.Traffic != 0 {
+		t.Errorf("expected traffic 0, got %d", conn.Traffic)
+	}
+	if conn.SourceID != 7 {
+		t.Errorf("expected sourceId 7, got %d", conn.SourceID)
+	}
+	if conn.TargetID != 319 {
+		t.Errorf("expected targetId 319, got %d", conn.TargetID)
+	}
+	if conn.StartTimestamp != "2025-09-12T21:01:42.738562+00:00" {
+		t.Errorf("expected startTimestamp '2025-09-12T21:01:42.738562+00:00', got %q", conn.StartTimestamp)
+	}
+	if conn.EndTimestamp != "2030-01-01T00:00:00+00:00" {
+		t.Errorf("expected endTimestamp '2030-01-01T00:00:00+00:00', got %q", conn.EndTimestamp)
+	}
+	if conn.Title != "Connection between modbus device - unit id: 1 and Workstation" {
+		t.Errorf("expected title 'Connection between modbus device - unit id: 1 and Workstation', got %q", conn.Title)
+	}
+
+	if conn.Sensor.Name != "SPAN 8153 ens20 (PLC)" {
+		t.Errorf("expected sensor.name 'SPAN 8153 ens20 (PLC)', got %q", conn.Sensor.Name)
+	}
+	if conn.Sensor.Type != "SPAN" {
+		t.Errorf("expected sensor.type 'SPAN', got %q", conn.Sensor.Type)
+	}
+
+	if conn.Site.Location != "Houston" {
+		t.Errorf("expected site.location 'Houston', got %q", conn.Site.Location)
+	}
+	if conn.Site.Name != "Lab" {
+		t.Errorf("expected site.name 'Lab', got %q", conn.Site.Name)
+	}
+
+	if len(conn.Sites) != 1 {
+		t.Fatalf("expected 1 site, got %d", len(conn.Sites))
+	}
+	if conn.Sites[0].Location != "Houston" {
+		t.Errorf("expected sites[0].location 'Houston', got %q", conn.Sites[0].Location)
+	}
+	if conn.Sites[0].Name != "Lab" {
+		t.Errorf("expected sites[0].name 'Lab', got %q", conn.Sites[0].Name)
+	}
+}
+
 func TestGetSearchRequiresAQL(t *testing.T) {
 	t.Parallel()
 
