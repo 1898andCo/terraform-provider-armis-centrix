@@ -80,7 +80,7 @@ type SearchResult struct {
 	Traffic              int                    `json:"traffic,omitempty"`
 	Sensor               Sensor                 `json:"sensor"`
 	Site                 SingleSite             `json:"site"`
-	Sites                Sites                  `json:"sites"`
+	Sites                []SingleSite           `json:"sites"`
 }
 
 type SearchEndpointID string
@@ -184,10 +184,6 @@ type Sensor struct {
 
 // SingleSite represents a single site in a connections search.
 type SingleSite struct {
-	Name string `json:"name,omitempty"`
-}
-
-// Sites represents a list of sites in a connections search.
-type Sites struct {
-	Sites []SingleSite `json:"sites,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Location string `json:"location,omitempty"`
 }
