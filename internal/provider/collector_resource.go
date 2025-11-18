@@ -168,10 +168,10 @@ func (r *collectorResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	if collector == nil {
-		resp.Diagnostics.AddError(
-			"Error Reading Armis Collector",
-			"Could not read Armis collector ID "+state.ID.ValueString()+": Collector not found",
-		)
+		tflog.Warn(ctx, "Collector not found during refresh, removing from state", map[string]any{
+			"collector_id": state.ID.ValueString(),
+		})
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
