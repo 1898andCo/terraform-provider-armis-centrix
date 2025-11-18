@@ -821,11 +821,10 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading role %s", state.ID.ValueString()), err)
 		return
 	}
+
 	if role == nil {
-		resp.Diagnostics.AddError(
-			"Error reading role",
-			fmt.Sprintf("Failed to fetch role with ID %q: API returned no data", state.ID.ValueString()),
-		)
+		tflog.Warn(ctx, "Role not found during refresh, removing from state", map[string]any{"role_id": state.ID.ValueString()})
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
