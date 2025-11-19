@@ -28,7 +28,7 @@ type BoundarySettings struct {
 	ID            int     `json:"id,omitempty"`
 	AffectedSites string  `json:"affectedSites,omitempty"`
 	Name          string  `json:"name,omitempty"`
-	RuleAQL       RuleAQL `json:"ruleAql,omitempty"`
+	RuleAQL       RuleAQL `json:"ruleAql"`
 }
 
 // RuleAQL struct for individual rule AQL settings.

@@ -28,36 +28,36 @@ type RoleSettings struct {
 }
 
 type Permissions struct {
-	AdvancedPermissions AdvancedPermissions `json:"advancedPermissions,omitempty"`
-	Alert               Alert               `json:"alert,omitempty"`
-	Device              Device              `json:"device,omitempty"`
-	Policy              Policy              `json:"policy,omitempty"`
-	Report              Report              `json:"report,omitempty"`
-	RiskFactor          RiskFactor          `json:"risk_factor,omitempty"`
-	Settings            Settings            `json:"settings,omitempty"`
-	User                User                `json:"user,omitempty"`
-	Vulnerability       Vulnerability       `json:"vulnerability,omitempty"`
+	AdvancedPermissions AdvancedPermissions `json:"advancedPermissions"`
+	Alert               Alert               `json:"alert"`
+	Device              Device              `json:"device"`
+	Policy              Policy              `json:"policy"`
+	Report              Report              `json:"report"`
+	RiskFactor          RiskFactor          `json:"risk_factor"`
+	Settings            Settings            `json:"settings"`
+	User                User                `json:"user"`
+	Vulnerability       Vulnerability       `json:"vulnerability"`
 }
 
 type AdvancedPermissions struct {
 	All        bool           `json:"all,omitempty"`
-	Behavioral Behavioral     `json:"behavioral,omitempty"`
-	Device     DeviceAdvanced `json:"device,omitempty"`
+	Behavioral Behavioral     `json:"behavioral"`
+	Device     DeviceAdvanced `json:"device"`
 }
 
 type Behavioral struct {
 	All             bool       `json:"all,omitempty"`
-	ApplicationName Permission `json:"applicationName,omitempty"`
-	HostName        Permission `json:"hostName,omitempty"`
-	ServiceName     Permission `json:"serviceName,omitempty"`
+	ApplicationName Permission `json:"applicationName"`
+	HostName        Permission `json:"hostName"`
+	ServiceName     Permission `json:"serviceName"`
 }
 
 type DeviceAdvanced struct {
 	All          bool       `json:"all,omitempty"`
-	DeviceNames  Permission `json:"deviceNames,omitempty"`
-	IPAddresses  Permission `json:"ipAddresses,omitempty"`
-	MACAddresses Permission `json:"macAddresses,omitempty"`
-	PhoneNumbers Permission `json:"phoneNumbers,omitempty"`
+	DeviceNames  Permission `json:"deviceNames"`
+	IPAddresses  Permission `json:"ipAddresses"`
+	MACAddresses Permission `json:"macAddresses"`
+	PhoneNumbers Permission `json:"phoneNumbers"`
 }
 
 type Permission struct {
@@ -66,172 +66,172 @@ type Permission struct {
 
 type Alert struct {
 	All    bool       `json:"all,omitempty"`
-	Manage Manage     `json:"manage,omitempty"`
-	Read   Permission `json:"read,omitempty"`
+	Manage Manage     `json:"manage"`
+	Read   Permission `json:"read"`
 }
 
 type Manage struct {
 	All              bool       `json:"all,omitempty"`
-	Resolve          Permission `json:"resolve,omitempty"`
-	WhitelistDevices Permission `json:"whitelistDevices,omitempty"`
+	Resolve          Permission `json:"resolve"`
+	WhitelistDevices Permission `json:"whitelistDevices"`
 }
 
 type Device struct {
 	All    bool         `json:"all,omitempty"`
-	Manage ManageDevice `json:"manage,omitempty"`
-	Read   Permission   `json:"read,omitempty"`
+	Manage ManageDevice `json:"manage"`
+	Read   Permission   `json:"read"`
 }
 
 type ManageDevice struct {
 	All                bool       `json:"all,omitempty"`
-	Create             Permission `json:"create,omitempty"`
-	Delete             Permission `json:"delete,omitempty"`
-	Edit               Permission `json:"edit,omitempty"`
-	Enforce            Enforce    `json:"enforce,omitempty"`
-	Merge              Permission `json:"merge,omitempty"`
-	RequestDeletedData Permission `json:"request_deleted_data,omitempty"`
-	Tags               Permission `json:"tags,omitempty"`
+	Create             Permission `json:"create"`
+	Delete             Permission `json:"delete"`
+	Edit               Permission `json:"edit"`
+	Enforce            Enforce    `json:"enforce"`
+	Merge              Permission `json:"merge"`
+	RequestDeletedData Permission `json:"request_deleted_data"`
+	Tags               Permission `json:"tags"`
 }
 
 type Enforce struct {
 	All    bool       `json:"all,omitempty"`
-	Create Permission `json:"create,omitempty"`
-	Delete Permission `json:"delete,omitempty"`
+	Create Permission `json:"create"`
+	Delete Permission `json:"delete"`
 }
 
 type Policy struct {
 	All    bool       `json:"all,omitempty"`
-	Manage Permission `json:"manage,omitempty"`
-	Read   Permission `json:"read,omitempty"`
+	Manage Permission `json:"manage"`
+	Read   Permission `json:"read"`
 }
 
 type Report struct {
 	All    bool         `json:"all,omitempty"`
-	Export Permission   `json:"export,omitempty"`
-	Manage ManageReport `json:"manage,omitempty"`
-	Read   Permission   `json:"read,omitempty"`
+	Export Permission   `json:"export"`
+	Manage ManageReport `json:"manage"`
+	Read   Permission   `json:"read"`
 }
 
 type ManageReport struct {
 	All    bool       `json:"all,omitempty"`
-	Create Permission `json:"create,omitempty"`
-	Delete Permission `json:"delete,omitempty"`
-	Edit   Permission `json:"edit,omitempty"`
+	Create Permission `json:"create"`
+	Delete Permission `json:"delete"`
+	Edit   Permission `json:"edit"`
 }
 
 type RiskFactor struct {
 	All    bool       `json:"all,omitempty"`
-	Manage ManageRisk `json:"manage,omitempty"`
-	Read   Permission `json:"read,omitempty"`
+	Manage ManageRisk `json:"manage"`
+	Read   Permission `json:"read"`
 }
 
 type ManageRisk struct {
 	All           bool          `json:"all,omitempty"`
-	Customization Customization `json:"customization,omitempty"`
-	Status        Status        `json:"status,omitempty"`
+	Customization Customization `json:"customization"`
+	Status        Status        `json:"status"`
 }
 
 type Customization struct {
 	All     bool       `json:"all,omitempty"`
-	Create  Permission `json:"create,omitempty"`
-	Disable Permission `json:"disable,omitempty"`
-	Edit    Permission `json:"edit,omitempty"`
+	Create  Permission `json:"create"`
+	Disable Permission `json:"disable"`
+	Edit    Permission `json:"edit"`
 }
 
 type Status struct {
 	All     bool       `json:"all,omitempty"`
-	Ignore  Permission `json:"ignore,omitempty"`
-	Resolve Permission `json:"resolve,omitempty"`
+	Ignore  Permission `json:"ignore"`
+	Resolve Permission `json:"resolve"`
 }
 
 type Settings struct {
 	All              bool            `json:"all,omitempty"`
-	AuditLog         Permission      `json:"auditLog,omitempty"`
-	Boundary         Boundary        `json:"boundary,omitempty"`
-	BusinessImpact   ManageAndRead   `json:"businessImpact,omitempty"`
-	Collector        ManageAndRead   `json:"collector,omitempty"`
-	CustomProperties ManageAndRead   `json:"customProperties,omitempty"`
-	Integration      ManageAndRead   `json:"integration,omitempty"`
-	InternalIps      ManageAndRead   `json:"internalIps,omitempty"`
-	Notifications    ManageAndRead   `json:"notifications,omitempty"`
-	OIDC             ManageAndRead   `json:"oidc,omitempty"`
-	SAML             ManageAndRead   `json:"saml,omitempty"`
-	SecretKey        Permission      `json:"secretKey,omitempty"`
-	SecuritySettings Permission      `json:"securitySettings,omitempty"`
-	SitesAndSensors  SitesAndSensors `json:"sitesAndSensors,omitempty"`
-	UsersAndRoles    UsersAndRoles   `json:"usersAndRoles,omitempty"`
+	AuditLog         Permission      `json:"auditLog"`
+	Boundary         Boundary        `json:"boundary"`
+	BusinessImpact   ManageAndRead   `json:"businessImpact"`
+	Collector        ManageAndRead   `json:"collector"`
+	CustomProperties ManageAndRead   `json:"customProperties"`
+	Integration      ManageAndRead   `json:"integration"`
+	InternalIps      ManageAndRead   `json:"internalIps"`
+	Notifications    ManageAndRead   `json:"notifications"`
+	OIDC             ManageAndRead   `json:"oidc"`
+	SAML             ManageAndRead   `json:"saml"`
+	SecretKey        Permission      `json:"secretKey"`
+	SecuritySettings Permission      `json:"securitySettings"`
+	SitesAndSensors  SitesAndSensors `json:"sitesAndSensors"`
+	UsersAndRoles    UsersAndRoles   `json:"usersAndRoles"`
 }
 
 type Boundary struct {
 	All    bool           `json:"all,omitempty"`
-	Manage ManageBoundary `json:"manage,omitempty"`
-	Read   Permission     `json:"read,omitempty"`
+	Manage ManageBoundary `json:"manage"`
+	Read   Permission     `json:"read"`
 }
 
 type ManageBoundary struct {
 	All    bool       `json:"all,omitempty"`
-	Create Permission `json:"create,omitempty"`
-	Delete Permission `json:"delete,omitempty"`
-	Edit   Permission `json:"edit,omitempty"`
+	Create Permission `json:"create"`
+	Delete Permission `json:"delete"`
+	Edit   Permission `json:"edit"`
 }
 
 type ManageAndRead struct {
 	All    bool       `json:"all,omitempty"`
-	Manage Permission `json:"manage,omitempty"`
-	Read   Permission `json:"read,omitempty"`
+	Manage Permission `json:"manage"`
+	Read   Permission `json:"read"`
 }
 
 type SitesAndSensors struct {
 	All    bool          `json:"all,omitempty"`
-	Manage ManageSensors `json:"manage,omitempty"`
-	Read   Permission    `json:"read,omitempty"`
+	Manage ManageSensors `json:"manage"`
+	Read   Permission    `json:"read"`
 }
 
 type ManageSensors struct {
 	All     bool       `json:"all,omitempty"`
-	Sensors Permission `json:"sensors,omitempty"`
-	Sites   Permission `json:"sites,omitempty"`
+	Sensors Permission `json:"sensors"`
+	Sites   Permission `json:"sites"`
 }
 
 type UsersAndRoles struct {
 	All    bool        `json:"all,omitempty"`
-	Manage ManageUsers `json:"manage,omitempty"`
-	Read   Permission  `json:"read,omitempty"`
+	Manage ManageUsers `json:"manage"`
+	Read   Permission  `json:"read"`
 }
 
 type ManageUsers struct {
 	All   bool        `json:"all,omitempty"`
-	Roles UserActions `json:"roles,omitempty"`
-	Users UserActions `json:"users,omitempty"`
+	Roles UserActions `json:"roles"`
+	Users UserActions `json:"users"`
 }
 
 type UserActions struct {
 	All    bool       `json:"all,omitempty"`
-	Create Permission `json:"create,omitempty"`
-	Delete Permission `json:"delete,omitempty"`
-	Edit   Permission `json:"edit,omitempty"`
+	Create Permission `json:"create"`
+	Delete Permission `json:"delete"`
+	Edit   Permission `json:"edit"`
 }
 
 type User struct {
 	All    bool       `json:"all,omitempty"`
-	Manage ManageUser `json:"manage,omitempty"`
-	Read   Permission `json:"read,omitempty"`
+	Manage ManageUser `json:"manage"`
+	Read   Permission `json:"read"`
 }
 
 type ManageUser struct {
 	All    bool       `json:"all,omitempty"`
-	Upsert Permission `json:"upsert,omitempty"`
+	Upsert Permission `json:"upsert"`
 }
 
 type Vulnerability struct {
 	All    bool       `json:"all,omitempty"`
-	Manage ManageVuln `json:"manage,omitempty"`
-	Read   Permission `json:"read,omitempty"`
+	Manage ManageVuln `json:"manage"`
+	Read   Permission `json:"read"`
 }
 
 type ManageVuln struct {
 	All     bool       `json:"all,omitempty"`
-	Ignore  Permission `json:"ignore,omitempty"`
-	Resolve Permission `json:"resolve,omitempty"`
-	Write   Permission `json:"write,omitempty"`
+	Ignore  Permission `json:"ignore"`
+	Resolve Permission `json:"resolve"`
+	Write   Permission `json:"write"`
 }

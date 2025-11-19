@@ -42,7 +42,7 @@ type Consolidation struct {
 
 // Params represents the parameters of an action.
 type Params struct {
-	Consolidation Consolidation `json:"consolidation,omitempty"`
+	Consolidation Consolidation `json:"consolidation"`
 	Severity      string        `json:"severity,omitempty"`
 	Title         string        `json:"title,omitempty"`
 	Type          string        `json:"type,omitempty"`
@@ -52,7 +52,7 @@ type Params struct {
 
 // Action represents an individual action.
 type Action struct {
-	Params Params `json:"params,omitempty"`
+	Params Params `json:"params"`
 	Type   string `json:"type,omitempty"`
 }
 
@@ -71,7 +71,7 @@ type PolicySettings struct {
 	MitreAttackLabels []string `json:"mitreAttackLabels,omitempty"`
 	Name              string   `json:"name,omitempty"`
 	RuleType          string   `json:"ruleType,omitempty"`
-	Rules             Rules    `json:"rules,omitempty"`
+	Rules             Rules    `json:"rules"`
 }
 
 // UpdatePolicySettings represents the structure for updating policies.
@@ -83,7 +83,7 @@ type UpdatePolicySettings struct {
 	MitreAttackLabels []MitreAttackLabel `json:"mitreAttackLabels,omitempty"`
 	Name              string             `json:"name,omitempty"`
 	RuleType          string             `json:"ruleType,omitempty"`
-	Rules             Rules              `json:"rules,omitempty"`
+	Rules             Rules              `json:"rules"`
 }
 
 // GetPolicySettings represents the structure for retrieving policies.
@@ -95,7 +95,7 @@ type GetPolicySettings struct {
 	MitreAttackLabels []MitreAttackLabel `json:"mitreAttackLabels,omitempty"`
 	Name              string             `json:"name,omitempty"`
 	RuleType          string             `json:"ruleType,omitempty"`
-	Rules             Rules              `json:"rules,omitempty"`
+	Rules             Rules              `json:"rules"`
 }
 
 type MitreAttackLabel struct {
