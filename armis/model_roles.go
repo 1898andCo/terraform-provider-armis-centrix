@@ -232,7 +232,6 @@ type Vulnerability struct {
 type ManageVuln struct {
 	All     bool       `json:"all,omitempty"`
 	Ignore  Permission `json:"ignore"`
-	Ignore  Permission `json:"ignore,omitempty"`
 	Resolve Permission `json:"resolve"`
 	Write   Permission `json:"write"`
 }
