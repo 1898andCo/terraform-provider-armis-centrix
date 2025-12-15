@@ -5,10 +5,11 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 
@@ -226,7 +227,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	user, err := r.client.GetUser(ctx, state.ID.ValueString())
 	if err != nil {
 		// Handle 404 Not Found by removing resource from state
-		if strings.Contains(err.Error(), "Status Code: 404") {
+		var ae *armis.APIError
+		if errors.As(err, &ae) && ae.StatusCode == http.StatusNotFound {
 			tflog.Warn(ctx, "User not found, removing from state", map[string]any{
 				"user_id": state.ID.ValueString(),
 			})
