@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// SweepArmisUsers will delete all Armis users with users starting with "test".
+// SweepArmisUsers will delete all Armis users with names starting with "tfacc".
 func SweepArmisUsers(name string) *resource.Sweeper {
 	return &resource.Sweeper{
 		Name: name,
