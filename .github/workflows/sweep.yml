@@ -1,0 +1,36 @@
+name: Test Sweeper
+
+# This GitHub action periodically sweeps the tenant for dangling resources.
+# Optionally, you can manually run this workflow from the Actions tab.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # Once a day
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    name: Sweep
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+        id: go
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: "3.x"
+      - run: go mod download
+      - name: Sweep Dangling Resources
+        env:
+          ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
+          ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
+        run: task sweep
