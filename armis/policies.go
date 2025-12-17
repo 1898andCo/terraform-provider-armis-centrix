@@ -234,7 +234,7 @@ func (c *Client) DeletePolicy(ctx context.Context, policyID string) (bool, error
 	return response.Success, nil
 }
 
-// Len ensures that And and Or policy rules exist.
+// Len returns the total number of policy rules (And + Or).
 func (r Rules) Len() int {
 	return len(r.And) + len(r.Or)
 }
