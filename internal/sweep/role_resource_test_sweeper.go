@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-// SweepArmisRoles will delete all Armis roles with names starting with "test".
+// SweepArmisRoles will delete all Armis roles with names starting with "tfacc".
 func SweepArmisRoles(name string) *resource.Sweeper {
 	return &resource.Sweeper{
 		Name: name,
