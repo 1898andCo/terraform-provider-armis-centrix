@@ -27,12 +27,21 @@ type authResponse struct {
 // authenticate exchanges the API key for a short-lived bearer token. It is
 // concurrency-safe and returns early if the cached token is still valid.
 func (c *Client) authenticate(ctx context.Context) error {
+	// This uses double-checked locking to prevent a TOCTOU race: an RLock fast
+	// path checks the token, then a Lock with a second check ensures only one
+	// goroutine authenticates if multiple detect an expired token simultaneously.
 	c.mu.RLock()
 	if c.accessToken != "" && time.Now().Before(c.accessTokenExpires) {
 		c.mu.RUnlock()
 		return nil // cached token still good
 	}
 	c.mu.RUnlock()
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.accessToken != "" && time.Now().Before(c.accessTokenExpires) {
+		return nil // another goroutine already authenticated
+	}
 
 	form := url.Values{}
 	form.Set("secret_key", c.apiKey)
@@ -70,10 +79,8 @@ func (c *Client) authenticate(ctx context.Context) error {
 	}
 	expiry = expiry.Add(-5 * time.Minute) // expire early for safety
 
-	c.mu.Lock()
 	c.accessToken = ar.Data.AccessToken
 	c.accessTokenExpires = expiry
-	c.mu.Unlock()
 
 	return nil
 }
