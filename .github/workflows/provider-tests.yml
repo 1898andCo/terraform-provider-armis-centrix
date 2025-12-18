@@ -107,6 +107,13 @@ jobs:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
       - run: go mod download
+      # Run sweep to ensure there are no dangling resources before running tests
+      - name: Clean Environment
+        env:
+          ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
+          ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
+        run: task sweep
+        timeout-minutes: 5
       - name: Run Acceptance Tests
         env:
           TF_ACC: "1"
@@ -135,7 +142,6 @@ jobs:
       - run: go mod download
       - name: Run Sweeper
         env:
-          TF_ACC: "1"
           ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
           ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
         run: task sweep
