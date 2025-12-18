@@ -17,6 +17,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: armis-provider-tests
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build
@@ -79,19 +83,19 @@ jobs:
     name: Terraform Provider Acceptance Tests
     needs: build
     runs-on: ubuntu-latest
-    concurrency:
-      group: test-${{ github.run_id }}
-      cancel-in-progress: false
     timeout-minutes: 15
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
         terraform:
-          - '1.5.6'
-          - '1.6.0'
+          - '1.5.7'
           - '1.7.5'
-          - '1.8.2'
+          - '1.9.8'
+          - '1.10.5'
+          - '1.11.4'
+          - '1.12.2'
+          - '1.14.3'
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
@@ -122,9 +126,27 @@ jobs:
           ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
         run: go test -v ./internal/provider/
         timeout-minutes: 10
-      - name: Cleanup Dangling Resources
+
+  # Run sweeper after all test matrix jobs complete
+  cleanup:
+    name: Cleanup Dangling Resources
+    needs: provider-tests
+    runs-on: ubuntu-latest
+    if: always()
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: "3.x"
+      - run: go mod download
+      - name: Run Sweeper
         env:
           ARMIS_API_URL: ${{ secrets.ARMIS_API_URL }}
           ARMIS_API_KEY: ${{ secrets.ARMIS_API_KEY }}
         run: task sweep
-        timeout-minutes: 5
