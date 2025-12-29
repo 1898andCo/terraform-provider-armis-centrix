@@ -21,6 +21,7 @@ type authResponse struct {
 	Data    struct {
 		AccessToken   string `json:"access_token"`
 		ExpirationUTC string `json:"expiration_utc"`
+		UserID        int    `json:"user_id"`
 	} `json:"data"`
 }
 
@@ -81,6 +82,7 @@ func (c *Client) authenticate(ctx context.Context) error {
 
 	c.accessToken = ar.Data.AccessToken
 	c.accessTokenExpires = expiry
+	c.userID = ar.Data.UserID
 
 	return nil
 }
