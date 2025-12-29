@@ -32,7 +32,7 @@ type Permissions struct {
 	Alert               Alert               `json:"alert"`
 	Device              Device              `json:"device"`
 	Policy              Policy              `json:"policy"`
-	Report              Report              `json:"report"`
+	Report              ReportPermissions   `json:"report"`
 	RiskFactor          RiskFactor          `json:"risk_factor"`
 	Settings            Settings            `json:"settings"`
 	User                User                `json:"user"`
@@ -105,7 +105,7 @@ type Policy struct {
 	Read   Permission `json:"read"`
 }
 
-type Report struct {
+type ReportPermissions struct {
 	All    bool         `json:"all,omitempty"`
 	Export Permission   `json:"export"`
 	Manage ManageReport `json:"manage"`

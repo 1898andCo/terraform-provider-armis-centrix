@@ -41,4 +41,7 @@ var (
 
 	// Search errors.
 	ErrSearchAQL = errors.New("search AQL cannot be empty")
+
+	// Report errors.
+	ErrReportID = errors.New("report ID cannot be empty")
 )
