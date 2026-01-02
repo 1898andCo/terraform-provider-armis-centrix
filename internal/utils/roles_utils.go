@@ -110,7 +110,7 @@ func BuildRoleRequest(role RoleResourceModel) armis.RoleSettings {
 					All: role.Permissions.Policy.Read.ValueBool(),
 				},
 			},
-			Report: armis.Report{
+			Report: armis.ReportPermissions{
 				All: role.Permissions.Report.All.ValueBool(),
 				Export: armis.Permission{
 					All: role.Permissions.Report.Export.ValueBool(),
