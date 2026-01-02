@@ -61,6 +61,15 @@ type Client struct {
 	mu                 sync.RWMutex
 	accessToken        string
 	accessTokenExpires time.Time
+	userID             int
+}
+
+// UserID returns the authenticated user's ID from the last successful
+// authentication. Useful for external logging and audit trails.
+func (c *Client) UserID() int {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.userID
 }
 
 // NewClient constructs a new Client. The first parameter (apiKey) is required.
