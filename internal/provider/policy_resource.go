@@ -5,10 +5,11 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 
 	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
@@ -240,7 +241,8 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	getResp, err := r.client.GetPolicy(ctx, state.ID.ValueString())
 	if err != nil {
 		// Handle 404 Not Found by removing resource from state
-		if strings.Contains(err.Error(), "status: 404") {
+		var ae *armis.APIError
+		if errors.As(err, &ae) && ae.StatusCode == http.StatusNotFound {
 			tflog.Warn(ctx, "Policy not found, removing from state", map[string]any{
 				"policy_id": state.ID.ValueString(),
 			})
