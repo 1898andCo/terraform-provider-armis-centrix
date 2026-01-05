@@ -235,6 +235,14 @@ func (r *collectorResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	if updatedCollector == nil {
+		resp.Diagnostics.AddError(
+			"Error Updating Collector",
+			fmt.Sprintf("Collector %s was not found after update. The collector may have been deleted outside of Terraform.", state.ID.ValueString()),
+		)
+		return
+	}
+
 	// Update resource state with updated collector options and timestamp
 	// Map the response to Terraform state
 	plan.ID = types.StringValue(strconv.Itoa(updatedCollector.CollectorNumber))
