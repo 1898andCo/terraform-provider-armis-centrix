@@ -1,7 +1,12 @@
 {
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":ignoreUnstable"
   ],
+  "github-actions": {
+    "enabled": true,
+    "pinDigests": true
+  },
   "packageRules": [
     {
       "matchManagers": [
@@ -26,6 +31,12 @@
         "Pending",
         "OpenSSF"
       ]
+    },
+    {
+      "description": "Only update GitHub Actions when stable and aged",
+      "matchManagers": ["github-actions"],
+      "minimumReleaseAge": "3 days",
+      "allowedVersions": "!/-(alpha|beta|rc|test)/"
     }
   ],
   "labels": [
