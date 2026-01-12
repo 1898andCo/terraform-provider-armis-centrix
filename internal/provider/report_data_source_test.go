@@ -34,7 +34,7 @@ func TestAcc_ReportsDataSource(t *testing.T) {
 					// Verify the first report has basic attributes populated
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.id"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_name"),
-					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_type"),
+					// Note: report_type can be null for some Armis reports, so we don't check it
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.asq"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.creation_time"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.is_scheduled"),
@@ -59,7 +59,7 @@ func TestAcc_ReportsDataSource_ByID(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.id"),
 					// Verify all attributes are present
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_name"),
-					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_type"),
+					// Note: report_type can be null for some Armis reports, so we don't check it
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.asq"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.creation_time"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.is_scheduled"),
@@ -84,7 +84,7 @@ func TestAcc_ReportsDataSource_ByName(t *testing.T) {
 					resource.TestCheckResourceAttr("data.armis_reports.test", "reports.0.report_name", reportName),
 					// Verify all attributes are present
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.id"),
-					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_type"),
+					// Note: report_type can be null for some Armis reports, so we don't check it
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.asq"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.creation_time"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.is_scheduled"),

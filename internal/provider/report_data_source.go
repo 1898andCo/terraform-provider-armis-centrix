@@ -319,10 +319,16 @@ func mapReportToModel(report *armis.Report) reportModel {
 		}
 	}
 
+	// Handle reportType - use null if empty since some Armis reports don't have a type
+	reportType := types.StringValue(report.ReportType)
+	if report.ReportType == "" {
+		reportType = types.StringNull()
+	}
+
 	return reportModel{
 		ID:           types.NumberValue(big.NewFloat(float64(report.ID))),
 		ReportName:   types.StringValue(report.ReportName),
-		ReportType:   types.StringValue(report.ReportType),
+		ReportType:   reportType,
 		Asq:          types.StringValue(report.Asq),
 		CreationTime: types.StringValue(report.CreationTime),
 		IsScheduled:  types.BoolValue(report.IsScheduled),
