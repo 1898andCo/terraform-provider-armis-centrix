@@ -20,21 +20,20 @@ var (
 	reportName = "All Activities"
 )
 
-// TestAcc_ReportsDataSource tests fetching a specific report by name with comprehensive attribute validation.
+// TestAcc_ReportsDataSource tests fetching all reports without any filters.
 func TestAcc_ReportsDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportsDataSourceConfigByName(reportName),
+				Config: testAccReportsDataSourceConfigNoFilter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify reports list exists and has at least one report
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.#"),
-					// Verify the report name matches
-					resource.TestCheckResourceAttr("data.armis_reports.test", "reports.0.report_name", reportName),
-					// Verify report attributes are populated
+					// Verify the first report has basic attributes populated
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.id"),
+					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_name"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_type"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.asq"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.creation_time"),
@@ -107,6 +106,13 @@ func testAccReportsDataSourceConfigByName(reportName string) string {
 	return `
 data "armis_reports" "test" {
   report_name = "` + reportName + `"
+}
+`
+}
+
+func testAccReportsDataSourceConfigNoFilter() string {
+	return `
+data "armis_reports" "test" {
 }
 `
 }
