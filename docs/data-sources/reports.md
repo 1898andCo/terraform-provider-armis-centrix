@@ -3,12 +3,12 @@
 page_title: "armis_reports Data Source - armis"
 subcategory: ""
 description: |-
-  Retrieves Armis report information. Optionally filter by report_id or report_name. If no filter is provided, all reports are returned.
+  Retrieves Armis report information. Supports filtering by report_id or report_name. If report_id is provided, it takes precedence and fetches a single report directly from the API. If only report_name is provided, all reports are fetched and filtered client-side by name (case-sensitive exact match). If no filter is provided, all reports are returned.
 ---
 
 # armis_reports (Data Source)
 
-Retrieves Armis report information. Optionally filter by report_id or report_name. If no filter is provided, all reports are returned.
+Retrieves Armis report information. Supports filtering by report_id or report_name. If report_id is provided, it takes precedence and fetches a single report directly from the API. If only report_name is provided, all reports are fetched and filtered client-side by name (case-sensitive exact match). If no filter is provided, all reports are returned.
 
 ## Example Usage
 
@@ -32,8 +32,8 @@ data "armis_reports" "weekly" {
 
 ### Optional
 
-- `report_id` (String) An optional report ID used to filter the retrieved report information. If specified, only the report matching this ID will be returned.
-- `report_name` (String) An optional report name used to filter the retrieved report information. If specified, only reports matching this name will be returned.
+- `report_id` (String) Optional report ID to fetch a specific report. Takes precedence over report_name if both are provided. Note: The report ID is stored as a number in the results, but provided as a string for filtering.
+- `report_name` (String) Optional report name to filter reports (case-sensitive exact match). Uses client-side filtering after fetching all reports. Ignored if report_id is provided.
 
 ### Read-Only
 
@@ -50,17 +50,17 @@ Read-Only:
 - `is_scheduled` (Boolean) Indicates whether the report is scheduled.
 - `report_name` (String) The name of the report.
 - `report_type` (String) The type of the report.
-- `schedule` (Attributes) The schedule configuration for the report. (see [below for nested schema](#nestedatt--reports--schedule))
+- `schedule` (Attributes) The schedule configuration for the report. Only present when is_scheduled is true. (see [below for nested schema](#nestedatt--reports--schedule))
 
 <a id="nestedatt--reports--schedule"></a>
 ### Nested Schema for `reports.schedule`
 
 Read-Only:
 
-- `email` (List of String) A list of email addresses to receive the scheduled report.
-- `repeat_amount` (Number) The repeat interval amount for the scheduled report.
-- `repeat_unit` (String) The repeat interval unit for the scheduled report (e.g., 'days', 'weeks').
-- `report_file_format` (String) The file format of the scheduled report (e.g., 'pdf', 'csv').
-- `time_of_day` (String) The time of day when the scheduled report is generated.
-- `timezone` (String) The timezone for the scheduled report.
-- `weekdays` (List of String) A list of weekdays when the scheduled report is generated.
+- `email` (List of String) List of email addresses to receive the scheduled report.
+- `repeat_amount` (Number) The repeat interval amount for the scheduled report. Can be a decimal value.
+- `repeat_unit` (String) The repeat interval unit for the scheduled report (e.g., 'days', 'weeks', 'months').
+- `report_file_format` (String) The file format of the scheduled report (e.g., 'pdf', 'csv', 'xlsx').
+- `time_of_day` (String) The time of day when the scheduled report is generated. Format: HH:MM (24-hour format).
+- `timezone` (String) The timezone for the scheduled report (e.g., 'America/New_York', 'UTC').
+- `weekdays` (List of String) List of weekdays when the scheduled report is generated (e.g., 'Monday', 'Tuesday'). Only applicable for weekly schedules.

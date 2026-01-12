@@ -27,14 +27,16 @@ type Report struct {
 	ReportName   string   `json:"reportName,omitempty"`
 	ReportType   string   `json:"reportType,omitempty"`
 	Asq          string   `json:"asq,omitempty"`
-	Schedule     Schedule `json:"schedule,omitempty"`
+	Schedule     Schedule `json:"schedule"`
 	CreationTime string   `json:"creationTime,omitempty"`
 	IsScheduled  bool     `json:"isScheduled,omitempty"`
 }
 
 // Schedule represents a report schedule.
 type Schedule struct {
-	Email            []string `json:"email,omitempty"`
+	Email []string `json:"email,omitempty"`
+	// RepeatAmount is a float64 to support decimal interval values (e.g., 0.5 for half-day intervals).
+	// The Armis API returns this as a numeric value that can include decimals.
 	RepeatAmount     float64  `json:"repeatAmount,omitempty"`
 	RepeatUnit       string   `json:"repeatUnit,omitempty"`
 	ReportFileFormat string   `json:"reportFileFormat,omitempty"`

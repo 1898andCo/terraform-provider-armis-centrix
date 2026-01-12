@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -60,14 +61,14 @@ func (d *reportsDataSource) Metadata(_ context.Context, req datasource.MetadataR
 // Schema defines the schema for the reports data source.
 func (d *reportsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Retrieves Armis report information. Optionally filter by report_id or report_name. If no filter is provided, all reports are returned.",
+		Description: "Retrieves Armis report information. Supports filtering by report_id or report_name. If report_id is provided, it takes precedence and fetches a single report directly from the API. If only report_name is provided, all reports are fetched and filtered client-side by name (case-sensitive exact match). If no filter is provided, all reports are returned.",
 		Attributes: map[string]schema.Attribute{
 			"report_id": schema.StringAttribute{
-				Description: "An optional report ID used to filter the retrieved report information. If specified, only the report matching this ID will be returned.",
+				Description: "Optional report ID to fetch a specific report. Takes precedence over report_name if both are provided. Note: The report ID is stored as a number in the results, but provided as a string for filtering.",
 				Optional:    true,
 			},
 			"report_name": schema.StringAttribute{
-				Description: "An optional report name used to filter the retrieved report information. If specified, only reports matching this name will be returned.",
+				Description: "Optional report name to filter reports (case-sensitive exact match). Uses client-side filtering after fetching all reports. Ignored if report_id is provided.",
 				Optional:    true,
 			},
 			"reports": schema.ListNestedAttribute{
@@ -100,36 +101,36 @@ func (d *reportsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 							Computed:    true,
 						},
 						"schedule": schema.SingleNestedAttribute{
-							Description: "The schedule configuration for the report.",
+							Description: "The schedule configuration for the report. Only present when is_scheduled is true.",
 							Computed:    true,
 							Attributes: map[string]schema.Attribute{
 								"email": schema.ListAttribute{
-									Description: "A list of email addresses to receive the scheduled report.",
+									Description: "List of email addresses to receive the scheduled report.",
 									Computed:    true,
 									ElementType: types.StringType,
 								},
 								"repeat_amount": schema.NumberAttribute{
-									Description: "The repeat interval amount for the scheduled report.",
+									Description: "The repeat interval amount for the scheduled report. Can be a decimal value.",
 									Computed:    true,
 								},
 								"repeat_unit": schema.StringAttribute{
-									Description: "The repeat interval unit for the scheduled report (e.g., 'days', 'weeks').",
+									Description: "The repeat interval unit for the scheduled report (e.g., 'days', 'weeks', 'months').",
 									Computed:    true,
 								},
 								"report_file_format": schema.StringAttribute{
-									Description: "The file format of the scheduled report (e.g., 'pdf', 'csv').",
+									Description: "The file format of the scheduled report (e.g., 'pdf', 'csv', 'xlsx').",
 									Computed:    true,
 								},
 								"time_of_day": schema.StringAttribute{
-									Description: "The time of day when the scheduled report is generated.",
+									Description: "The time of day when the scheduled report is generated. Format: HH:MM (24-hour format).",
 									Computed:    true,
 								},
 								"timezone": schema.StringAttribute{
-									Description: "The timezone for the scheduled report.",
+									Description: "The timezone for the scheduled report (e.g., 'America/New_York', 'UTC').",
 									Computed:    true,
 								},
 								"weekdays": schema.ListAttribute{
-									Description: "A list of weekdays when the scheduled report is generated.",
+									Description: "List of weekdays when the scheduled report is generated (e.g., 'Monday', 'Tuesday'). Only applicable for weekly schedules.",
 									Computed:    true,
 									ElementType: types.StringType,
 								},
@@ -175,6 +176,8 @@ type scheduleModel struct {
 func (d *reportsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var config reportsDataSourceModel
 
+	tflog.Info(ctx, "Reading reports data source")
+
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -183,58 +186,137 @@ func (d *reportsDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	var reports []reportModel
 
+	// Fetch report by ID if specified, otherwise fetch all reports
 	if !config.ReportID.IsNull() {
-		// Fetch a specific report by ID
-		report, err := d.client.GetReportByID(ctx, config.ReportID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to Read Armis Report",
-				err.Error(),
-			)
+		reports = d.fetchReportByID(ctx, config.ReportID.ValueString(), resp)
+		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		// Map response body to model
-		reportState := mapReportToModel(report)
-		reports = append(reports, reportState)
 	} else {
-		// Fetch all reports
-		allReports, err := d.client.GetReports(ctx)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Unable to Read Armis Reports",
-				err.Error(),
-			)
+		reports = d.fetchAndFilterReports(ctx, config.ReportName, resp)
+		if resp.Diagnostics.HasError() {
 			return
-		}
-
-		// Filter by name if specified
-		for _, report := range allReports {
-			if !config.ReportName.IsNull() && report.ReportName != config.ReportName.ValueString() {
-				continue
-			}
-			reportState := mapReportToModel(&report)
-			reports = append(reports, reportState)
 		}
 	}
+
+	tflog.Info(ctx, "Setting reports state", map[string]any{"report_count": len(reports)})
 
 	// Save data into Terraform state
 	config.Reports = reports
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 }
 
-// mapReportToModel converts an armis.Report to a reportModel.
-func mapReportToModel(report *armis.Report) reportModel {
-	// Map email addresses
-	var emails []types.String
-	for _, email := range report.Schedule.Email {
-		emails = append(emails, types.StringValue(email))
+// fetchReportByID fetches a single report by ID.
+func (d *reportsDataSource) fetchReportByID(ctx context.Context, reportID string, resp *datasource.ReadResponse) []reportModel {
+	tflog.Debug(ctx, "Fetching report by ID", map[string]any{"report_id": reportID})
+
+	report, err := d.client.GetReportByID(ctx, reportID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Armis Report",
+			fmt.Sprintf("Failed to fetch report with ID '%s': %s", reportID, err.Error()),
+		)
+		return nil
 	}
 
-	// Map weekdays
-	var weekdays []types.String
-	for _, weekday := range report.Schedule.Weekdays {
-		weekdays = append(weekdays, types.StringValue(weekday))
+	// Check for nil report response
+	if report == nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Armis Report",
+			fmt.Sprintf("Report with ID '%s' was not found or returned empty response.", reportID),
+		)
+		return nil
+	}
+
+	tflog.Debug(ctx, "Successfully fetched report by ID", map[string]any{
+		"report_id":   reportID,
+		"report_name": report.ReportName,
+	})
+
+	// Map response body to model
+	reportState := mapReportToModel(report)
+	return []reportModel{reportState}
+}
+
+// fetchAndFilterReports fetches all reports and optionally filters by name.
+func (d *reportsDataSource) fetchAndFilterReports(ctx context.Context, reportName types.String, resp *datasource.ReadResponse) []reportModel {
+	tflog.Debug(ctx, "Fetching all reports")
+
+	allReports, err := d.client.GetReports(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Read Armis Reports",
+			fmt.Sprintf("Failed to fetch reports from Armis API: %s", err.Error()),
+		)
+		return nil
+	}
+
+	tflog.Debug(ctx, "Successfully fetched reports", map[string]any{"total_count": len(allReports)})
+
+	// Filter by name if specified
+	filterByName := !reportName.IsNull()
+	nameFilter := reportName.ValueString()
+
+	if filterByName {
+		tflog.Debug(ctx, "Filtering reports by name", map[string]any{"report_name": nameFilter})
+	}
+
+	var reports []reportModel
+	for i, report := range allReports {
+		// Validate report data before processing
+		if report.ReportName == "" {
+			tflog.Warn(ctx, "Skipping report with empty name", map[string]any{"index": i, "report_id": report.ID})
+			continue
+		}
+
+		// Filter by name if specified
+		if filterByName && report.ReportName != nameFilter {
+			continue
+		}
+
+		reportState := mapReportToModel(&report)
+		reports = append(reports, reportState)
+	}
+
+	if filterByName {
+		tflog.Debug(ctx, "Filtered reports by name", map[string]any{
+			"report_name":    nameFilter,
+			"matched_count":  len(reports),
+			"original_count": len(allReports),
+		})
+	}
+
+	return reports
+}
+
+// mapReportToModel converts an armis.Report to a reportModel.
+func mapReportToModel(report *armis.Report) reportModel {
+	var schedulePtr *scheduleModel
+
+	// Only map schedule if the report is scheduled and has schedule data
+	// This prevents nil pointer dereference when accessing report.Schedule fields
+	if report.IsScheduled {
+		// Map email addresses
+		var emails []types.String
+		for _, email := range report.Schedule.Email {
+			emails = append(emails, types.StringValue(email))
+		}
+
+		// Map weekdays
+		var weekdays []types.String
+		for _, weekday := range report.Schedule.Weekdays {
+			weekdays = append(weekdays, types.StringValue(weekday))
+		}
+
+		schedulePtr = &scheduleModel{
+			Email:            emails,
+			RepeatAmount:     types.NumberValue(big.NewFloat(report.Schedule.RepeatAmount)),
+			RepeatUnit:       types.StringValue(report.Schedule.RepeatUnit),
+			ReportFileFormat: types.StringValue(report.Schedule.ReportFileFormat),
+			TimeOfDay:        types.StringValue(report.Schedule.TimeOfDay),
+			Timezone:         types.StringValue(report.Schedule.Timezone),
+			Weekdays:         weekdays,
+		}
 	}
 
 	return reportModel{
@@ -244,14 +326,6 @@ func mapReportToModel(report *armis.Report) reportModel {
 		Asq:          types.StringValue(report.Asq),
 		CreationTime: types.StringValue(report.CreationTime),
 		IsScheduled:  types.BoolValue(report.IsScheduled),
-		Schedule: &scheduleModel{
-			Email:            emails,
-			RepeatAmount:     types.NumberValue(big.NewFloat(report.Schedule.RepeatAmount)),
-			RepeatUnit:       types.StringValue(report.Schedule.RepeatUnit),
-			ReportFileFormat: types.StringValue(report.Schedule.ReportFileFormat),
-			TimeOfDay:        types.StringValue(report.Schedule.TimeOfDay),
-			Timezone:         types.StringValue(report.Schedule.Timezone),
-			Weekdays:         weekdays,
-		},
+		Schedule:     schedulePtr,
 	}
 }
