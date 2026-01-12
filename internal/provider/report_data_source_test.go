@@ -12,28 +12,29 @@ import (
 
 // Test data for report data source acceptance tests.
 // These values reference default reports that should exist in a standard Armis Centrix environment.
-// If tests fail, verify these reports exist in your test environment:
-//   - Report ID 1 should be a valid report
+// If tests fail, verify these reports exist in the test environment:
+//   - Report ID 3 should be a valid default system report
 //   - "All Activities" is a default system report
 var (
-	reportID   = 1
+	reportID   = 3
 	reportName = "All Activities"
 )
 
-// TestAcc_ReportsDataSource tests fetching all reports with comprehensive attribute validation.
+// TestAcc_ReportsDataSource tests fetching a specific report by name with comprehensive attribute validation.
 func TestAcc_ReportsDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportsDataSourceConfig(),
+				Config: testAccReportsDataSourceConfigByName(reportName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Verify reports list exists and has at least one report
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.#"),
+					// Verify the report name matches
+					resource.TestCheckResourceAttr("data.armis_reports.test", "reports.0.report_name", reportName),
 					// Verify report attributes are populated
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.id"),
-					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_name"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.report_type"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.asq"),
 					resource.TestCheckResourceAttrSet("data.armis_reports.test", "reports.0.creation_time"),
@@ -92,10 +93,6 @@ func TestAcc_ReportsDataSource_ByName(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccReportsDataSourceConfig() string {
-	return `data "armis_reports" "test" {}`
 }
 
 func testAccReportsDataSourceConfigByID(reportID string) string {
