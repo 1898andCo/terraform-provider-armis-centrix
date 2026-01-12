@@ -4,10 +4,20 @@
 package provider_test
 
 import (
-	"os"
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+)
+
+// Test data for report data source acceptance tests.
+// These values reference default reports that should exist in a standard Armis Centrix environment.
+// If tests fail, verify these reports exist in your test environment:
+//   - Report ID 1 should be a valid report
+//   - "All Activities" is a default system report
+var (
+	reportID   = 1
+	reportName = "All Activities"
 )
 
 // TestAcc_ReportsDataSource tests fetching all reports with comprehensive attribute validation.
@@ -35,19 +45,13 @@ func TestAcc_ReportsDataSource(t *testing.T) {
 }
 
 // TestAcc_ReportsDataSource_ByID tests filtering reports by report_id.
-// This test requires TEST_REPORT_ID environment variable to be set.
 func TestAcc_ReportsDataSource_ByID(t *testing.T) {
-	reportID := os.Getenv("TEST_REPORT_ID")
-	if reportID == "" {
-		t.Skip("TEST_REPORT_ID environment variable not set, skipping report_id filter test")
-	}
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportsDataSourceConfigByID(reportID),
+				Config: testAccReportsDataSourceConfigByID(fmt.Sprintf("%d", reportID)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Should return exactly one report
 					resource.TestCheckResourceAttr("data.armis_reports.test", "reports.#", "1"),
@@ -66,13 +70,7 @@ func TestAcc_ReportsDataSource_ByID(t *testing.T) {
 }
 
 // TestAcc_ReportsDataSource_ByName tests filtering reports by report_name.
-// This test requires TEST_REPORT_NAME environment variable to be set.
 func TestAcc_ReportsDataSource_ByName(t *testing.T) {
-	reportName := os.Getenv("TEST_REPORT_NAME")
-	if reportName == "" {
-		t.Skip("TEST_REPORT_NAME environment variable not set, skipping report_name filter test")
-	}
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
