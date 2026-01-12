@@ -35,7 +35,7 @@ type Report struct {
 // Schedule represents a report schedule.
 type Schedule struct {
 	Email            []string `json:"email,omitempty"`
-	RepeatAmount     int      `json:"repeatAmount,omitempty"`
+	RepeatAmount     float64  `json:"repeatAmount,omitempty"`
 	RepeatUnit       string   `json:"repeatUnit,omitempty"`
 	ReportFileFormat string   `json:"reportFileFormat,omitempty"`
 	TimeOfDay        string   `json:"timeOfDay,omitempty"`
