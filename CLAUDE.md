@@ -43,10 +43,13 @@ Each resource follows this structure:
    - Define schema with validators (use `stringvalidator`, `int64validator` from framework).
    - `Create/Read/Update/Delete` methods: extract plan/state → call armis client → update state.
    - Handle 404 in Read: `resp.State.RemoveResource(ctx)` for drift detection.
+   - **No nil client checks needed**: The Terraform framework guarantees `Configure()` is called before CRUD methods, and `provider.go` validates the client during configuration. Trust the framework's lifecycle guarantees.
 4. **internal/provider/{resource}_resource_test.go**: Write acceptance tests with test fixtures.
 5. **internal/sweep/{resource}_resource_test_sweeper.go**: Register sweeper for test cleanup.
 6. **provider.go**: Add factory to `Resources()` slice.
 7. Run `task docs` to regenerate documentation from schema descriptions.
+
+**Data Source Pattern**: Same structure as resources, but implement `datasource.DataSource` + `datasource.DataSourceWithConfigure`. Data sources only need a `Read` method.
 
 ### Error Handling Strategy
 Three-level approach:
@@ -74,12 +77,35 @@ Three-level approach:
 - **Models**: Maintain separate API models (`armis/`) and Terraform models (`internal/provider`, `internal/utils`); use helper functions for conversion.
 - **Struct tags**: When defining nested structs in API models, apply `omitempty` tags to individual fields within the nested struct (e.g., `Name string \`json:"name,omitempty"\``), not to the parent struct field itself; this avoids linter warnings about redundant tags while achieving proper JSON marshaling behavior.
 
+### Consistency and Standardization
+
+- **Pattern adherence**: Follow existing patterns in the codebase for error messages, validation, and structure. Individual PRs should not introduce one-off improvements that break consistency.
+- **Cross-cutting improvements**: If you identify opportunities for improvement (e.g., enhancing error messages with troubleshooting steps), create a follow-on issue to standardize the improvement across **all** resources/data sources rather than implementing it in isolation.
+- **Type changes**: When changing API model types (e.g., `int` → `float64`), document the rationale clearly. If claiming API support for new value ranges (e.g., decimals), provide evidence from actual API responses or link to API documentation.
+
 ## Testing Guidance
 
 - **Acceptance tests**: Require `ARMIS_API_KEY` and `ARMIS_API_URL`; `task test` must pass locally before commits land to keep the provider healthy.
 - **Unit tests**: Add table-driven tests alongside implementations in `*_test.go` files; rely on mockable interfaces where possible.
 - **Cleanup**: Extend `task sweep` when resources need explicit teardown to prevent drift in shared environments.
 - **Pre-submit**: Run `go test ./...` before opening a PR; ensure acceptance tests pass locally when touching provider logic.
+
+### Test Coverage Best Practices
+
+- **Required coverage**: Every data source/resource needs at least three test cases:
+  1. Basic functionality test (create/read core attributes)
+  2. Filter/query parameter tests (for data sources with filters)
+  3. Update tests (for resources with mutable attributes)
+
+- **Optional/environment-dependent attributes**: For attributes that depend on API state (e.g., nested objects that only exist in certain conditions), it's acceptable to omit them from tests to avoid flakiness. Document test assumptions clearly:
+  ```go
+  // Note: Schedule attribute is omitted from tests because not all reports
+  // are scheduled in the test environment, which would cause flaky tests.
+  ```
+
+- **Error scenario testing**: Error handling tests belong in the **SDK layer** (`armis/`), not the provider layer (`internal/provider/`). The SDK is where API interactions occur, making it the appropriate place to test error responses, network failures, and invalid inputs. Provider-level tests should focus on Terraform-specific behavior (state management, drift detection, validation).
+
+- **Test data dependencies**: When tests require specific resources to exist (e.g., "Report ID 3 must exist"), document these requirements in test file comments. Consider using fixtures or setup functions for predictable test data.
 
 ## Running Individual Tests
 
