@@ -176,6 +176,7 @@ func (p *ArmisProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		CollectorDataSource,
 		BoundaryDataSource,
 		ListsDataSource,
+		ReportsDataSource,
 	}
 }
 
