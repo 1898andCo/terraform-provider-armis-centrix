@@ -11,7 +11,7 @@ import (
 	"context"
 	"os"
 
-	armis "github.com/1898andCo/terraform-provider-armis-centrix/armis"
+	armis "github.com/1898andCo/armis-sdk-go/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
