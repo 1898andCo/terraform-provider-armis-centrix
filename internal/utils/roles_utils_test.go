@@ -6,7 +6,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/1898andCo/terraform-provider-armis-centrix/armis"
+	"github.com/1898andCo/armis-sdk-go/armis"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 

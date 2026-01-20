@@ -5,7 +5,7 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 ## Repository Overview
 
 - **Focus**: Provider that manages Armis Centrix resources via the Armis API.
-- **Primary libs**: Terraform Plugin SDK v2, HashiCorp testing harness, internal `armis/` SDK.
+- **Primary libs**: Terraform Plugin SDK v2, HashiCorp testing harness, external [`armis-sdk-go`](https://github.com/1898andCo/armis-sdk-go) SDK.
 - **Go version**: `1.25` as documented in `README.md`.
 
 ## Local Environment
@@ -16,7 +16,7 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 
 ## Repository Layout
 
-- **`armis/`**: Armis API client with auth (`client.go`, `auth.go`), CRUD operations (`{resource}.go`), and models (`model_{resource}.go`); uses functional options and token caching.
+- **`github.com/1898andCo/armis-sdk-go/armis`**: External Armis API client SDK with auth, CRUD operations, and models; uses functional options and token caching. See [armis-sdk-go](https://github.com/1898andCo/armis-sdk-go) repository for SDK development.
 - **`internal/provider/`**: Terraform resource and data source implementations plus acceptance tests.
 - **`docs/`**: Generated provider docs (`task docs` refreshes from code descriptions).
 - **`examples/`**: Usage samples consumed in documentation.
@@ -25,7 +25,7 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 ## Architecture Patterns
 
 ### Dual Model System
-- **API models** (`armis/model_*.go`): Match Armis API JSON structure exactly; use `json` tags.
+- **API models** (in `armis-sdk-go`): Match Armis API JSON structure exactly; use `json` tags. Defined in the external SDK.
 - **Terraform models** (resource files, `internal/utils/model_*.go`): Map to Terraform state; use `tfsdk` tags.
 - **Conversion**: Helper functions bridge models (e.g., `buildArmisUser()` converts Terraform → API).
 
@@ -36,8 +36,8 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 
 ### Resource Implementation Pattern
 Each resource follows this structure:
-1. **armis/model_{resource}.go**: Define API response structs (GetResponse, CreateResponse, etc.).
-2. **armis/{resource}.go**: Implement CRUD methods; add sentinel errors to `armis/errors.go`.
+1. **SDK models** (in `armis-sdk-go`): API response structs (GetResponse, CreateResponse, etc.) are defined in the external SDK.
+2. **SDK CRUD methods** (in `armis-sdk-go`): CRUD methods and sentinel errors are implemented in the external SDK.
 3. **internal/provider/{resource}_resource.go**:
    - Implement `resource.Resource` + `resource.ResourceWithConfigure` + `resource.ResourceWithImportState`.
    - Define schema with validators (use `stringvalidator`, `int64validator` from framework).
@@ -53,7 +53,7 @@ Each resource follows this structure:
 
 ### Error Handling Strategy
 Three-level approach:
-- **Validation errors**: Sentinel errors in `armis/errors.go` (e.g., `ErrCollectorInvalidType`).
+- **Validation errors**: Sentinel errors in the SDK (e.g., `armis.ErrCollectorInvalidType`).
 - **API errors**: `armis.APIError` with StatusCode and Body; use `appendAPIError()` for diagnostics.
 - **Context wrapping**: `fmt.Errorf("%w", err)` preserves error chain for debugging.
 
@@ -73,8 +73,8 @@ Three-level approach:
 - **Imports**: Group as standard library, third-party, repository local; maintain alphabetical order.
 - **Error handling**: Wrap errors with context using `fmt.Errorf("%w", err)`; leverage sentinel errors in `internal/provider` when available.
 - **Comments**: Follow Go doc comment conventions; keep exported symbol docs in sync with generated docs (`task docs`).
-- **APIs**: Use helper functions in `armis/` for REST interactions; avoid duplicating HTTP logic.
-- **Models**: Maintain separate API models (`armis/`) and Terraform models (`internal/provider`, `internal/utils`); use helper functions for conversion.
+- **APIs**: Use helper functions from the `armis-sdk-go` SDK for REST interactions; avoid duplicating HTTP logic.
+- **Models**: Maintain separate API models (in `armis-sdk-go`) and Terraform models (`internal/provider`, `internal/utils`); use helper functions for conversion.
 - **Struct tags**: When defining nested structs in API models, apply `omitempty` tags to individual fields within the nested struct (e.g., `Name string \`json:"name,omitempty"\``), not to the parent struct field itself; this avoids linter warnings about redundant tags while achieving proper JSON marshaling behavior.
 
 ### Consistency and Standardization
@@ -103,7 +103,7 @@ Three-level approach:
   // are scheduled in the test environment, which would cause flaky tests.
   ```
 
-- **Error scenario testing**: Error handling tests belong in the **SDK layer** (`armis/`), not the provider layer (`internal/provider/`). The SDK is where API interactions occur, making it the appropriate place to test error responses, network failures, and invalid inputs. Provider-level tests should focus on Terraform-specific behavior (state management, drift detection, validation).
+- **Error scenario testing**: Error handling tests belong in the **SDK layer** (`armis-sdk-go`), not the provider layer (`internal/provider/`). The SDK is where API interactions occur, making it the appropriate place to test error responses, network failures, and invalid inputs. Provider-level tests should focus on Terraform-specific behavior (state management, drift detection, validation).
 
 - **Test data dependencies**: When tests require specific resources to exist (e.g., "Report ID 3 must exist"), document these requirements in test file comments. Consider using fixtures or setup functions for predictable test data.
 
@@ -111,7 +111,7 @@ Three-level approach:
 
 - **Single unit test**: `go test ./internal/utils -v -run TestBuildRoleRequest`
 - **Single acceptance test**: `TF_ACC=true go test ./internal/provider -v -run TestAccCollectorResource_basic -timeout=30m`
-- **Package-specific tests**: `go test ./armis -v` or `go test ./internal/utils -v`
+- **Package-specific tests**: `go test ./internal/utils -v`
 - **With coverage**: `go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out`
 - **Parallel execution**: Tests use `t.Parallel()` for speed; ensure parallel-safe when adding new tests.
 
@@ -139,7 +139,7 @@ Three-level approach:
 ## Additional Notes
 
 - **Dependencies**: Run `go mod tidy` (part of `task prep`) after adding/removing imports.
-- **API changes**: Coordinate with the Armis Centrix API team before introducing breaking changes in `armis/` models.
+- **API changes**: Coordinate with the Armis Centrix API team before introducing breaking changes; SDK changes should be made in the `armis-sdk-go` repository.
 - **Security**: Never log sensitive API tokens; scrub before committing.
 - **Pre-commit**: Hooks run `task prep -f` automatically for Go files under `main.go` and `internal/`; do not bypass with `--no-verify`.
 - **Hook contents**: `task prep` formats (`gofumpt`), lints (`golangci-lint`, `tfproviderlint`, `go vet`), regenerates docs, installs the provider locally, and tidies modules.

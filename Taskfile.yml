@@ -48,8 +48,8 @@ tasks:
       - cd tools; go generate ./...
       - sed -i.bak 's/armis Provider/Armis Centrix Provider/g' docs/index.md && rm docs/index.md.bak
     sources:
-      - "armis/**/*.go"
-      - "provider/**/*.go"
+      - "internal/provider/**/*.go"
+      - "internal/utils/**/*.go"
       - "main.go"
       - "examples/**/*.tf"
       - "examples/**/*.sh"

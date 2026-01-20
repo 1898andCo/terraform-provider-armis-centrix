@@ -7,7 +7,9 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Armis Centrix Go SDK
 
-The Armis Centrix Go SDK for authenticating and provisioning resources is located in the `armis` directory. This location may be temporary as we plan to migrate the SDK to a separate, versioned repository. Within this directory, `client.go` and `auth.go` handle authentication and provider requests, requiring an API key and the Armis instance URL to communicate and manage resources. The `models_` files define the Go structs used for API calls and responses. When creating a new data source or resource, a model and a corresponding CRUD operations file (e.g., `roles.go`, `collectors.go`, or `users.go`) must be implemented to interact with the API. Once these components are created and tested, they can be utilized by the provider in the `internal/provider` directory.
+The Armis Centrix Go SDK for authenticating and provisioning resources is maintained in a separate repository: [`armis-sdk-go`](https://github.com/1898andCo/armis-sdk-go). This provider imports the SDK as a Go module dependency (`github.com/1898andCo/armis-sdk-go/armis`).
+
+The SDK handles authentication and API requests, requiring an API key and the Armis instance URL to communicate and manage resources. When creating a new data source or resource in this provider, you will use the existing SDK types and CRUD methods. If new API functionality is needed, contribute to the `armis-sdk-go` repository first, then update this provider to use the new SDK version.
 
 ## Building the Provider
 
@@ -70,7 +72,6 @@ go tool cover -html=coverage.out
 
 # Run specific package tests
 go test ./internal/utils -v
-go test ./armis -v
 
 # Run specific test function
 go test ./internal/utils -v -run TestBuildRoleRequest
@@ -96,10 +97,6 @@ task test
 
 ```
 .
-├── armis/                      # SDK tests
-│   ├── auth_test.go           # Authentication tests
-│   ├── collectors_test.go     # Collector CRUD tests
-│   └── ...
 ├── internal/
 │   ├── provider/              # Acceptance tests
 │   │   ├── collector_resource_test.go
@@ -109,6 +106,8 @@ task test
 │       ├── roles_utils_test.go      # Role transformation tests
 │       └── policy_utils_test.go     # Policy transformation tests
 ```
+
+> **Note:** SDK tests are maintained in the separate [`armis-sdk-go`](https://github.com/1898andCo/armis-sdk-go) repository.
 
 ### Writing Tests
 
