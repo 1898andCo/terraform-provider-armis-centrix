@@ -1,0 +1,69 @@
+# Terraform Armis Centrix Provider
+
+> Terraform/OpenTofu provider for managing Armis Centrix security platform resources. Enables Infrastructure as Code (IaC) management of users, roles, policies, and collectors in Armis Centrix environments. Built with Terraform Plugin SDK v2 and the external armis-sdk-go SDK. Requires Terraform >= 0.12 or OpenTofu >= 1.5, and Go >= 1.25 for development.
+
+The provider authenticates via API key and URL, supporting both environment variables (ARMIS_API_KEY, ARMIS_API_URL) and provider configuration. The API key is obtained from the Armis console under Settings > API Management.
+
+## Getting Started
+
+- [README](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/README.md): Project overview, requirements, and quick start
+- [Provider Index](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/index.md): Provider configuration, authentication, and example usage
+- [Contributing Guide](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/Contributing.md): How to build, test, and contribute to the provider
+
+## Resources
+
+Resources support full CRUD operations for managing Armis Centrix entities:
+
+- [armis_user](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/resources/user.md): Manage Armis users with roles, sites, and role assignments
+- [armis_role](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/resources/role.md): Create and manage custom Armis roles with permissions
+- [armis_policy](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/resources/policy.md): Configure security policies with rules and actions
+- [armis_collector](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/resources/collector.md): Manage Armis collector virtual appliances
+
+## Data Sources
+
+Data sources provide read-only access to Armis Centrix information:
+
+- [armis_user](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/user.md): Look up user details by ID
+- [armis_roles](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/roles.md): Query available roles
+- [armis_policies](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/policies.md): List security policies
+- [armis_collectors](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/collectors.md): Retrieve collector information
+- [armis_sites](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/sites.md): List Armis sites
+- [armis_boundary](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/boundary.md): Query boundary configurations
+- [armis_lists](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/lists.md): Access Armis lists
+- [armis_reports](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/docs/data-sources/reports.md): Retrieve report configurations
+
+## Examples
+
+- [Provider Configuration](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/provider/provider.tf): Basic provider setup
+- [User Resource](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/resources/armis_user/resource.tf): Creating and managing users
+- [Role Resource](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/resources/armis_role/resource.tf): Custom role creation
+- [Policy Resource](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/resources/armis_policy/resource.tf): Security policy configuration
+- [Collector Resource](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/resources/armis_collector/resource.tf): Collector management
+- [User Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_user/data-source.tf): Looking up user details
+- [Roles Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_roles/data-source.tf): Querying available roles
+- [Policies Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_policies/data-source.tf): Listing security policies
+- [Collectors Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_collectors/data-source.tf): Retrieving collector information
+- [Sites Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_sites/data-source.tf): Listing Armis sites
+- [Boundary Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_boundary/data-source.tf): Querying boundary configurations
+- [Lists Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_lists/data-source.tf): Accessing Armis lists
+- [Reports Data Source](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/examples/data-sources/armis_reports/data-source.tf): Retrieving report configurations
+
+## Source Code
+
+- [internal/provider/](https://github.com/1898andCo/terraform-provider-armis-centrix/tree/main/internal/provider): Terraform resource and data source implementations
+- [internal/utils/](https://github.com/1898andCo/terraform-provider-armis-centrix/tree/main/internal/utils): Helper functions and model conversions
+- [main.go](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/main.go): Provider entry point
+
+## Related Projects
+
+- [armis-sdk-go](https://github.com/1898andCo/armis-sdk-go): The external Armis API client SDK used by this provider for authentication and CRUD operations
+
+## Optional
+
+Additional context for contributors and developers:
+
+- [CLAUDE.md](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/CLAUDE.md): Detailed codebase guidance including architecture patterns, coding standards, and development workflow
+- [Taskfile](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/Taskfile.yml): Available development tasks (build, test, lint, docs)
+- [LICENSE](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/LICENSE): Apache-2.0 license
+- [.golangci.yml](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/.golangci.yml): Linter configuration
+- [.goreleaser.yml](https://github.com/1898andCo/terraform-provider-armis-centrix/blob/main/.goreleaser.yml): Release configuration
