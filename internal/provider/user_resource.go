@@ -87,8 +87,9 @@ The resource provisions a user with the ability to define location, email, roles
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
+					// Intentionally permissive but validate digits, common formatting, and a responsible length
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^\+[1-9]\d{1,14}$`),
+						regexp.MustCompile(`^[\d\s.\-+()]{7,25}$`),
 						"must be a valid phone number",
 					),
 				},

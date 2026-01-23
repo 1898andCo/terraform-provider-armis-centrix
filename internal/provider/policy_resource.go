@@ -148,7 +148,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 									Optional:    true,
 									Description: "The severity of the action.",
 									Validators: []validator.String{
-										stringvalidator.OneOf("Low", "Medium", "High", "Critical"),
+										stringvalidator.OneOf("low", "medium", "high", "critical"),
 									},
 								},
 								"title": schema.StringAttribute{
