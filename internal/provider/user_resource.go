@@ -75,6 +75,9 @@ The resource provisions a user with the ability to define location, email, roles
 				Required:      true,
 				Description:   "The full name of the user.",
 				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplaceIfConfigured(), stringplanmodifier.UseStateForUnknown()},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+				},
 			},
 			"phone": schema.StringAttribute{
 				Optional:    true,
@@ -82,6 +85,12 @@ The resource provisions a user with the ability to define location, email, roles
 				Description: "The phone number of the user.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^\+[1-9]\d{1,14}$`),
+						"must be a valid phone number",
+					),
 				},
 			},
 			"email": schema.StringAttribute{
@@ -113,6 +122,9 @@ The resource provisions a user with the ability to define location, email, roles
 			"username": schema.StringAttribute{
 				Required:    true,
 				Description: "The unique username of the user.",
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 100),
+				},
 			},
 			"id": schema.StringAttribute{
 				Computed:      true,
