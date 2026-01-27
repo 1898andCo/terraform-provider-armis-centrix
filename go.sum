@@ -1,7 +1,7 @@
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
 dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
-github.com/1898andCo/armis-sdk-go v1.1.0 h1:4scp+7ByvTVapn3rFhZGPX+S6UkmXpAPJNS350T3GOM=
-github.com/1898andCo/armis-sdk-go v1.1.0/go.mod h1:YGxbflJR6CdGF8FJeZcxEKyGOJxmQtBaaDPfntcgd7M=
+github.com/1898andCo/armis-sdk-go v1.2.0 h1:MB1AYgRcKOk2NL8RW+OW7yMr+le7+KZPgStVobn5pHc=
+github.com/1898andCo/armis-sdk-go v1.2.0/go.mod h1:YGxbflJR6CdGF8FJeZcxEKyGOJxmQtBaaDPfntcgd7M=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/ProtonMail/go-crypto v1.3.0 h1:ILq8+Sf5If5DCpHQp4PbZdS1J7HDFRXz/+xKBiRGFrw=
