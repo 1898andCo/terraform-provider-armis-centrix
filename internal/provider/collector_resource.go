@@ -72,6 +72,9 @@ func (r *collectorResource) Schema(ctx context.Context, req resource.SchemaReque
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "The full name of the collector.",
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+				},
 			},
 			"deployment_type": schema.StringAttribute{
 				Required:    true,

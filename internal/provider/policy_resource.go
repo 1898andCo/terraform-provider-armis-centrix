@@ -13,7 +13,9 @@ import (
 
 	armis "github.com/1898andCo/armis-sdk-go/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
+	"github.com/1898andCo/terraform-provider-armis-centrix/internal/verify"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -82,6 +84,9 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "The full name of the policy.",
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional:    true,
@@ -108,6 +113,9 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.ValueStringsAre(verify.ValidMitreAttackLabel()),
 				},
 			},
 			"rule_type": schema.StringAttribute{
@@ -139,6 +147,9 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 								"severity": schema.StringAttribute{
 									Optional:    true,
 									Description: "The severity of the action.",
+									Validators: []validator.String{
+										stringvalidator.OneOf("low", "medium", "high", "critical"),
+									},
 								},
 								"title": schema.StringAttribute{
 									Optional:    true,
