@@ -10,7 +10,8 @@
 
 [![Terraform Provider Tests](https://github.com/1898andCo/terraform-provider-armis-centrix/actions/workflows/provider-tests.yml/badge.svg)](https://github.com/1898andCo/terraform-provider-armis-centrix/actions/workflows/provider-tests.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/1898andCo/terraform-provider-armis-centrix)](https://goreportcard.com/report/github.com/1898andCo/terraform-provider-armis-centrix)
-[![GoDoc](https://godoc.org/github.com/1898andCo/terraform-provider-armis-centrix?status.svg)](https://godoc.org/github.com/1898andCo/terraform-provider-armis-centrix)
+[![Go Reference](https://pkg.go.dev/badge/github.com/1898andCo/terraform-provider-armis-centrix.svg)](https://pkg.go.dev/github.com/1898andCo/terraform-provider-armis-centrix)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/1898andCo/terraform-provider-armis-centrix)](go.mod)
 [![License](https://img.shields.io/github/license/1898andCo/terraform-provider-armis-centrix)](LICENSE)
 
 </div>
