@@ -6,6 +6,16 @@
 
 # Terraform/OpenTofu Armis Centrix Provider
 
+<div align="center">
+
+[![Terraform Provider Tests](https://github.com/1898andCo/terraform-provider-armis-centrix/actions/workflows/provider-tests.yml/badge.svg)](https://github.com/1898andCo/terraform-provider-armis-centrix/actions/workflows/provider-tests.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/1898andCo/terraform-provider-armis-centrix)](https://goreportcard.com/report/github.com/1898andCo/terraform-provider-armis-centrix)
+[![Go Reference](https://pkg.go.dev/badge/github.com/1898andCo/terraform-provider-armis-centrix.svg)](https://pkg.go.dev/github.com/1898andCo/terraform-provider-armis-centrix)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/1898andCo/terraform-provider-armis-centrix)](go.mod)
+[![License](https://img.shields.io/github/license/1898andCo/terraform-provider-armis-centrix)](LICENSE)
+
+</div>
+
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.12 or [OpenTofu](https://opentofu.org/) >= 1.5
@@ -84,4 +94,3 @@ PRs are welcome! We follow the typical "fork-and-pull" Git workflow.
 
 > [!TIP]
 > Be sure to merge the latest changes from "upstream" before making a pull request!
-
