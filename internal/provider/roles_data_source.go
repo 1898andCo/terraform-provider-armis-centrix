@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/1898andCo/armis-sdk-go/armis"
+	"github.com/1898andCo/armis-sdk-go/v2/armis"
 	u "github.com/1898andCo/terraform-provider-armis-centrix/internal/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"

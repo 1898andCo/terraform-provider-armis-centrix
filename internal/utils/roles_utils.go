@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/1898andCo/armis-sdk-go/armis"
+	"github.com/1898andCo/armis-sdk-go/v2/armis"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 

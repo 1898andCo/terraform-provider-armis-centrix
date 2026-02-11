@@ -11,7 +11,7 @@ import (
 	"context"
 	"os"
 
-	armis "github.com/1898andCo/armis-sdk-go/armis"
+	armis "github.com/1898andCo/armis-sdk-go/v2/armis"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -98,14 +98,14 @@ func (p *ArmisProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	// Default to environment variables if configuration is not provided
 	apiKey := os.Getenv("ARMIS_API_KEY")
-	apiUrl := os.Getenv("ARMIS_API_URL")
+	apiURL := os.Getenv("ARMIS_API_URL")
 
 	if !config.APIKey.IsNull() {
 		apiKey = config.APIKey.ValueString()
 	}
 
 	if !config.APIUrl.IsNull() {
-		apiUrl = config.APIUrl.ValueString()
+		apiURL = config.APIUrl.ValueString()
 	}
 
 	// Handle missing values
@@ -118,7 +118,7 @@ func (p *ArmisProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		)
 	}
 
-	if apiUrl == "" {
+	if apiURL == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("api_url"),
 			"Missing Armis API URL",
@@ -132,7 +132,7 @@ func (p *ArmisProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	}
 
 	// Debug log the configuration
-	ctx = tflog.SetField(ctx, "armis_api_url", apiUrl)
+	ctx = tflog.SetField(ctx, "armis_api_url", apiURL)
 	ctx = tflog.SetField(ctx, "armis_api_key", apiKey)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "armis_api_key")
 
@@ -141,7 +141,7 @@ func (p *ArmisProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	// Create the Armis client
 	client, err := armis.NewClient(
 		apiKey,
-		armis.WithAPIURL(apiUrl),
+		apiURL,
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
