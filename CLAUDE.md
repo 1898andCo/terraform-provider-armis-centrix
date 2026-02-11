@@ -16,7 +16,7 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 
 ## Repository Layout
 
-- **`github.com/1898andCo/armis-sdk-go/armis`**: External Armis API client SDK with auth, CRUD operations, and models; uses functional options and token caching. See [armis-sdk-go](https://github.com/1898andCo/armis-sdk-go) repository for SDK development.
+- **`github.com/1898andCo/armis-sdk-go/v2/armis`**: External Armis API client SDK with auth, CRUD operations, and models; uses functional options and token caching. See [armis-sdk-go](https://github.com/1898andCo/armis-sdk-go) repository for SDK development.
 - **`internal/provider/`**: Terraform resource and data source implementations plus acceptance tests.
 - **`docs/`**: Generated provider docs (`task docs` refreshes from code descriptions).
 - **`examples/`**: Usage samples consumed in documentation.
@@ -30,7 +30,7 @@ Guidance for Claude Code when contributing to the Armis Centrix Terraform/OpenTo
 - **Conversion**: Helper functions bridge models (e.g., `buildArmisUser()` converts Terraform → API).
 
 ### API Client Design
-- **Functional options**: Configure client via `armis.WithAPIURL()`, `armis.WithHTTPClient()`, etc.
+- **Client construction**: `armis.NewClient(apiKey, apiURL, opts...)` — API key and URL are required positional args; additional options via `armis.WithHTTPClient()`, etc.
 - **Token caching**: Bearer token auto-refreshes 5 minutes before expiry; `sync.RWMutex` ensures thread safety.
 - **CRUD signature**: `Get(ctx, id) (*Model, error)`, `Create(ctx, model) (*Model, error)`, `Update(ctx, model, id)`, `Delete(ctx, id) (bool, error)`.
 
