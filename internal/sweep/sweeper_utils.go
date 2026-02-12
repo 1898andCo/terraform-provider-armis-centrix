@@ -10,7 +10,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/1898andCo/armis-sdk-go/armis"
+	"github.com/1898andCo/armis-sdk-go/v2/armis"
 )
 
 // ConfigureSweeperClient initializes an Armis client using environment variables
@@ -32,7 +32,7 @@ func ConfigureSweeperClient(name string) (*armis.Client, error) {
 	// Initialize the client
 	client, err := armis.NewClient(
 		apiKey,
-		armis.WithAPIURL(apiURL),
+		apiURL,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creating Armis client: %w", err)

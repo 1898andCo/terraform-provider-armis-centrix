@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Armis Centrix Go SDK
 
-The Armis Centrix Go SDK for authenticating and provisioning resources is maintained in a separate repository: [`armis-sdk-go`](https://github.com/1898andCo/armis-sdk-go). This provider imports the SDK as a Go module dependency (`github.com/1898andCo/armis-sdk-go/armis`).
+The Armis Centrix Go SDK for authenticating and provisioning resources is maintained in a separate repository: [`armis-sdk-go`](https://github.com/1898andCo/armis-sdk-go). This provider imports the SDK as a Go module dependency (`github.com/1898andCo/armis-sdk-go/v2/armis`).
 
 The SDK handles authentication and API requests, requiring an API key and the Armis instance URL to communicate and manage resources. When creating a new data source or resource in this provider, you will use the existing SDK types and CRUD methods. If new API functionality is needed, contribute to the `armis-sdk-go` repository first, then update this provider to use the new SDK version.
 
