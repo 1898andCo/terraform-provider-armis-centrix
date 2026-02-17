@@ -3,7 +3,7 @@ module github.com/1898andCo/terraform-provider-armis-centrix
 go 1.25.5
 
 require (
-	github.com/1898andCo/armis-sdk-go/v2 v2.0.1
+	github.com/1898andCo/armis-sdk-go/v2 v2.1.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-go v0.29.0

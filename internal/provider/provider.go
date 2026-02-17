@@ -164,6 +164,7 @@ func (p *ArmisProvider) Resources(ctx context.Context) []func() resource.Resourc
 		UserResource,
 		CollectorResource,
 		PolicyResource,
+		ReportResource,
 	}
 }
 
