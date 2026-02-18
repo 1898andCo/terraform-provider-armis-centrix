@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -68,7 +69,6 @@ func (r *reportResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 Provides an Armis report resource.
 
 The resource provisions a report in Armis with support for ASQ queries, scheduling, and export configurations.
-Note: Reports cannot be updated in-place. Any changes will force recreation of the resource.
 `,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -79,9 +79,6 @@ Note: Reports cannot be updated in-place. Any changes will force recreation of t
 			"report_name": schema.StringAttribute{
 				Required:    true,
 				Description: "The name of the report.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
 				},
@@ -89,28 +86,20 @@ Note: Reports cannot be updated in-place. Any changes will force recreation of t
 			"asq": schema.StringAttribute{
 				Required:    true,
 				Description: "The Armis Standard Query (ASQ) for the report. Example: 'in:devices timeFrame:\"1 Day\"'",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"email_subject": schema.StringAttribute{
 				Optional:    true,
 				Description: "The email subject for scheduled report notifications.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"report_type": schema.StringAttribute{
-				Computed:    true,
-				Description: "The type of the report (computed from the API response).",
 			},
 			"creation_time": schema.StringAttribute{
-				Computed:    true,
-				Description: "The timestamp when the report was created.",
+				Computed:      true,
+				Description:   "The timestamp when the report was created.",
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"is_scheduled": schema.BoolAttribute{
-				Computed:    true,
-				Description: "Whether the report has a schedule configured.",
+				Computed:      true,
+				Description:   "Whether the report has a schedule configured.",
+				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"schedule": schema.SingleNestedAttribute{
 				Optional:    true,
@@ -134,9 +123,9 @@ Note: Reports cannot be updated in-place. Any changes will force recreation of t
 					},
 					"report_file_format": schema.StringAttribute{
 						Optional:    true,
-						Description: "The file format for the exported report (e.g., 'csv', 'xlsx', 'pdf').",
+						Description: "The file format for the exported report (e.g., 'csv', 'xlsx', 'json').",
 						Validators: []validator.String{
-							stringvalidator.OneOf("csv", "xlsx", "pdf"),
+							stringvalidator.OneOf("csv", "xlsx", "json"),
 						},
 					},
 					"time_of_day": schema.StringAttribute{
@@ -191,7 +180,6 @@ type reportResourceModel struct {
 	ReportName          types.String                    `tfsdk:"report_name"`
 	ASQ                 types.String                    `tfsdk:"asq"`
 	EmailSubject        types.String                    `tfsdk:"email_subject"`
-	ReportType          types.String                    `tfsdk:"report_type"`
 	CreationTime        types.String                    `tfsdk:"creation_time"`
 	IsScheduled         types.Bool                      `tfsdk:"is_scheduled"`
 	Schedule            *reportScheduleModel            `tfsdk:"schedule"`
@@ -244,7 +232,6 @@ func (r *reportResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Map API response to state
 	plan.ID = types.StringValue(strconv.Itoa(newReport.ID))
-	plan.ReportType = types.StringValue(newReport.ReportType)
 	plan.CreationTime = types.StringValue(newReport.CreationTime)
 	plan.IsScheduled = types.BoolValue(newReport.IsScheduled)
 
@@ -291,7 +278,6 @@ func (r *reportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	state.ID = types.StringValue(strconv.Itoa(report.ID))
 	state.ReportName = types.StringValue(report.ReportName)
 	state.ASQ = types.StringValue(report.Asq)
-	state.ReportType = types.StringValue(report.ReportType)
 	state.CreationTime = types.StringValue(report.CreationTime)
 	state.IsScheduled = types.BoolValue(report.IsScheduled)
 
@@ -326,12 +312,49 @@ func (r *reportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(diags...)
 }
 
-// Update is not supported for reports - all changes require replacement.
+// Update updates an existing report in Armis.
 func (r *reportResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"Update Not Supported",
-		"Reports cannot be updated in-place. All attribute changes require resource replacement.",
-	)
+	var plan reportResourceModel
+	var state reportResourceModel
+
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	reportID := state.ID.ValueString()
+	updateReq := buildUpdateReportRequest(plan)
+
+	tflog.Info(ctx, "Updating report in Armis", map[string]any{
+		"report_id":   reportID,
+		"report_name": plan.ReportName.ValueString(),
+	})
+
+	updatedReport, err := r.client.UpdateReport(ctx, reportID, updateReq)
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error updating report %s", reportID), err)
+		return
+	}
+
+	tflog.Info(ctx, "Report updated successfully", map[string]any{
+		"report_id":   updatedReport.ID,
+		"report_name": updatedReport.ReportName,
+	})
+
+	// Map API response to state, preserving computed fields that don't change on update
+	plan.ID = state.ID
+	plan.CreationTime = state.CreationTime
+	plan.IsScheduled = state.IsScheduled
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Delete deletes the resource.
@@ -418,6 +441,29 @@ func buildArmisReport(plan reportResourceModel) armis.CreateReportRequest {
 		report.ExportConfiguration = armis.ExportConfiguration{
 			Columns: buildExportColumnsFromPlan(plan.ExportConfiguration.Columns),
 		}
+	}
+
+	return report
+}
+
+// buildUpdateReportRequest converts the Terraform model to an SDK UpdateReportRequest.
+func buildUpdateReportRequest(plan reportResourceModel) armis.UpdateReportRequest {
+	report := armis.UpdateReportRequest{
+		ReportName:   plan.ReportName.ValueString(),
+		ASQ:          plan.ASQ.ValueString(),
+		EmailSubject: plan.EmailSubject.ValueString(),
+	}
+
+	if plan.Schedule != nil {
+		schedule := buildScheduleFromPlan(plan.Schedule)
+		report.Schedule = &schedule
+	}
+
+	if plan.ExportConfiguration != nil && plan.ExportConfiguration.Columns != nil {
+		exportConfig := armis.ExportConfiguration{
+			Columns: buildExportColumnsFromPlan(plan.ExportConfiguration.Columns),
+		}
+		report.ExportConfiguration = &exportConfig
 	}
 
 	return report
