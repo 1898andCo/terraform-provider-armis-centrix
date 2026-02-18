@@ -36,8 +36,9 @@ func TestAcc_ReportResource_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// email_subject is write-only and not returned by the API on read
-				ImportStateVerifyIgnore: []string{"email_subject"},
+				// email_subject is write-only and export_configuration is not returned
+				// by the GetReportByID API, so neither can be verified on import.
+				ImportStateVerifyIgnore: []string{"email_subject", "export_configuration"},
 			},
 		},
 	})
@@ -83,6 +84,39 @@ func TestAcc_ReportResource_withExportConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "asq", `in:devices timeFrame:"1 Day"`),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+				),
+			},
+		},
+	})
+}
+
+// TestAcc_ReportResource_update tests updating a report's name and ASQ query.
+func TestAcc_ReportResource_update(t *testing.T) {
+	resourceName := "armis_report.test"
+	rName := strings.ToLower(acctest.RandomWithPrefix("tfacc-report-upd"))
+	rNameUpdated := rName + "-updated"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Create the report
+			{
+				Config: testAccReportResourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "asq", `in:devices timeFrame:"1 Day"`),
+					resource.TestCheckResourceAttr(resourceName, "is_scheduled", "false"),
+				),
+			},
+			// Step 2: Update the report name and ASQ
+			{
+				Config: testAccReportResourceConfig_basic(rNameUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "asq", `in:devices timeFrame:"1 Day"`),
 				),
 			},
 		},

@@ -281,6 +281,12 @@ func (r *reportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	state.CreationTime = types.StringValue(report.CreationTime)
 	state.IsScheduled = types.BoolValue(report.IsScheduled)
 
+	// email_subject is write-only; the API does not return it, so we
+	// preserve the value already in state (populated from req.State.Get).
+
+	// export_configuration is not returned by the GetReportByID API,
+	// so we preserve the value from the existing Terraform state.
+
 	// Map schedule from API response if present
 	if report.IsScheduled {
 		state.Schedule = &reportScheduleModel{
@@ -306,6 +312,8 @@ func (r *reportResource) Read(ctx context.Context, req resource.ReadRequest, res
 				state.Schedule.Weekdays[i] = types.StringValue(weekday)
 			}
 		}
+	} else {
+		state.Schedule = nil
 	}
 
 	diags = resp.State.Set(ctx, &state)
@@ -348,10 +356,10 @@ func (r *reportResource) Update(ctx context.Context, req resource.UpdateRequest,
 		"report_name": updatedReport.ReportName,
 	})
 
-	// Map API response to state, preserving computed fields that don't change on update
+	// Preserve immutable computed fields from state; update mutable computed fields from API response
 	plan.ID = state.ID
 	plan.CreationTime = state.CreationTime
-	plan.IsScheduled = state.IsScheduled
+	plan.IsScheduled = types.BoolValue(updatedReport.IsScheduled)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
