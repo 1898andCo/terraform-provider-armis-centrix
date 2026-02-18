@@ -223,15 +223,33 @@ func (r *reportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	reportID := strconv.Itoa(newReport.ID)
+
 	tflog.Info(ctx, "Report created successfully", map[string]any{
 		"report_id":   newReport.ID,
 		"report_name": newReport.ReportName,
 	})
 
+	// Read back the full resource to get accurate computed fields. The
+	// CreateReport response may not include all fields (e.g., normalized
+	// schedule values), so we read the resource to match Update() behavior.
+	createdReport, err := r.client.GetReportByID(ctx, reportID)
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading report %s after create", reportID), err)
+		return
+	}
+	if createdReport == nil {
+		resp.Diagnostics.AddError(
+			"Error Fetching Created Report",
+			fmt.Sprintf("Report %s was created but could not be read back from the API", reportID),
+		)
+		return
+	}
+
 	// Map API response to state
-	plan.ID = types.StringValue(strconv.Itoa(newReport.ID))
-	plan.CreationTime = types.StringValue(newReport.CreationTime)
-	plan.IsScheduled = types.BoolValue(newReport.IsScheduled)
+	plan.ID = types.StringValue(reportID)
+	plan.CreationTime = types.StringValue(createdReport.CreationTime)
+	plan.IsScheduled = types.BoolValue(createdReport.IsScheduled)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -285,7 +303,9 @@ func (r *reportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// export_configuration is not returned by the GetReportByID API,
 	// so we preserve the value from the existing Terraform state.
 
-	// Map schedule from API response if present
+	// Map schedule from API response if present. When the API does not
+	// report the schedule (IsScheduled=false) but the user has a schedule
+	// block configured in state, preserve it to avoid a perpetual diff.
 	if report.IsScheduled {
 		state.Schedule = &reportScheduleModel{
 			RepeatAmount:     types.StringValue(fmt.Sprintf("%g", report.Schedule.RepeatAmount)),
@@ -310,7 +330,10 @@ func (r *reportResource) Read(ctx context.Context, req resource.ReadRequest, res
 				state.Schedule.Weekdays[i] = types.StringValue(weekday)
 			}
 		}
-	} else {
+	} else if state.Schedule == nil {
+		// Only clear schedule when neither the API nor the prior state has one.
+		// If the user configured a schedule but the API doesn't reflect it yet,
+		// the existing state.Schedule (populated from req.State.Get) is preserved.
 		state.Schedule = nil
 	}
 
