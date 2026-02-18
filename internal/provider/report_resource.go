@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -97,9 +96,8 @@ The resource provisions a report in Armis with support for ASQ queries, scheduli
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"is_scheduled": schema.BoolAttribute{
-				Computed:      true,
-				Description:   "Whether the report has a schedule configured.",
-				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+				Computed:    true,
+				Description: "Whether the report has a schedule configured.",
 			},
 			"schedule": schema.SingleNestedAttribute{
 				Optional:    true,
@@ -345,9 +343,24 @@ func (r *reportResource) Update(ctx context.Context, req resource.UpdateRequest,
 		"report_name": plan.ReportName.ValueString(),
 	})
 
-	updatedReport, err := r.client.UpdateReport(ctx, reportID, updateReq)
+	_, err := r.client.UpdateReport(ctx, reportID, updateReq)
 	if err != nil {
 		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error updating report %s", reportID), err)
+		return
+	}
+
+	// Fetch the updated report to get accurate computed fields. The UpdateReport
+	// response omits fields like isScheduled, so we read back the full resource.
+	updatedReport, err := r.client.GetReportByID(ctx, reportID)
+	if err != nil {
+		appendAPIError(&resp.Diagnostics, fmt.Sprintf("Error reading report %s after update", reportID), err)
+		return
+	}
+	if updatedReport == nil {
+		resp.Diagnostics.AddError(
+			"Error Fetching Updated Report",
+			fmt.Sprintf("Report %s was updated but could not be read back from the API", reportID),
+		)
 		return
 	}
 
@@ -356,9 +369,9 @@ func (r *reportResource) Update(ctx context.Context, req resource.UpdateRequest,
 		"report_name": updatedReport.ReportName,
 	})
 
-	// Preserve immutable computed fields from state; update mutable computed fields from API response
+	// Map plan values with computed fields from the read-after-update
 	plan.ID = state.ID
-	plan.CreationTime = state.CreationTime
+	plan.CreationTime = types.StringValue(updatedReport.CreationTime)
 	plan.IsScheduled = types.BoolValue(updatedReport.IsScheduled)
 
 	diags = resp.State.Set(ctx, plan)
