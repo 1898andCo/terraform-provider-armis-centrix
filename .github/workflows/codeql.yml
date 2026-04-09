@@ -40,6 +40,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache: ${{ matrix.dependency-caching }}
+
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@38697555549f1db7851b81482ff19f1fa5c4fedc # v4
@@ -49,11 +55,16 @@ jobs:
           # By default, queries listed here will override any specified in a config file.
           # Prefix the list here with "+" to use these queries and those in the config file.
           #
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@38697555549f1db7851b81482ff19f1fa5c4fedc # v4
-
           # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
           # queries: security-extended,security-and-quality
+
+      # Replace the default autobuild step with an explicit build so CodeQL
+      # can reliably compile and analyze all Go sources under main.go and
+      # internal/. This matches the `task build` target defined in Taskfile.yml.
+      - name: Build Go sources for CodeQL analysis
+        run: |
+          go mod download
+          go build -v ./...
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@38697555549f1db7851b81482ff19f1fa5c4fedc # v4
