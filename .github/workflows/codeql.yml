@@ -122,6 +122,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Pin Go to go.mod so golangci-lint (built with go1.25) does not load the
+      # runner's newer default Go toolchain and panic.
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: 'go.mod'
+
       - name: Run golangci-lint
         uses: step-security/golangci-lint-action@2697867e9c204558ca23d0decdd0039dc21f2b93 # v9.3.0
         id: golangci
