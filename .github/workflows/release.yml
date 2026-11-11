@@ -47,7 +47,7 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
       - name: Run GoReleaser
-        uses: step-security/goreleaser-action@v7.2.3
+        uses: step-security/goreleaser-action@v7.3.0
         with:
           args: release --clean
         env:
