@@ -20,7 +20,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v6.5.0'
         - 'step-security/ghaction-import-gpg@v7.0.0'
-        - 'step-security/goreleaser-action@v7.2.3'
+        - 'step-security/goreleaser-action@v7.3.0'
         - 'step-security/harden-runner@v2.21.1'
     '.github/workflows/sweep.yml':
         - 'actions/checkout@v7.0.1'
@@ -72,9 +72,9 @@ dependencies:
         commit: 'sha1-2697867e9c204558ca23d0decdd0039dc21f2b93'
         owner_id: 88700172
         repo_id: 1230682818
-    'step-security/goreleaser-action@v7.2.3':
-        ref: 'v7.2.3'
-        commit: 'sha1-0b0370b85341e59c5eca041619966f53c80fbd41'
+    'step-security/goreleaser-action@v7.3.0':
+        ref: 'v7.3.0'
+        commit: 'sha1-e91207bb836a83eca7cb8b2e61024bcb6dc3c458'
         owner_id: 88700172
         repo_id: 1235248494
     'step-security/harden-runner@v2.21.1':
