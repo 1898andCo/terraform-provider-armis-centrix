@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Harden the runner (Block egress)
-      uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+      uses: step-security/harden-runner@v2.21.1
       with:
         egress-policy: block
         allowed-endpoints: >
@@ -24,8 +24,8 @@ jobs:
           release-assets.githubusercontent.com:443
 
     - name: "Checkout source code at current commit"
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-    - uses: step-security/codeowners-validator@073378e2c16714d69ac00356acebdb7505d82c7e # v0.7.4
+      uses: actions/checkout@v7.0.1
+    - uses: step-security/codeowners-validator@v0.7.4
       if: github.event.pull_request.head.repo.full_name == github.repository
       name: "Full check of CODEOWNERS"
       with:
@@ -37,7 +37,7 @@ jobs:
         checks: "syntax,duppatterns"
         # GitHub access token is required only if the `owners` check is enabled
         github_access_token: "${{ secrets.GITHUB_TOKEN }}"
-    - uses: step-security/codeowners-validator@073378e2c16714d69ac00356acebdb7505d82c7e # v0.7.4
+    - uses: step-security/codeowners-validator@v0.7.4
       if: github.event.pull_request.head.repo.full_name != github.repository
       name: "Syntax check of CODEOWNERS"
       with:
