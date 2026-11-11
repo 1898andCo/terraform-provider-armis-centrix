@@ -7,7 +7,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16'
         - 'actions/setup-go@v6.5.0'
-        - 'github/codeql-action@v4.38.0'
+        - 'github/codeql-action@v4.39.3'
         - 'step-security/golangci-lint-action@v9.3.0'
         - 'step-security/harden-runner@v2.21.1'
     '.github/workflows/provider-tests.yml':
@@ -52,9 +52,9 @@ dependencies:
         commit: 'sha1-b91d5d2c96a56797b48ac1e0e89220bf64044611'
         owner_id: 379109
         repo_id: 363589806
-    'github/codeql-action@v4.38.0':
-        ref: 'v4.38.0'
-        commit: 'sha1-b96794f015dfd88f77b49b1c93e0fa7110f94c63'
+    'github/codeql-action@v4.39.3':
+        ref: 'v4.39.3'
+        commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
         owner_id: 9919
         repo_id: 259445878
     'step-security/codeowners-validator@v0.7.4':
