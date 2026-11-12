@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden the runner (Block egress)
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@v2.21.1
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -32,22 +32,22 @@ jobs:
             sum.golang.org:443
             storage.googleapis.com:443
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
         with:
           # Allow goreleaser to access older tag information.
           fetch-depth: 0
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      - uses: actions/setup-go@v6.5.0
         with:
           go-version-file: 'go.mod'
           cache: true
       - name: Import GPG key
-        uses: step-security/ghaction-import-gpg@c0b4a334b9b72bfaaebec86ef022a78a5b17f828 # v7.0.0
+        uses: step-security/ghaction-import-gpg@v7.0.0
         id: import_gpg
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
       - name: Run GoReleaser
-        uses: step-security/goreleaser-action@0b0370b85341e59c5eca041619966f53c80fbd41 # v7.2.3
+        uses: step-security/goreleaser-action@v7.3.0
         with:
           args: release --clean
         env:
