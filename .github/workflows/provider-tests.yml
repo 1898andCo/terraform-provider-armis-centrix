@@ -88,7 +88,7 @@ jobs:
           go-version-file: go.mod
         id: go
       - name: Install Task
-        uses: arduino/setup-task@v2.0.0
+        uses: step-security/arduino-setup-task@e7c43b34e57886d0b0f583da4bd8e8ffcb084373 # v2.0.0
         with:
           version: "3.x"
       - uses: step-security/setup-terraform@v4.0.1
@@ -178,7 +178,7 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
       - name: Install Task
-        uses: arduino/setup-task@v2.0.0
+        uses: step-security/arduino-setup-task@e7c43b34e57886d0b0f583da4bd8e8ffcb084373 # v2.0.0
         with:
           version: "3.x"
       - name: Install Terraform
@@ -233,7 +233,7 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
       - name: Install Task
-        uses: arduino/setup-task@v2.0.0
+        uses: step-security/arduino-setup-task@e7c43b34e57886d0b0f583da4bd8e8ffcb084373 # v2.0.0
         with:
           version: "3.x"
       - run: go mod download
