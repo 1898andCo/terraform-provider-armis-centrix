@@ -9,28 +9,28 @@ workflows:
         - 'actions/setup-go@v6.5.0'
         - 'github/codeql-action@v4.39.3'
         - 'step-security/golangci-lint-action@v9.3.0'
-        - 'step-security/harden-runner@v2.21.1'
+        - 'step-security/harden-runner@v2.22.4'
     '.github/workflows/provider-tests.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v6.5.0'
         - 'arduino/setup-task@v2.0.0'
-        - 'step-security/harden-runner@v2.21.1'
+        - 'step-security/harden-runner@v2.22.4'
         - 'step-security/setup-terraform@v4.0.1'
     '.github/workflows/release.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v6.5.0'
         - 'step-security/ghaction-import-gpg@v7.0.0'
         - 'step-security/goreleaser-action@v7.3.0'
-        - 'step-security/harden-runner@v2.21.1'
+        - 'step-security/harden-runner@v2.22.4'
     '.github/workflows/sweep.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v6.5.0'
         - 'arduino/setup-task@v2.0.0'
-        - 'step-security/harden-runner@v2.21.1'
+        - 'step-security/harden-runner@v2.22.4'
     '.github/workflows/validate-codeowners.yml':
         - 'actions/checkout@v7.0.1'
         - 'step-security/codeowners-validator@v0.7.4'
-        - 'step-security/harden-runner@v2.21.1'
+        - 'step-security/harden-runner@v2.22.4'
 dependencies:
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
@@ -77,9 +77,9 @@ dependencies:
         commit: 'sha1-e91207bb836a83eca7cb8b2e61024bcb6dc3c458'
         owner_id: 88700172
         repo_id: 1235248494
-    'step-security/harden-runner@v2.21.1':
-        ref: 'v2.21.1'
-        commit: 'sha1-e14015d583714f6e62063499dc959a02595150a1'
+    'step-security/harden-runner@v2.22.4':
+        ref: 'v2.22.4'
+        commit: 'sha1-1d88384fd173af6ecb012dfd0264a306b711241a'
         owner_id: 88700172
         repo_id: 422287306
     'step-security/setup-terraform@v4.0.1':
