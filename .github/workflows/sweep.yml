@@ -45,7 +45,7 @@ jobs:
           cache: true
         id: go
       - name: Install Task
-        uses: step-security/arduino-setup-task@e7c43b34e57886d0b0f583da4bd8e8ffcb084373 # v2.0.0
+        uses: step-security/arduino-setup-task@793c87da104f27ef7dacab5cb89ce8337595e576 # v3.0.0
         with:
           version: "3.x"
       - run: go mod download
