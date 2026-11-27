@@ -7,13 +7,12 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16'
         - 'actions/setup-go@v6.5.0'
-        - 'github/codeql-action@v4.39.4'
+        - 'github/codeql-action@v4.39.5'
         - 'step-security/golangci-lint-action@v9.3.0'
         - 'step-security/harden-runner@v2.23.0'
     '.github/workflows/provider-tests.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v6.5.0'
-        - 'arduino/setup-task@v2.0.0'
         - 'step-security/harden-runner@v2.23.0'
         - 'step-security/setup-terraform@v4.0.1'
     '.github/workflows/release.yml':
@@ -25,7 +24,6 @@ workflows:
     '.github/workflows/sweep.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-go@v6.5.0'
-        - 'arduino/setup-task@v2.0.0'
         - 'step-security/harden-runner@v2.23.0'
     '.github/workflows/validate-codeowners.yml':
         - 'actions/checkout@v7.0.1'
@@ -47,14 +45,9 @@ dependencies:
         commit: 'sha1-924ae3a1cded613372ab5595356fb5720e22ba16'
         owner_id: 44036562
         repo_id: 192624594
-    'arduino/setup-task@v2.0.0':
-        ref: 'v2.0.0'
-        commit: 'sha1-b91d5d2c96a56797b48ac1e0e89220bf64044611'
-        owner_id: 379109
-        repo_id: 363589806
-    'github/codeql-action@v4.39.4':
-        ref: 'v4.39.4'
-        commit: 'sha1-1bd86f2fdb4b86187fa4059f16f31a3202acc9ea'
+    'github/codeql-action@v4.39.5':
+        ref: 'v4.39.5'
+        commit: 'sha1-915412ff23e8b7659517e607487dbeae018f2934'
         owner_id: 9919
         repo_id: 259445878
     'step-security/codeowners-validator@v0.7.4':
